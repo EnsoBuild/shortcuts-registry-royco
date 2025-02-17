@@ -74,7 +74,7 @@ export const chainIdToSimulationRoles: Map<ChainIds, SimulationRoles> = new Map(
         label: 'Caller',
       },
       recipeMarketHub: {
-        address: '0xFcc593aD3705EBcd72eC961c63eb484BE795BDbD',
+        address: '0x7A1C91392462c55FB7F2eA98905eA8CeEEA04579',
         label: 'RecipeMarketHub',
       },
       multiCall: {
@@ -95,7 +95,7 @@ export const chainIdToSimulationRoles: Map<ChainIds, SimulationRoles> = new Map(
 
 export const chainIdToDeFiAddresses: Record<number, Record<string, AddressArg>> = {
   [ChainIds.Sonic]: {
-    wSonic: '0x039e2fb66102314ce7b64ce5ce3e5183bc94ad38',
+    wS: '0x039e2fb66102314ce7b64ce5ce3e5183bc94ad38',
   },
 };
 

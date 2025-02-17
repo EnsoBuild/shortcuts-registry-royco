@@ -97,21 +97,6 @@ pnpm build sonic 0xd4d6596bdc7cb7f8b214961f895c2d79d884f9c3dfcac62996c3f94c1641a
 Simulation supported modes are: `forge`, and `quoter`. Simulation mode is set via `--mode=<simulationMode>`. By default
 simulation is done via the `quoter`.
 
-Shortcuts whose execution require to set a `minAmountOut` have it set to `1` by default. This amount can be fine-tuned
-via `--slippage=<numberAsBIPS>` (allowed values: [0, 10000]. Examples: 3 represents 0.03%, 25 represents 0.25%, 100
-represents 1%).
-
-Other supported CCDMSetter variables are:
-
-- `minAmount0Bps`: sets the difference in basis points between the max amount in and min amount in for token0 in kodiak
-  vaults
-- `minAmount1Bps`: sets the difference in basis points between the max amount in and min amount in for token1 in kodiak
-  vaults
-- `skewRatio`: for shortcuts that do an off-chain calculation for the amount of a token that gets exchanged in a
-  shortcut, you can pass this value (in basis points) to reduce the amount exchanged relative to the calculated amount
-
-Log the tx `CCDMSetter` calldata with `--calldata`.
-
 ### Forge
 
 Please set first:

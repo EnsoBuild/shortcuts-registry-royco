@@ -12,25 +12,24 @@ export class SiloWsShortcut implements Shortcut {
   supportedChains = [ChainIds.Sonic];
   inputs: Record<number, Input> = {
     [ChainIds.Sonic]: {
-      ws: chainIdToDeFiAddresses[ChainIds.Sonic].ws,
+      wS: chainIdToDeFiAddresses[ChainIds.Sonic].wS,
       vault: '0xf55902DE87Bd80c6a35614b48d7f8B612a083C12',
     },
   };
-  setterInputs = new Set(['minAmountOut']);
 
   async build(chainId: number): Promise<Output> {
     const client = new RoycoClient();
 
     const inputs = this.inputs[chainId];
-    const { ws, vault } = inputs;
+    const { wS, vault } = inputs;
 
     const builder = new Builder(chainId, client, {
-      tokensIn: [ws],
+      tokensIn: [wS],
       tokensOut: [vault],
     });
-    const wsAmount = getBalance(ws, builder);
+    const wsAmount = getBalance(wS, builder);
 
-    await mintErc4626(ws, vault, wsAmount, builder);
+    await mintErc4626(wS, vault, wsAmount, builder);
 
     const payload = await builder.build({
       requireWeiroll: true,

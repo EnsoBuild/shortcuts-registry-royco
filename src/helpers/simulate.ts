@@ -24,7 +24,7 @@ export async function simulateShortcutOnQuoter(
   roles: SimulationRoles,
   simulationLogConfig: SimulationLogConfig,
 ): Promise<Report> {
-  const { txData, reportPre } = await generateTxData(provider, script, roles);
+  const { txData } = await generateTxData(provider, script, roles);
 
   const tx: APITransaction = {
     from: roles.caller.address!,
@@ -49,8 +49,6 @@ export async function simulateShortcutOnQuoter(
   const report: Report = {
     weirollWallet: getAddress(roles.weirollWallet!.address!),
     amountsIn,
-    minAmountOut: reportPre.minAmountOut,
-    minAmountOutHex: reportPre.minAmountOutHex,
     quote: {},
     dust: {},
     gas: quote.gas,
@@ -90,7 +88,7 @@ export async function simulateShortcutOnForge(
   const forgeTestRelativePath = 'test/foundry/fork/Simulation_Fork_Test.t.sol';
   const forgeContractABI = CONTRCT_SIMULATION_FORK_TEST_EVENTS_ABI;
 
-  const { txData, reportPre } = await generateTxData(provider, script, roles);
+  const { txData } = await generateTxData(provider, script, roles);
 
   // Get labels for known addresses
   const addressToLabel: Map<AddressArg, string> = new Map();
@@ -198,8 +196,6 @@ export async function simulateShortcutOnForge(
   const report = {
     weirollWallet: getAddress(roles.weirollWallet!.address!),
     amountsIn,
-    minAmountOut: reportPre.minAmountOut,
-    minAmountOutHex: reportPre.minAmountOutHex,
     quote: Object.fromEntries(
       quoteTokensOut.map((key: AddressArg, idx: number) => [key, quoteAmountsOut[idx].toString()]),
     ),
