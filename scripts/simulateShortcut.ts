@@ -62,7 +62,6 @@ export async function main_(args: string[]): Promise<Report> {
     case SimulationMode.QUOTER: {
       report = await simulateShortcutOnQuoter(
         provider,
-        shortcut,
         chainId,
         script,
         amountsIn,
