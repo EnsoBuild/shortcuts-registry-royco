@@ -4,7 +4,7 @@ import {
   Transaction,
   WeirollScript,
 } from "@ensofinance/shortcuts-builder/types";
-import { BigNumber, BigNumberish } from "@ethersproject/bignumber";
+import { BigNumber } from "@ethersproject/bignumber";
 import { StaticJsonRpcProvider } from "@ethersproject/providers";
 
 export interface Shortcut {
@@ -12,7 +12,6 @@ export interface Shortcut {
   description: string;
   supportedChains: number[];
   inputs: Record<number, Input>;
-  setterInputs?: SetterInputToIndex;
   build(chainId: number, provider: StaticJsonRpcProvider): Promise<Output>;
   getAddressData?(chainId: number): Map<AddressArg, AddressData>;
   getTokenHolder?(chainId: number): Map<AddressArg, AddressArg>;
@@ -30,20 +29,10 @@ export type RoycoOutput = {
 
 
 export type Input = Record<string, AddressArg>;
-export type SetterInputToIndex = Set<string>;
 
-export interface SetterInputData {
-  [key: string]: {
-    value: BigNumberish;
-    index: number;
-  }
-}
 
-export interface SetterCallData {
-  setterInputData: SetterInputData;
-  setterData: [AddressArg, string][];
-  safeTransactions: SafeTransaction[];
-}
+
+
 
 export interface SimulationResult {
   /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -55,8 +44,6 @@ export interface SimulationResult {
 export type Report = {
   weirollWallet: AddressArg;
   amountsIn: string[];
-  minAmountOut?: string;
-  minAmountOutHex?: string;
   quote: Record<string, string>;
   dust: Record<string, string>;
   gas: string;
