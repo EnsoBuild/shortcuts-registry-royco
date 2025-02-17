@@ -1,0 +1,40 @@
+[profile.default]
+cache_path = "foundry-cache"
+evm_version = "cancun"
+fs_permissions = [{ access = "read", path = "./test/foundry/"}]
+libs = ["node_modules", "lib", "dependencies"]
+out = "foundry-out"
+solc = "0.8.27"
+scripts = "foundry-scripts"
+src = "foundry-src"
+test = "test/foundry"
+# via_ir = true
+# See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
+
+[fmt]
+bracket_spacing = true
+int_types = "long"
+line_length = 120
+multiline_func_header = "all"
+number_underscore = "thousands"
+quote_style = "double"
+sort_imports = true
+tab_width = 4
+wrap_comments = true
+
+[dependencies]
+forge-std = "1.9.4"
+"@openzeppelin-contracts" = "5.1.0"
+
+[rpc_endpoints]
+# arbitrum = ""
+# avalanche = ""
+# bnb_smart_chain = ""
+# gnosis_chain = ""
+# goerli = ""
+# localhost = "http://localhost:8545"
+# mainnet = ""
+# mainnet = ""
+# optimism = ""
+# polygon = ""
+# sepolia = ""

@@ -1,0 +1,33 @@
+# Node modules
+node_modules/
+
+# Build output
+dist/
+
+# Logs
+logs
+*.log
+
+# Temporary files
+.temp/
+
+# Environment variables
+.env
+
+# IDE files
+.vscode/
+
+# Foundry
+foundry-cache/
+foundry-out/
+
+## Soldeer
+/dependencies
+
+# Jetbrains
+.idea
+
+## MacOs
+.DS_Store
+
+transaction-builder.json

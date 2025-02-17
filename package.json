@@ -1,0 +1,67 @@
+{
+  "name": "shortcuts-registry",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "generate": "pnpm ts-node scripts/getShortcut.ts",
+    "generate:all": "pnpm ts-node scripts/getAllShortcuts.ts",
+    "lint:check": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "prettier:check": "prettier --check \"**/*.{mjs,js,json,md,ts,yml}\"",
+    "prettier:write": "prettier --write \"**/*.{mjs,js,json,md,ts,yml}\"",
+    "registryup": "pnpm install && forge soldeer update && forge remappings",
+    "simulate": "pnpm ts-node scripts/simulateShortcut.ts",
+    "execute": "pnpm ts-node scripts/executeShortcut.ts",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "test:simulations": "pnpm vitest run test/integration/simulateShortcut.test.ts",
+    "prepare": "husky"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@ensofinance/shortcuts-builder": "0.0.12",
+    "@ensofinance/shortcuts-standards": "1.0.104",
+    "@ethersproject/abi": "^5.7.0",
+    "@ethersproject/address": "^5.7.0",
+    "@ethersproject/bignumber": "^5.7.0",
+    "@ethersproject/bytes": "^5.7.0",
+    "@ethersproject/constants": "^5.7.0",
+    "@ethersproject/hash": "^5.7.0",
+    "@ethersproject/keccak256": "^5.7.0",
+    "@ethersproject/providers": "^5.7.2",
+    "@ethersproject/solidity": "^5.7.0",
+    "@ethersproject/units": "^5.7.0",
+    "@ethersproject/wallet": "^5.7.0",
+    "axios": "^1.7.9",
+    "dotenv": "^16.4.7"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.16.0",
+    "@trivago/prettier-plugin-sort-imports": "^5.2.0",
+    "@types/node": "^22.10.1",
+    "eslint": "^9.16.0",
+    "eslint-config-prettier": "^9.1.0",
+    "globals": "^15.13.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.2.11",
+    "prettier": "3.4.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.18.0",
+    "vitest": "^2.1.8"
+  },
+  "lint-staged": {
+    "**/*": [
+      "pnpm lint:fix",
+      "pnpm prettier:write",
+      "forge fmt"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  }
+}
