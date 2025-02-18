@@ -46,7 +46,7 @@ export class SiloWsShortcut implements Shortcut {
     switch (chainId) {
       case ChainIds.Sonic:
         return new Map([
-          [this.inputs[ChainIds.Sonic].ws, { label: 'ERC20:ws' }],
+          [this.inputs[ChainIds.Sonic].wS, { label: 'ERC20:wS' }],
           [this.inputs[ChainIds.Sonic].vault, { label: 'ERC20:Silo Vault' }],
         ]);
       default:

@@ -15,13 +15,41 @@ export function simulateTransactionOnForge(
   chainId: number,
   blockNumber: number,
 ): ForgeTestLogJSON {
-  // TODO: process auth headers if present
   const rpcUrl = provider.connection.url;
   if (!roles.callee?.address) {
     throw new Error("missing 'callee' address in 'roles'");
   }
   if (!roles.weirollWallet?.address) {
     throw new Error("missing 'weirollWallet' address in 'roles'");
+  }
+
+  const simulationJsonData = {
+    chainId,
+    rpcUrl,
+    blockNumber: blockNumber.toString(),
+    caller: roles.caller.address,
+    recipeMarketHub: roles.recipeMarketHub.address,
+    callee: roles.callee.address,
+    weirollWallet: roles.weirollWallet.address,
+    txData,
+    tokensIn: tokensData.tokensIn,
+    tokensInHolders: tokensData.tokensInHolders,
+    amountsIn: tokensData.amountsIn,
+    tokensOut: tokensData.tokensOut,
+    tokensDust: tokensData.tokensDust,
+    labelKeys: [...addressToLabel.keys()],
+    labelValues: [...addressToLabel.values()],
+  };
+
+  // NB: validate and throw here errors to log better the whole 'simulationJsonData'
+  if ((simulationJsonData.labelKeys as (undefined | string)[]).includes(undefined)) {
+    console.warn('Simulation (JSON Data):\n', simulationJsonData, '\n');
+    // @ts-expect-error key is AddressArg
+    const missingAddressLabel = addressToLabel.get(undefined);
+    throw new Error(
+      `simulateTransactionOnForge: missing address on shorcut 'getAddressData()', check key spelling. ` +
+        `Key: undefined (missing), Value: ${missingAddressLabel}`,
+    );
   }
 
   const logFormat = ForgeTestLogFormat.JSON;
@@ -37,23 +65,7 @@ export function simulateTransactionOnForge(
       encoding: 'utf-8',
       env: {
         PATH: `${process.env.PATH}:${forgeData.path}"`,
-        SIMULATION_JSON_DATA: JSON.stringify({
-          chainId,
-          rpcUrl,
-          blockNumber: blockNumber.toString(),
-          caller: roles.caller.address,
-          recipeMarketHub: roles.recipeMarketHub.address,
-          callee: roles.callee.address,
-          weirollWallet: roles.weirollWallet.address,
-          txData,
-          tokensIn: tokensData.tokensIn,
-          tokensInHolders: tokensData.tokensInHolders,
-          amountsIn: tokensData.amountsIn,
-          tokensOut: tokensData.tokensOut,
-          tokensDust: tokensData.tokensDust,
-          labelKeys: [...addressToLabel.keys()],
-          labelValues: [...addressToLabel.values()],
-        }),
+        SIMULATION_JSON_DATA: JSON.stringify(simulationJsonData),
         TERM: process.env.TER || 'xterm-256color',
         FORCE_COLOR: '1',
       },
