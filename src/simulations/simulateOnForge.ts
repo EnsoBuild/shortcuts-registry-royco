@@ -1,6 +1,7 @@
 import type { AddressArg } from '@ensofinance/shortcuts-builder/types';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 import { spawnSync } from 'node:child_process';
+import os from 'node:os';
 
 import { ForgeTestLogFormat } from '../constants';
 import type { ForgeTestLogJSON, SimulationForgeData, SimulationRoles, SimulationTokensData } from '../types';
@@ -53,13 +54,14 @@ export function simulateTransactionOnForge(
   }
 
   const logFormat = ForgeTestLogFormat.JSON;
+  const forgeCmd = os.platform() === 'win32' ? 'forge.cmd' : 'forge'; // ! untested on Windows
   // NB: `spawnSync` forge call return can optionally be read from both `return.stdout` and `return.stderr`, and processed.
   // NB: calling forge with `--json` will print the deployment information as JSON.
   // NB: calling forge with `--gas-report` will print the gas report.
   // NB: calling forge with `-vvv` prevents too much verbosity (i.e. `setUp` steps), but hides traces from successful
   // tests. To make visible successful test traces, use `-vvvv`.
   const result = spawnSync(
-    'forge',
+    forgeCmd,
     ['test', '--match-contract', forgeData.contract, '--match-test', forgeData.test, '-vvv', logFormat],
     {
       encoding: 'utf-8',
