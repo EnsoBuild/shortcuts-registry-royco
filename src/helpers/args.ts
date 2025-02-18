@@ -2,6 +2,7 @@ import { getChainName } from '@ensofinance/shortcuts-builder/helpers';
 import { BigNumber } from '@ethersproject/bignumber';
 import dotenv from 'dotenv';
 import { execSync } from 'node:child_process';
+import os from 'node:os';
 
 import { MAX_BPS, ShortcutOutputFormat, SimulationMode } from '../constants';
 import { shortcuts } from './shortcuts';
@@ -34,13 +35,15 @@ export function getRpcUrlByChainId(chainId: number): string {
 }
 
 export function getForgePath(): string {
-  const forgePath = execSync('which forge', { encoding: 'utf-8' }).trim();
-  if (!forgePath) {
-    throw new Error(
-      `missing 'forge' binary on the system. Make sure 'foundry' is properly installed  (test it via '$ which forge')`,
-    );
+  try {
+    const forgePath = execSync(os.platform() === 'win32' ? 'where forge' : 'which forge', { encoding: 'utf-8' }).trim();
+    if (!forgePath) {
+      throw new Error(`missing 'forge' binary on the system. Make sure 'foundry' is properly installed`);
+    }
+    return forgePath;
+  } catch (error) {
+    throw new Error(`Error finding 'forge' binary: ${error}`);
   }
-  return forgePath;
 }
 
 export function getSimulationModeFromArgs(args: string[]): SimulationMode {
