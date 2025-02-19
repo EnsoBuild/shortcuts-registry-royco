@@ -107,11 +107,11 @@ export async function simulateShortcutOnForge(
   const tokensDustRaw: Set<AddressArg> = new Set();
   for (const command of script.commands) {
     if (command.startsWith(FUNCTION_ID_ERC20_APPROVE)) {
-      // NB: spender address is the last 20 bytes of the data (not checksum)
+      // NOTE: spender address is the last 20 bytes of the data (not checksum)
       tokensDustRaw.add(getAddress(`0x${command.slice(-40)}`));
     }
   }
-  // NB: tokensOut shouldn't be flagged as dust
+  // NOTE: tokensOut shouldn't be flagged as dust
   const tokensDust = tokensDustRaw.difference(new Set(tokensOut) as Set<AddressArg>);
 
   // Get holder addresses for tokens In

@@ -42,7 +42,7 @@ export function simulateTransactionOnForge(
     labelValues: [...addressToLabel.values()],
   };
 
-  // NB: validate and throw here errors to log better the whole 'simulationJsonData'
+  // NOTE: validate and throw here errors to log better the whole 'simulationJsonData'
   if ((simulationJsonData.labelKeys as (undefined | string)[]).includes(undefined)) {
     console.warn('Simulation (JSON Data):\n', simulationJsonData, '\n');
     // @ts-expect-error key is AddressArg
@@ -55,10 +55,10 @@ export function simulateTransactionOnForge(
 
   const logFormat = ForgeTestLogFormat.JSON;
   const forgeCmd = os.platform() === 'win32' ? 'forge.cmd' : 'forge'; // ! untested on Windows
-  // NB: `spawnSync` forge call return can optionally be read from both `return.stdout` and `return.stderr`, and processed.
-  // NB: calling forge with `--json` will print the deployment information as JSON.
-  // NB: calling forge with `--gas-report` will print the gas report.
-  // NB: calling forge with `-vvv` prevents too much verbosity (i.e. `setUp` steps), but hides traces from successful
+  // NOTE: `spawnSync` forge call return can optionally be read from both `return.stdout` and `return.stderr`, and processed.
+  // NOTE: calling forge with `--json` will print the deployment information as JSON.
+  // NOTE: calling forge with `--gas-report` will print the gas report.
+  // NOTE: calling forge with `-vvv` prevents too much verbosity (i.e. `setUp` steps), but hides traces from successful
   // tests. To make visible successful test traces, use `-vvvv`.
   const result = spawnSync(
     forgeCmd,
