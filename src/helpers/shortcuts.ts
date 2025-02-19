@@ -1,12 +1,12 @@
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 
-import { SiloWsShortcut } from '../shortcuts/silo/ws';
+import { Silo_Ws_Shortcut } from '../shortcuts/silo/ws';
 import { Shortcut } from '../types';
 import { buildVerificationHash } from './utils';
 
 export const shortcuts: Record<string, Record<string, Shortcut>> = {
   silo: {
-    ws: new SiloWsShortcut(),
+    ws: new Silo_Ws_Shortcut(),
   },
 };
 

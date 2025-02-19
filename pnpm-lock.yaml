@@ -12,8 +12,8 @@ importers:
         specifier: 0.0.12
         version: 0.0.12
       '@ensofinance/shortcuts-standards':
-        specifier: 1.0.104
-        version: 1.0.104(@ethersproject/abi@5.7.0)(@ethersproject/providers@5.7.2)(ethers@5.7.2)(lodash@4.17.21)
+        specifier: 1.0.111
+        version: 1.0.111(@ethersproject/abi@5.7.0)(@ethersproject/providers@5.7.2)(ethers@5.7.2)(lodash@4.17.21)
       '@ethersproject/abi':
         specifier: ^5.7.0
         version: 5.7.0
@@ -136,8 +136,8 @@ packages:
   '@ensofinance/shortcuts-builder@0.0.12':
     resolution: {integrity: sha512-JL8gCSioCF6woTkR1htPg1WtSd/tbNvc5r4rjSFjF1cxw2rP7GYI7DbEWI3rseJxnEprhQ3xImOmUPXOluL98A==}
 
-  '@ensofinance/shortcuts-standards@1.0.104':
-    resolution: {integrity: sha512-mqP5FOaGdSgAOYYhigam6LFPZ+FerTu/h4GAiJ6SoLVjciFiyaNe8vuNUayE7wuCpmJe6Ip22yo0drpdoZg49w==}
+  '@ensofinance/shortcuts-standards@1.0.111':
+    resolution: {integrity: sha512-ehJHpIURhGpQpqikTrJp3y03NeYnTABYrQ5kSyDM6sSjlMuX4aMllWdRvWIYHfWcTfyrWdJ7n5Nl/M1gGBba0g==}
     engines: {node: '>=18.0.0'}
 
   '@ensofinance/weiroll.js@0.4.1':
@@ -1675,7 +1675,7 @@ snapshots:
       - debug
       - utf-8-validate
 
-  '@ensofinance/shortcuts-standards@1.0.104(@ethersproject/abi@5.7.0)(@ethersproject/providers@5.7.2)(ethers@5.7.2)(lodash@4.17.21)':
+  '@ensofinance/shortcuts-standards@1.0.111(@ethersproject/abi@5.7.0)(@ethersproject/providers@5.7.2)(ethers@5.7.2)(lodash@4.17.21)':
     dependencies:
       '@ensofinance/shortcuts-builder': 0.0.12
       '@ethersproject/address': 5.7.0

@@ -62,6 +62,7 @@ export interface SimulationLogConfig {
 export interface SimulationRoles {
   readonly caller: AddressData;
   readonly recipeMarketHub: AddressData;
+  readonly roycoWalletHelpers: AddressData;
   readonly multiCall: AddressData;
   readonly nativeToken: AddressData;
   weirollWallet?: AddressData;
