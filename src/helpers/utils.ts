@@ -19,6 +19,11 @@ export function getSimulationRolesByChainId(chainId: number): SimulationRoles {
       `Missing simulation roles for 'chainId': ${chainId}. Please, update 'chainIdToSimulationRoles' map`,
     );
 
+  if (!roles.caller?.address) throw new Error("missing 'caller' address in 'roles'");
+  if (!roles.multiCall?.address) throw new Error("missing 'multiCall' address in 'roles'");
+  if (!roles.roycoWalletHelpers?.address) throw new Error("missing 'roycoWalletHelpers' address in 'roles'");
+  if (!roles.nativeToken?.address) throw new Error("missing 'nativeToken' address in 'roles'");
+
   return roles;
 }
 

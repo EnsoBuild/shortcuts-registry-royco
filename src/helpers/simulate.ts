@@ -119,7 +119,11 @@ export async function simulateShortcutOnForge(
   if (shortcut.getTokenHolder) {
     const tokenToHolder = shortcut.getTokenHolder(chainId);
     for (let i = 0; i < tokensIn.length; i++) {
+      const nativeToken = roles.nativeToken.address as AddressArg;
       const holder = tokenToHolder.get(tokensIn[i]);
+      const token = tokensIn[i];
+      if (token.toLowerCase() === nativeToken.toLowerCase()) continue;
+
       if (!holder) {
         console.warn(
           `simulateOnForge: no holder found for token: ${tokensIn[i]} (${addressToLabel.get(tokensIn[i])}). ` +
