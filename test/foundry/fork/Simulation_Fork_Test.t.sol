@@ -172,7 +172,7 @@ contract Simulation_Fork_Test is Test {
         } else {
             console2.log("| Block Number (Fork): ", block.number);
         }
-        // NB: logs below could be more granular if are being executed by execution mode (as enum)
+        // NOTE: logs below could be more granular if are being executed by execution mode (as enum)
         console2.log("| Caller        : ");
         console2.log("|   Addr        : ", s_caller);
         console2.log("|   Name        : ", s_addressToLabel[s_caller]);
