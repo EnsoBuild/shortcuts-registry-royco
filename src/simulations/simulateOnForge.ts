@@ -24,13 +24,13 @@ export function simulateTransactionOnForge(
 ): ForgeTestLogJSON {
   const rpcUrl = provider.connection.url;
   if (!roles.callee?.address) {
-    throw new Error("missing 'callee' address in 'roles'");
+    throw new Error("simulateTransactionOnForge: missing 'callee' address in 'roles'");
   }
   if (!roles.weirollWallet?.address) {
-    throw new Error("missing 'weirollWallet' address in 'roles'");
+    throw new Error("simulateTransactionOnForge: missing 'weirollWallet' address in 'roles'");
   }
 
-  const simulationJsonData = {
+  const simulationJsonDataRaw = {
     chainId,
     rpcUrl,
     blockNumbers: blockNumbers,
@@ -49,19 +49,28 @@ export function simulateTransactionOnForge(
     labelKeys: [...addressToLabel.keys()],
     labelValues: [...addressToLabel.values()],
   };
-  console.warn('Simulation (JSON Data):\n', simulationJsonData, '\n');
+  console.warn('Simulation (JSON Data):\n', simulationJsonDataRaw, '\n');
 
-  // NOTE: validate and throw here errors to log better the whole 'simulationJsonData'
-  if ((simulationJsonData.labelKeys as (undefined | string)[]).includes(undefined)) {
-    console.warn('Simulation (JSON Data):\n', simulationJsonData, '\n');
-    // @ts-expect-error key is AddressArg
-    const missingAddressLabel = addressToLabel.get(undefined);
-    throw new Error(
-      `simulateTransactionOnForge: missing address on shorcut 'getAddressData()', check key spelling. ` +
-        `Key: undefined (missing), Value: ${missingAddressLabel}`,
-    );
-  }
-
+  // NOTE: foundry JSON parsing cheatcodes don't support multidimensional arrays, therefore we stringify them
+  const simulationJsonData = {
+    chainId,
+    rpcUrl,
+    blockNumbers: blockNumbers,
+    blockTimestamps: blockTimestamps,
+    caller: roles.caller.address,
+    recipeMarketHub: roles.recipeMarketHub.address,
+    callee: roles.callee.address,
+    weirollWallet: roles.weirollWallet.address,
+    txData,
+    txValues,
+    tokensIn: tokensIn.map((tokens) => JSON.stringify(tokens)),
+    tokensInHolders: tokensInHolders.map((addresses) => JSON.stringify(addresses)),
+    amountsIn: amountsIn.map((amounts) => JSON.stringify(amounts)),
+    tokensOut: tokensIn.map((tokens) => JSON.stringify(tokens)),
+    tokensDust: tokensIn.map((tokens) => JSON.stringify(tokens)),
+    labelKeys: [...addressToLabel.keys()],
+    labelValues: [...addressToLabel.values()],
+  };
   const logFormat = ForgeTestLogFormat.DEFAULT;
   const forgeCmd = os.platform() === 'win32' ? 'forge.cmd' : 'forge'; // ! untested on Windows
   // NOTE: `spawnSync` forge call return can optionally be read from both `return.stdout` and `return.stderr`, and processed.

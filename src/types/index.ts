@@ -25,7 +25,7 @@ export interface BuiltShortcut {
 export interface TransactionToSimulate {
   shortcut: Shortcut;
   amountsIn: BigNumberish[];
-  blockNumber?: BigNumberish[];
+  blockNumber?: BigNumberish;
   blockTimestamp?: number;
 }
 
