@@ -29,6 +29,18 @@ export interface TransactionToSimulate {
   blockTimestamp?: number;
 }
 
+export interface TransactionToSimulateForgeData {
+  blockNumber: number;
+  blockTimestamp: number;
+  txData: string;
+  txValue: string;
+  tokensIn: AddressArg[];
+  tokensInHolders: AddressArg[];
+  amountsIn: string[];
+  tokensOut: AddressArg[];
+  tokensDust: AddressArg[];
+}
+
 export type Output = {
   script: WeirollScript,
   metadata: ShortcutMetadata,

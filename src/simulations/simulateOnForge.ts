@@ -7,15 +7,20 @@ import { ForgeTestLogFormat } from '../constants';
 import type { ForgeTestLogJSON, SimulationForgeData, SimulationRoles, SimulationTokensData } from '../types';
 
 export function simulateTransactionOnForge(
+  chainId: number,
   provider: StaticJsonRpcProvider,
+  blockNumbers: number[],
+  blockTimestamps: number[],
+  txData: string[],
+  txValues: string[],
+  tokensIn: AddressArg[][],
+  tokensInHolders: AddressArg[][],
+  amountsIn: string[][],
+  tokensOut: AddressArg[][],
+  tokensDust: AddressArg[][],
   roles: SimulationRoles,
-  txData: string,
-  txValue: string,
-  tokensData: SimulationTokensData,
   addressToLabel: Map<AddressArg, string>,
   forgeData: SimulationForgeData,
-  chainId: number,
-  blockNumber: number,
 ): ForgeTestLogJSON {
   const rpcUrl = provider.connection.url;
   if (!roles.callee?.address) {
@@ -28,18 +33,19 @@ export function simulateTransactionOnForge(
   const simulationJsonData = {
     chainId,
     rpcUrl,
-    blockNumber: blockNumber.toString(),
+    blockNumbers: blockNumbers,
+    blockTimestamps: blockTimestamps,
     caller: roles.caller.address,
     recipeMarketHub: roles.recipeMarketHub.address,
     callee: roles.callee.address,
     weirollWallet: roles.weirollWallet.address,
     txData,
-    txValue,
-    tokensIn: tokensData.tokensIn,
-    tokensInHolders: tokensData.tokensInHolders,
-    amountsIn: tokensData.amountsIn,
-    tokensOut: tokensData.tokensOut,
-    tokensDust: tokensData.tokensDust,
+    txValues,
+    tokensIn,
+    tokensInHolders,
+    amountsIn,
+    tokensOut,
+    tokensDust,
     labelKeys: [...addressToLabel.keys()],
     labelValues: [...addressToLabel.values()],
   };
