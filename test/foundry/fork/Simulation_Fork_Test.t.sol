@@ -23,6 +23,7 @@ contract Simulation_Fork_Test is Test {
     string private constant JSON_RECIPE_MARKET_HUB = ".recipeMarketHub";
     string private constant JSON_WEIROLL_WALLET = ".weirollWallet";
     string private constant JSON_TX_DATA = ".txData";
+    string private constant JSON_TX_VALUE = ".txValue";
     string private constant JSON_TOKENS_IN = ".tokensIn";
     string private constant JSON_AMOUNTS_IN = ".amountsIn";
     string private constant JSON_TOKENS_IN_HOLDERS = ".tokensInHolders";
@@ -32,11 +33,13 @@ contract Simulation_Fork_Test is Test {
     string private constant JSON_LABEL_VALUES = ".labelValues";
 
     // --- Shortcut ---
+    address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     int256 private s_blockNumber;
     address private s_caller;
     address private s_recipeMarketHub;
     address private s_weirollWallet;
     address private s_callee;
+    uint256 private s_txValue;
     bytes private s_txData;
     address[] private s_tokensIn;
     uint256[] private s_amountsIn;
@@ -81,6 +84,7 @@ contract Simulation_Fork_Test is Test {
         s_weirollWallet = vm.parseJsonAddress(jsonStr, JSON_WEIROLL_WALLET);
         s_callee = vm.parseJsonAddress(jsonStr, JSON_CALLEE);
         s_txData = vm.parseJsonBytes(jsonStr, JSON_TX_DATA);
+        s_txValue = vm.parseJsonUint(jsonStr, JSON_TX_VALUE);
         s_tokensIn = vm.parseJsonAddressArray(jsonStr, JSON_TOKENS_IN);
         s_amountsIn = vm.parseJsonUintArray(jsonStr, JSON_AMOUNTS_IN);
 
@@ -113,6 +117,11 @@ contract Simulation_Fork_Test is Test {
         vm.deal(s_caller, 1000 ether);
     }
 
+    function getBalanceOf(address _token, address _account) internal view returns (uint256) {
+        if (_token == NATIVE_TOKEN) return _account.balance;
+        return IERC20(_token).balanceOf(_account);
+    }
+
     function test_simulateShortcut_1() public {
         uint256[] memory tokensInBalancesPre = new uint256[](s_tokensIn.length);
         uint256[] memory tokensOutBalancesPre = new uint256[](s_tokensOut.length);
@@ -121,19 +130,22 @@ contract Simulation_Fork_Test is Test {
         // --- Calculate balances before ---
         // Tokens in (before funding them)
         for (uint256 i = 0; i < s_tokensIn.length; i++) {
-            tokensInBalancesPre[i] = IERC20(s_tokensIn[i]).balanceOf(s_weirollWallet);
+            tokensInBalancesPre[i] = getBalanceOf(s_tokensIn[i], s_weirollWallet);
         }
         // Tokens out
         for (uint256 i = 0; i < s_tokensOut.length; i++) {
-            tokensOutBalancesPre[i] = IERC20(s_tokensOut[i]).balanceOf(s_weirollWallet);
+            tokensOutBalancesPre[i] = getBalanceOf(s_tokensOut[i], s_weirollWallet);
         }
         // Tokens dust
         for (uint256 i = 0; i < s_tokensDust.length; i++) {
-            tokensDustBalancesPre[i] = IERC20(s_tokensDust[i]).balanceOf(s_weirollWallet);
+            tokensDustBalancesPre[i] = getBalanceOf(s_tokensDust[i], s_weirollWallet);
         }
-        // Fund wallet from Tokens In holders
+        // Fund wallet from Tokens In holders (except for native token)
         for (uint256 i = 0; i < s_tokensIn.length; i++) {
             address tokenIn = s_tokensIn[i];
+            // NB: skip funding caller with native token, as it is not an ERC20 and it has been already funded
+            if (tokenIn == NATIVE_TOKEN) continue;
+
             uint256 amountIn = s_amountsIn[i];
             address holder = s_tokensInHolders[i];
             if (holder == address(0)) {
@@ -154,9 +166,12 @@ contract Simulation_Fork_Test is Test {
         }
 
         // --- Execute shortcut ---
+        uint256 txValue = s_txValue;
+        bytes memory txData = s_txData;
+
         vm.prank(s_caller);
         uint256 gasStart = gasleft();
-        (bool success, bytes memory data) = s_callee.call(s_txData);
+        (bool success, bytes memory data) = s_callee.call{ value: txValue }(txData);
         uint256 gasEnd = gasleft();
         if (!success) {
             revert Simulation_Fork_Test__SimulationCallFailed(data);
@@ -189,7 +204,7 @@ contract Simulation_Fork_Test is Test {
             console2.log("| No Tokens In");
         }
         for (uint256 i = 0; i < s_tokensIn.length; i++) {
-            uint256 tokenInBalancePost = IERC20(s_tokensIn[i]).balanceOf(s_weirollWallet);
+            uint256 tokenInBalancePost = getBalanceOf(s_tokensIn[i], s_weirollWallet);
             console2.log("| Addr    : ", s_tokensIn[i]);
             console2.log("| Name    : ", s_addressToLabel[s_tokensIn[i]]);
             console2.log("| Amount  : ");
@@ -209,7 +224,7 @@ contract Simulation_Fork_Test is Test {
         }
         uint256[] memory tokensOutAmounts = new uint256[](s_tokensOut.length);
         for (uint256 i = 0; i < s_tokensOut.length; i++) {
-            uint256 tokenOutBalancePost = IERC20(s_tokensOut[i]).balanceOf(s_weirollWallet);
+            uint256 tokenOutBalancePost = getBalanceOf(s_tokensOut[i], s_weirollWallet);
             console2.log("| Addr    : ", s_tokensOut[i]);
             console2.log("| Name    : ", s_addressToLabel[s_tokensOut[i]]);
             tokensOutAmounts[i] = tokenOutBalancePost - tokensOutBalancesPre[i];
@@ -229,7 +244,7 @@ contract Simulation_Fork_Test is Test {
         }
         uint256[] memory tokensDustAmounts = new uint256[](s_tokensDust.length);
         for (uint256 i = 0; i < s_tokensDust.length; i++) {
-            uint256 tokenDustBalancePost = IERC20(s_tokensDust[i]).balanceOf(s_weirollWallet);
+            uint256 tokenDustBalancePost = getBalanceOf(s_tokensDust[i], s_weirollWallet);
             console2.log("| Addr    : ", s_tokensDust[i]);
             console2.log("| Name    : ", s_addressToLabel[s_tokensDust[i]]);
             tokensDustAmounts[i] = tokenDustBalancePost - tokensDustBalancesPre[i];

@@ -1,5 +1,5 @@
 import { Builder } from '@ensofinance/shortcuts-builder';
-import { contractCall, walletAddress } from '@ensofinance/shortcuts-builder/helpers';
+import { contractCall, getChainName, walletAddress } from '@ensofinance/shortcuts-builder/helpers';
 import {
   AddressArg,
   ChainIds,
@@ -8,10 +8,11 @@ import {
   Transaction,
   WalletAddressArg,
 } from '@ensofinance/shortcuts-builder/types';
-import { getStandardByProtocol } from '@ensofinance/shortcuts-standards';
-import { GeneralAddresses } from '@ensofinance/shortcuts-standards/addresses';
+import { Standards, getStandardByProtocol } from '@ensofinance/shortcuts-standards';
+import { GeneralAddresses, helperAddresses } from '@ensofinance/shortcuts-standards/addresses';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 
+import { getNativeToken } from '../helpers/utils';
 import type { RoycoOutput, Shortcut, SimulationResult } from '../types';
 
 export async function prepareResponse(
@@ -56,8 +57,17 @@ export async function burnTokens(token: AddressArg, amount: NumberArg, builder: 
   });
 }
 
-export function getBalance(token: AddressArg, builder: Builder) {
-  return builder.add(balanceOf(token, walletAddress()));
+// NOTE: alternative to 'import {balance} from "@ensofinance/shortcuts-standards/helpers"'
+export function getBalance(token: AddressArg, builder: Builder, account = walletAddress()) {
+  if (token.toLowerCase() !== getNativeToken(builder.chainId).toLowerCase())
+    return builder.add(balanceOf(token, account));
+
+  return builder.add({
+    address: helperAddresses(builder.chainId).shortcutsHelpers,
+    abi: ['function getBalance(address) external view returns (uint256)'],
+    functionName: 'getBalance',
+    args: [account],
+  });
 }
 
 export async function buildRoycoMarketShortcut(
@@ -71,4 +81,50 @@ export async function buildRoycoMarketShortcut(
     weirollCommands: output.script.commands,
     weirollState: output.script.state,
   };
+}
+
+export async function wrap_nativeToken(
+  tokenIn: AddressArg,
+  tokenOut: AddressArg,
+  amountIn: NumberArg,
+  builder: Builder,
+) {
+  const standard = getStandardByProtocol('wrapped-native', builder.chainId);
+  const { amountOut } = await standard.deposit.addToBuilder(builder, {
+    tokenIn,
+    tokenOut,
+    amountIn,
+    primaryAddress: tokenOut,
+  });
+
+  return amountOut as FromContractCallArg;
+}
+
+export async function unwrap_wrappedNativeToken(
+  tokenIn: AddressArg,
+  tokenOut: AddressArg,
+  amountIn: NumberArg,
+  builder: Builder,
+) {
+  const standard = getStandardByProtocol('wrapped-native', builder.chainId);
+  const { amountOut } = await standard.redeem.addToBuilder(builder, {
+    tokenIn,
+    tokenOut,
+    amountIn,
+    primaryAddress: tokenIn,
+  });
+
+  return amountOut as FromContractCallArg;
+}
+
+export async function mint_stS(tokenIn: AddressArg, tokenOut: AddressArg, amountIn: NumberArg, builder: Builder) {
+  const standard = getStandardByProtocol('beets-sts', builder.chainId);
+  const { amountOut } = await standard.deposit.addToBuilder(builder, {
+    tokenIn,
+    tokenOut,
+    amountIn,
+    primaryAddress: Standards.Beets_Sts.protocol.addresses![getChainName(builder.chainId)]!.primary as AddressArg,
+  });
+
+  return amountOut as FromContractCallArg;
 }
