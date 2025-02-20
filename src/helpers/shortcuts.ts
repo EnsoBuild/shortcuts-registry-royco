@@ -1,18 +1,22 @@
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 
-import { Silo_Ws_Shortcut } from '../shortcuts/silo/ws';
-import { StableJack_PtSts_Shortcut } from '../shortcuts/stablejack/PT-stS';
-import { StableJack_PtSts_2_Shortcut } from '../shortcuts/stablejack/PT-stS-2';
+import { Silo_Ws_Deposit_Shortcut } from '../shortcuts/silo/ws_deposit';
+import { StableJack_PtSts_2_Deposit_Shortcut } from '../shortcuts/stablejack/PT-stS-2_deposit';
+import { StableJack_PtSts_Deposit_Shortcut } from '../shortcuts/stablejack/PT-stS_deposit';
+import { StableJack_PtSts_Redeem_Shortcut } from '../shortcuts/stablejack/PT-stS_redeem';
+import { StableJack_YtSts_Redeem_Shortcut } from '../shortcuts/stablejack/YT-stS_redeem';
 import { Shortcut } from '../types';
 import { buildVerificationHash } from './utils';
 
 export const shortcuts: Record<string, Record<string, Shortcut>> = {
   silo: {
-    ws: new Silo_Ws_Shortcut(),
+    ws_deposit: new Silo_Ws_Deposit_Shortcut(),
   },
   stablejack: {
-    'pt-sts': new StableJack_PtSts_Shortcut(),
-    'pt-sts-2': new StableJack_PtSts_2_Shortcut(),
+    'pt-sts_deposit': new StableJack_PtSts_Deposit_Shortcut(),
+    'pt-sts-2_deposit': new StableJack_PtSts_2_Deposit_Shortcut(),
+    'pt-sts_redeem': new StableJack_PtSts_Redeem_Shortcut(),
+    'yt-sts_redeem': new StableJack_YtSts_Redeem_Shortcut(),
   },
 };
 

@@ -1,19 +1,23 @@
 import { Builder } from '@ensofinance/shortcuts-builder';
 import { RoycoClient } from '@ensofinance/shortcuts-builder/client/implementations/roycoClient';
 import { AddressArg, ChainIds, WeirollScript } from '@ensofinance/shortcuts-builder/types';
+import { Standards, getStandardByProtocol } from '@ensofinance/shortcuts-standards';
 
 import { chainIdToDeFiAddresses, chainIdToTokenHolder } from '../../constants';
 import type { AddressData, Input, Output, Shortcut } from '../../types';
-import { getBalance, mintErc4626 } from '../../utils';
+import { getBalance, mint_stS, unwrap_wrappedNativeToken } from '../../utils';
 
-export class Silo_Ws_Shortcut implements Shortcut {
-  name = 'silo-ws';
-  description = '';
+export class StableJack_PtSts_Deposit_Shortcut implements Shortcut {
+  name = 'stablejack-pt-sts-deposit';
+  description = 'Market 1 Deposit: wS -> S -> stS -> PT-stS';
   supportedChains = [ChainIds.Sonic];
   inputs: Record<number, Input> = {
     [ChainIds.Sonic]: {
+      protocol: Standards.Stable_Jack.protocol.addresses!.sonic!.primary,
+      PT_stS: chainIdToDeFiAddresses[ChainIds.Sonic].PT_stS,
+      S: chainIdToDeFiAddresses[ChainIds.Sonic].S,
+      stS: chainIdToDeFiAddresses[ChainIds.Sonic].stS,
       wS: chainIdToDeFiAddresses[ChainIds.Sonic].wS,
-      vault: '0xf55902DE87Bd80c6a35614b48d7f8B612a083C12',
     },
   };
 
@@ -21,15 +25,26 @@ export class Silo_Ws_Shortcut implements Shortcut {
     const client = new RoycoClient();
 
     const inputs = this.inputs[chainId];
-    const { wS, vault } = inputs;
+    const { protocol, S, stS, PT_stS, wS } = inputs;
 
     const builder = new Builder(chainId, client, {
       tokensIn: [wS],
-      tokensOut: [vault],
+      tokensOut: [PT_stS],
     });
-    const wsAmount = getBalance(wS, builder);
+    const amountWs = getBalance(wS, builder);
 
-    await mintErc4626(wS, vault, wsAmount, builder);
+    await unwrap_wrappedNativeToken(wS, S, amountWs, builder);
+    const amountS = getBalance(S, builder);
+
+    await mint_stS(S, stS, amountS, builder);
+    const amountSts = getBalance(stS, builder);
+
+    getStandardByProtocol('stable-jack', builder.chainId).deposit.addToBuilder(builder, {
+      tokenIn: [stS],
+      tokenOut: PT_stS,
+      amountIn: [amountSts],
+      primaryAddress: protocol,
+    });
 
     const payload = await builder.build({
       requireWeiroll: true,
@@ -46,8 +61,11 @@ export class Silo_Ws_Shortcut implements Shortcut {
     switch (chainId) {
       case ChainIds.Sonic:
         return new Map([
-          [this.inputs[ChainIds.Sonic].wS, { label: 'ERC20:wS' }],
-          [this.inputs[ChainIds.Sonic].vault, { label: 'ERC20:Silo Vault' }],
+          [this.inputs[ChainIds.Sonic].protocol, { label: 'Protocol' }],
+          [this.inputs[ChainIds.Sonic].PT_stS, { label: 'PT_stS' }],
+          [this.inputs[ChainIds.Sonic].S, { label: 'S (Native Token)' }],
+          [this.inputs[ChainIds.Sonic].stS, { label: 'stS' }],
+          [this.inputs[ChainIds.Sonic].wS, { label: 'wS' }],
         ]);
       default:
         throw new Error(`Unsupported chainId: ${chainId}`);

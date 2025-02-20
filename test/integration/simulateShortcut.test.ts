@@ -14,9 +14,9 @@ describe('Successfully simulates Sonic shortcuts for', () => {
   });
 
   describe('silo', () => {
-    it('ws', async () => {
+    it('ws_deposit', async () => {
       // Arrange
-      const args = ['silo', 'ws', parseUnits('1', 18).toString(), '--mode=forge', '--block=8455854'];
+      const args = ['silo', 'ws_deposit', parseUnits('1', 18).toString(), '--mode=forge', '--block=8455854'];
 
       // Act
       const report = await main_([...DEFAULT_ARGS, ...args]);
@@ -33,9 +33,9 @@ describe('Successfully simulates Sonic shortcuts for', () => {
   });
 
   describe('stablejack', () => {
-    it('pt-sts', async () => {
+    it('pt-sts_deposit', async () => {
       // Arrange
-      const args = ['stablejack', 'pt-sts', parseUnits('1', 18).toString(), '--mode=forge', '--block=8865840'];
+      const args = ['stablejack', 'pt-sts_deposit', parseUnits('1', 18).toString(), '--mode=forge', '--block=8865840'];
 
       // Act
       const report = await main_([...DEFAULT_ARGS, ...args]);
@@ -50,6 +50,25 @@ describe('Successfully simulates Sonic shortcuts for', () => {
           '0xE5DA20F15420aD15DE0fa650600aFc998bbE3955': '0',
         },
         gas: '1079475',
+      });
+    });
+
+    it('pt-sts_redeemt', async () => {
+      // Arrange
+      const args = ['stablejack', 'pt-sts_redeem', parseUnits('1', 18).toString(), '--mode=forge', '--block=8879851'];
+
+      // Act
+      const report = await main_([...DEFAULT_ARGS, ...args]);
+
+      // Assert
+      expect(report).toMatchObject({
+        weirollWallet: '0xBa8F5f80C41BF5e169d9149Cd4977B1990Fc2736',
+        amountsIn: ['1000000000000000000'],
+        quote: { '0xE5DA20F15420aD15DE0fa650600aFc998bbE3955': '988965465237611473' },
+        dust: {
+          '0xFCA91fEEe65DB34448A83a74f4f8970b5dddfa7c': '0',
+        },
+        gas: '922643',
       });
     });
   });

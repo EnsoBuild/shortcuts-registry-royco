@@ -5,12 +5,11 @@ import { Standards, getStandardByProtocol } from '@ensofinance/shortcuts-standar
 
 import { chainIdToDeFiAddresses, chainIdToTokenHolder } from '../../constants';
 import type { AddressData, Input, Output, Shortcut } from '../../types';
-import { getBalance, mint_stS } from '../../utils';
+import { getBalance } from '../../utils';
 
-// NOTE: this market does not work as expected on both quoter and forge simulations
-export class StableJack_PtSts_2_Shortcut implements Shortcut {
-  name = 'stablejack-pt-sts-2';
-  description = 'Market 1: S -> stS -> PT-stS';
+export class StableJack_PtSts_Redeem_Shortcut implements Shortcut {
+  name = 'stablejack-pt-sts-redeem';
+  description = 'Market 1 Redeem: PT-stS -> stS -> S -> wS'; // TODO
   supportedChains = [ChainIds.Sonic];
   inputs: Record<number, Input> = {
     [ChainIds.Sonic]: {
@@ -18,6 +17,7 @@ export class StableJack_PtSts_2_Shortcut implements Shortcut {
       PT_stS: chainIdToDeFiAddresses[ChainIds.Sonic].PT_stS,
       S: chainIdToDeFiAddresses[ChainIds.Sonic].S,
       stS: chainIdToDeFiAddresses[ChainIds.Sonic].stS,
+      wS: chainIdToDeFiAddresses[ChainIds.Sonic].wS,
     },
   };
 
@@ -25,26 +25,19 @@ export class StableJack_PtSts_2_Shortcut implements Shortcut {
     const client = new RoycoClient();
 
     const inputs = this.inputs[chainId];
-    const { protocol, S, stS, PT_stS } = inputs;
+    const { protocol, stS, PT_stS } = inputs;
 
     const builder = new Builder(chainId, client, {
-      tokensIn: [S],
-      tokensOut: [PT_stS],
+      tokensIn: [PT_stS],
+      // tokensOut: [wS], // TODO
+      tokensOut: [stS],
     });
+    const amountPtSts = getBalance(PT_stS, builder);
 
-    const amountS = getBalance(S, builder);
-
-    // const amountSts = await mint_stS(S, stS, amountS, builder);
-    // TODO: this balance is not needed, better of using `mint_stS` return value
-    await mint_stS(S, stS, amountS, builder);
-    const amountSts = getBalance(stS, builder);
-
-    const standard = getStandardByProtocol('stable-jack', builder.chainId);
-
-    await standard.deposit.addToBuilder(builder, {
-      tokenIn: [stS],
-      tokenOut: PT_stS,
-      amountIn: [amountSts], // NOTE: if I use `mint_stS` return value this complains about type
+    getStandardByProtocol('stable-jack', builder.chainId).redeem.addToBuilder(builder, {
+      tokenIn: [PT_stS],
+      tokenOut: stS,
+      amountIn: [amountPtSts],
       primaryAddress: protocol,
     });
 
@@ -67,6 +60,7 @@ export class StableJack_PtSts_2_Shortcut implements Shortcut {
           [this.inputs[ChainIds.Sonic].PT_stS, { label: 'PT_stS' }],
           [this.inputs[ChainIds.Sonic].S, { label: 'S (Native Token)' }],
           [this.inputs[ChainIds.Sonic].stS, { label: 'stS' }],
+          [this.inputs[ChainIds.Sonic].wS, { label: 'wS' }],
         ]);
       default:
         throw new Error(`Unsupported chainId: ${chainId}`);
