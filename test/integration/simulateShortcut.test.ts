@@ -14,9 +14,9 @@ describe('Successfully simulates Sonic shortcuts for', () => {
   });
 
   describe('silo', () => {
-    it('ws', async () => {
+    it('ws-deposit', async () => {
       // Arrange
-      const args = ['silo', 'ws', parseUnits('1', 18).toString(), '--mode=forge', '--block=8455854'];
+      const args = ['silo', 'ws-deposit', parseUnits('1', 18).toString(), '--mode=forge', '--block=8455854'];
 
       // Act
       const report = await main_([...DEFAULT_ARGS, ...args]);
