@@ -36,3 +36,8 @@ export function buildVerificationHash(receiptToken: AddressArg, script: WeirollS
 export function hashContent(content: crypto.BinaryLike): string {
   return crypto.createHash('sha256').update(content).digest('hex');
 }
+
+export function getNativeToken(chainId: ChainIds): AddressArg {
+  const roles = getSimulationRolesByChainId(chainId);
+  return roles.nativeToken.address as AddressArg;
+}

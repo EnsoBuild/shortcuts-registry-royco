@@ -14,6 +14,21 @@ const recipeMarketHubInterface = new Interface([
   'function executeWeiroll(bytes32[] calldata commands, bytes[] calldata state) external payable returns (bytes[] memory)',
 ]);
 
+const DEFAULT_TX_VALUE = '0';
+
+function getAmountInForNativeToken(nativeToken: string, tokenIn: string[], amountIn: string[]): string | undefined {
+  const index = tokenIn.findIndex((token) => token.toLowerCase() === nativeToken.toLowerCase());
+
+  if (index === -1) return DEFAULT_TX_VALUE;
+
+  const amountInNativeToken = amountIn[index];
+
+  if (!amountInNativeToken || amountInNativeToken === DEFAULT_TX_VALUE || Number(amountInNativeToken) === 0) {
+    throw new Error(`simulateShortcutOnQuoter: missing 'amountIn' for native token at index: ${index}`);
+  }
+  return amountInNativeToken;
+}
+
 export async function simulateShortcutOnQuoter(
   provider: StaticJsonRpcProvider,
   chainId: ChainIds,
@@ -30,7 +45,7 @@ export async function simulateShortcutOnQuoter(
     from: roles.caller.address!,
     to: roles.callee!.address!,
     data: txData,
-    value: '0',
+    value: getAmountInForNativeToken(roles.nativeToken.address!, tokensIn, amountsIn)!,
     receiver: roles.weirollWallet!.address,
     executor: roles.weirollWallet!.address,
   };
@@ -115,11 +130,11 @@ export async function simulateShortcutOnForge(
   const tokensDust = tokensDustRaw.difference(new Set(tokensOut) as Set<AddressArg>);
 
   // Get holder addresses for tokens In
+  const nativeToken = roles.nativeToken.address as AddressArg;
   const tokensInHolders: AddressArg[] = [];
   if (shortcut.getTokenHolder) {
     const tokenToHolder = shortcut.getTokenHolder(chainId);
     for (let i = 0; i < tokensIn.length; i++) {
-      const nativeToken = roles.nativeToken.address as AddressArg;
       const holder = tokenToHolder.get(tokensIn[i]);
       const token = tokensIn[i];
       if (token.toLowerCase() === nativeToken.toLowerCase()) continue;
@@ -148,10 +163,13 @@ export async function simulateShortcutOnForge(
     tokensDust: [...tokensDust] as AddressArg[],
   };
 
+  const txValue = getAmountInForNativeToken(nativeToken, tokensIn, amountsIn) || DEFAULT_TX_VALUE;
+
   const forgeTestLog = simulateTransactionOnForge(
     provider,
     roles,
     txData,
+    txValue,
     tokensData,
     addressToLabel,
     forgeData,
