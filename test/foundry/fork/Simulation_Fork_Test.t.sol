@@ -160,6 +160,7 @@ contract Simulation_Fork_Test is Test {
             IERC20(tokenIn).transfer(s_weirollWallet, amountIn);
             uint256 balancePost = IERC20(tokenIn).balanceOf(s_weirollWallet);
 
+            // NB: check disabled due to fee on transfer tokens
             // if (balancePost - balancePre != amountIn) {
             //     revert Simulation_Fork_Test__BalancePostIsNotAmountIn(tokenIn, amountIn, balancePre, balancePost);
             // }

@@ -43,6 +43,7 @@ export function simulateTransactionOnForge(
     labelKeys: [...addressToLabel.keys()],
     labelValues: [...addressToLabel.values()],
   };
+  console.warn('Simulation (JSON Data):\n', simulationJsonData, '\n');
 
   // NOTE: validate and throw here errors to log better the whole 'simulationJsonData'
   if ((simulationJsonData.labelKeys as (undefined | string)[]).includes(undefined)) {
@@ -55,7 +56,7 @@ export function simulateTransactionOnForge(
     );
   }
 
-  const logFormat = ForgeTestLogFormat.JSON;
+  const logFormat = ForgeTestLogFormat.DEFAULT;
   const forgeCmd = os.platform() === 'win32' ? 'forge.cmd' : 'forge'; // ! untested on Windows
   // NOTE: `spawnSync` forge call return can optionally be read from both `return.stdout` and `return.stderr`, and processed.
   // NOTE: calling forge with `--json` will print the deployment information as JSON.
@@ -88,7 +89,7 @@ export function simulateTransactionOnForge(
   }
 
   if ([ForgeTestLogFormat.DEFAULT].includes(logFormat)) {
-    console.log(result.stdout);
+    process.stdout.write(result.stdout);
     throw new Error('Forced termination to inspect forge test log');
   }
 

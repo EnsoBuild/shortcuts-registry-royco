@@ -5,10 +5,56 @@ import { execSync } from 'node:child_process';
 import os from 'node:os';
 
 import { MAX_BPS, ShortcutOutputFormat, SimulationMode } from '../constants';
-import { shortcuts } from './shortcuts';
+import type { TransactionToSimulate } from '../types';
+import { shortcuts, supportedShortcuts } from './shortcuts';
 import { getChainId } from './utils';
 
 dotenv.config();
+
+// TODO: validate blockNumber and blockTimestamp increment from previous one
+export function validateSimulatedTransactions(txs: TransactionToSimulate[]): void {
+  if (!txs.length) throw new Error('Invalid txs array. Must contain at least one tx');
+
+  for (const [index, tx] of txs.entries()) {
+    if (!tx.shortcut || !supportedShortcuts.find((shortcut) => tx.shortcut instanceof shortcut)) {
+      throw new Error(`Invalid tx at index ${index}: ${JSON.stringify(tx)}. Unsupported 'shortcut'`);
+    }
+    if (!Array.isArray(tx.amountsIn)) {
+      throw new Error(
+        `Invalid tx at index ${index}: ${JSON.stringify(tx)}. 'amountsIn' must be an array of stringified big numbers`,
+      );
+    }
+    for (const amountIn of tx.amountsIn) {
+      try {
+        BigNumber.from(amountIn);
+      } catch (error) {
+        console.error(error);
+        throw new Error(
+          `Invalid tx at index ${index}: ${JSON.stringify(tx)}. 'amountsIn' contains an invalid stringified big number: ${JSON.stringify(amountIn)}`,
+        );
+      }
+    }
+
+    if ('blockNumber' in tx) {
+      try {
+        BigNumber.from(tx.blockNumber);
+      } catch (error) {
+        console.error(error);
+        throw new Error(
+          `Invalid tx at index ${index}: ${JSON.stringify(tx)}. 'blockNumber' contains an invalid stringified big number: ${JSON.stringify(tx.blockNumber)}`,
+        );
+      }
+
+      if ('blockTimestamp' in tx) {
+        if (typeof tx.blockTimestamp !== 'number' || tx.blockTimestamp < 0) {
+          throw new Error(
+            `Invalid tx at index ${index}: ${JSON.stringify(tx)}. 'blockTimestamp' must be a number >= 0`,
+          );
+        }
+      }
+    }
+  }
+}
 
 export async function getShortcut(args: string[]) {
   if (args.length < 3) throw 'Error: Please pass chain, protocol, and market';

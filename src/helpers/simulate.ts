@@ -6,7 +6,7 @@ import { StaticJsonRpcProvider } from '@ethersproject/providers';
 import { CONTRCT_SIMULATION_FORK_TEST_EVENTS_ABI, FUNCTION_ID_ERC20_APPROVE } from '../constants';
 import { simulateTransactionOnForge } from '../simulations/simulateOnForge';
 import { APITransaction, QuoteRequest, simulateTransactionOnQuoter } from '../simulations/simulateOnQuoter';
-import type { Report, Shortcut, SimulationLogConfig, SimulationRoles } from '../types';
+import type { BuiltShortcut, Report, SimulationLogConfig, SimulationRoles, TransactionToSimulate } from '../types';
 import { getEncodedData } from './call';
 
 const recipeMarketHubInterface = new Interface([
@@ -86,68 +86,83 @@ export async function simulateShortcutOnQuoter(
 }
 
 export async function simulateShortcutOnForge(
-  provider: StaticJsonRpcProvider,
-  shortcut: Shortcut,
   chainId: ChainIds,
+  provider: StaticJsonRpcProvider,
+  txsToSim: TransactionToSimulate[],
+  builtShortcuts: BuiltShortcut[],
   script: WeirollScript,
-  amountsIn: string[],
-  tokensIn: AddressArg[],
-  tokensOut: AddressArg[],
   forgePath: string,
-  blockNumber: number,
   roles: SimulationRoles,
   simulationLogConfig: SimulationLogConfig,
 ): Promise<Report> {
+  // TODO
+  // amountsIn: string[],
+  // tokensIn: AddressArg[],
+  // tokensOut: AddressArg[],
+  // blockNumber: number,
+
   const forgeContract = 'Simulation_Fork_Test';
   const forgeTest = 'test_simulateShortcut_1';
   const forgeTestRelativePath = 'test/foundry/fork/Simulation_Fork_Test.t.sol';
   const forgeContractABI = CONTRCT_SIMULATION_FORK_TEST_EVENTS_ABI;
 
-  const { txData } = await generateTxData(provider, script, roles);
+  const { txData } = await generateTxData(provider, builtShortcuts, roles);
 
-  // Get labels for known addresses
+  // For ALL the transactions to simulate
   const addressToLabel: Map<AddressArg, string> = new Map();
-  if (shortcut.getAddressData) {
-    const addressToData = shortcut.getAddressData(chainId);
-    // Map address to labels
-    for (const [address, data] of addressToData) {
-      addressToLabel.set(address, data.label);
+  const nativeToken = roles.nativeToken.address as AddressArg;
+  const tokensInHolders: AddressArg[] = [];
+  for (const [index, txToSim] of txsToSim.entries()) {
+    // 1. Get labels for known addresses (applies to all transactions to simulate)
+    if (txToSim.shortcut.getAddressData) {
+      const addressToData = txToSim.shortcut.getAddressData(chainId);
+      // Map address to labels
+      for (const [address, data] of addressToData) {
+        addressToLabel.set(address, data.label);
+      }
+    }
+    for (const { address, label } of Object.values(roles)) {
+      addressToLabel.set(address, label);
+    }
+
+    // 2. Get holder addresses for tokens In
+    if (txToSim.shortcut.getTokenHolder) {
+      const tokenToHolder = txToSim.shortcut.getTokenHolder(chainId);
+      const { tokensIn: tokensInRaw } = builtShortcuts[index].metadata;
+      const tokensIn = tokensInRaw as AddressArg[];
+      for (let i = 0; i < (tokensIn as AddressArg[]).length; i++) {
+        const holder = tokenToHolder.get(tokensIn[i]);
+        const token = tokensIn[i];
+        if (token.toLowerCase() === nativeToken.toLowerCase()) continue;
+
+        if (!holder) {
+          console.warn(
+            `simulateOnForge: no holder found for token: ${tokensIn[i]} (${addressToLabel.get(tokensIn[i])}). ` +
+              `If it is missing by mistake, please add it into 'chainIdToTokenHolder' map`,
+          );
+        }
+        tokensInHolders.push(tokenToHolder.get(tokensIn[i]) as AddressArg);
+      }
     }
   }
-  for (const { address, label } of Object.values(roles)) {
-    addressToLabel.set(address, label);
-  }
 
-  // Get addresses for dust tokens from commands
+  // For THE LAST transaction to simulate
+  // 2. Get addresses for dust tokens from commands
+  const lastBuiltShortcut = builtShortcuts.at(-1) as BuiltShortcut;
   const tokensDustRaw: Set<AddressArg> = new Set();
-  for (const command of script.commands) {
+  for (const command of lastBuiltShortcut.script.commands) {
     if (command.startsWith(FUNCTION_ID_ERC20_APPROVE)) {
       // NOTE: spender address is the last 20 bytes of the data (not checksum)
       tokensDustRaw.add(getAddress(`0x${command.slice(-40)}`));
     }
   }
   // NOTE: tokensOut shouldn't be flagged as dust
-  const tokensDust = tokensDustRaw.difference(new Set(tokensOut) as Set<AddressArg>);
+  const lastBuiltShortcutTokensOut = lastBuiltShortcut.metadata.tokensOut as AddressArg[];
+  const tokensDust = tokensDustRaw.difference(new Set(lastBuiltShortcutTokensOut) as Set<AddressArg>);
 
-  // Get holder addresses for tokens In
-  const nativeToken = roles.nativeToken.address as AddressArg;
-  const tokensInHolders: AddressArg[] = [];
-  if (shortcut.getTokenHolder) {
-    const tokenToHolder = shortcut.getTokenHolder(chainId);
-    for (let i = 0; i < tokensIn.length; i++) {
-      const holder = tokenToHolder.get(tokensIn[i]);
-      const token = tokensIn[i];
-      if (token.toLowerCase() === nativeToken.toLowerCase()) continue;
+  // TODO: this is for all txs
 
-      if (!holder) {
-        console.warn(
-          `simulateOnForge: no holder found for token: ${tokensIn[i]} (${addressToLabel.get(tokensIn[i])}). ` +
-            `If it is missing by mistake, please add it into 'chainIdToTokenHolder' map`,
-        );
-      }
-      tokensInHolders.push(tokenToHolder.get(tokensIn[i]) as AddressArg);
-    }
-  }
+  // TODO: missing tx blockNumbers, and blockTimestamps
   const forgeData = {
     path: forgePath,
     contract: forgeContract,
@@ -234,7 +249,7 @@ export async function simulateShortcutOnForge(
   return report;
 }
 
-async function generateTxData(
+async function generateTxDataOld(
   provider: StaticJsonRpcProvider,
   script: WeirollScript,
   roles: SimulationRoles,
@@ -250,6 +265,29 @@ async function generateTxData(
   roles.weirollWallet = { address: wallet, label: 'WeirollWallet' };
   roles.callee = roles.recipeMarketHub;
   const txData = getEncodedData(commands, state);
+
+  return { txData, reportPre };
+}
+
+async function generateTxData(
+  provider: StaticJsonRpcProvider,
+  builtShortcuts: BuiltShortcut[],
+  roles: SimulationRoles,
+): Promise<{
+  txData: string[];
+  reportPre: Partial<Report>;
+}> {
+  const reportPre: Partial<Report> = {};
+
+  const wallet = await getNextWeirollWalletFromMockRecipeMarketHub(provider, roles.recipeMarketHub.address!);
+  roles.weirollWallet = { address: wallet, label: 'WeirollWallet' };
+  roles.callee = roles.recipeMarketHub;
+
+  const txData: string[] = [];
+  for (const builtShortcut of builtShortcuts) {
+    const { commands, state } = builtShortcut.script;
+    txData.push(getEncodedData(commands, state));
+  }
 
   return { txData, reportPre };
 }

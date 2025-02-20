@@ -14,6 +14,8 @@ Install dependencies:
 pnpm install
 ```
 
+Make sure latest stable version of foundry is installed. See: https://book.getfoundry.sh/announcements
+
 Setup foundry:
 
 ```sh

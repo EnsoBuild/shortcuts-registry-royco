@@ -4,7 +4,7 @@ import {
   Transaction,
   WeirollScript,
 } from "@ensofinance/shortcuts-builder/types";
-import { BigNumber } from "@ethersproject/bignumber";
+import { BigNumber, BigNumberish } from "@ethersproject/bignumber";
 import { StaticJsonRpcProvider } from "@ethersproject/providers";
 
 export interface Shortcut {
@@ -17,6 +17,18 @@ export interface Shortcut {
   getTokenHolder?(chainId: number): Map<AddressArg, AddressArg>;
 }
 
+export interface BuiltShortcut {
+  script: WeirollScript;
+  metadata: ShortcutMetadata;
+}
+
+export interface TransactionToSimulate {
+  shortcut: Shortcut;
+  amountsIn: BigNumberish[];
+  blockNumber?: BigNumberish[];
+  blockTimestamp?: number;
+}
+
 export type Output = {
   script: WeirollScript,
   metadata: ShortcutMetadata,
@@ -27,12 +39,7 @@ export type RoycoOutput = {
   weirollState: WeirollScript['state'];
 }
 
-
 export type Input = Record<string, AddressArg>;
-
-
-
-
 
 export interface SimulationResult {
   /* eslint-disable @typescript-eslint/no-explicit-any */
