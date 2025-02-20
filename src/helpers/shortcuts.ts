@@ -1,6 +1,7 @@
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 
-import { Silo_Ws_Shortcut } from '../shortcuts/silo/ws';
+import { Silo_Ws_Deposit_Shortcut } from '../shortcuts/silo/ws-deposit';
+import { Silo_Ws_Redeem_Shortcut } from '../shortcuts/silo/ws-redeem';
 import { StableJack_PtSts_Shortcut } from '../shortcuts/stablejack/PT-stS';
 import { StableJack_PtSts_2_Shortcut } from '../shortcuts/stablejack/PT-stS-2';
 import { Shortcut } from '../types';
@@ -8,7 +9,8 @@ import { buildVerificationHash } from './utils';
 
 export const shortcuts: Record<string, Record<string, Shortcut>> = {
   silo: {
-    ws: new Silo_Ws_Shortcut(),
+    'ws-deposit': new Silo_Ws_Deposit_Shortcut(),
+    'ws-redeem': new Silo_Ws_Redeem_Shortcut(),
   },
   stablejack: {
     'pt-sts': new StableJack_PtSts_Shortcut(),

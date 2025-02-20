@@ -6,8 +6,8 @@ import { chainIdToDeFiAddresses, chainIdToTokenHolder } from '../../constants';
 import type { AddressData, Input, Output, Shortcut } from '../../types';
 import { getBalance, mintErc4626 } from '../../utils';
 
-export class Silo_Ws_Shortcut implements Shortcut {
-  name = 'silo-ws';
+export class Silo_Ws_Deposit_Shortcut implements Shortcut {
+  name = 'silo-ws-deposit';
   description = '';
   supportedChains = [ChainIds.Sonic];
   inputs: Record<number, Input> = {
