@@ -12,6 +12,7 @@ import { Standards, getStandardByProtocol } from '@ensofinance/shortcuts-standar
 import { GeneralAddresses, helperAddresses } from '@ensofinance/shortcuts-standards/addresses';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 
+import { chainIdToDeFiAddresses } from '../constants';
 import { getNativeToken } from '../helpers/utils';
 import type { RoycoOutput, Shortcut, SimulationResult } from '../types';
 
@@ -69,6 +70,16 @@ export async function burnTokens(token: AddressArg, amount: NumberArg, builder: 
   });
 }
 
+export async function sendTokensToOwner(token: AddressArg, amount: NumberArg, builder: Builder) {
+  const owner = await getWalletOwner(builder);
+  builder.add({
+    address: token,
+    functionName: 'transfer',
+    abi: ['function transfer(address,uint256)'],
+    args: [owner, amount],
+  });
+}
+
 // NOTE: alternative to 'import {balance} from "@ensofinance/shortcuts-standards/helpers"'
 export function getBalance(token: AddressArg, builder: Builder, account = walletAddress()) {
   if (token.toLowerCase() !== getNativeToken(builder.chainId).toLowerCase())
@@ -79,6 +90,15 @@ export function getBalance(token: AddressArg, builder: Builder, account = wallet
     abi: ['function getBalance(address) external view returns (uint256)'],
     functionName: 'getBalance',
     args: [account],
+  });
+}
+
+export function getWalletOwner(builder: Builder) {
+  return builder.add({
+    address: chainIdToDeFiAddresses[builder.chainId].roycoWalletHelpers,
+    abi: ['function owner() external view returns (address)'],
+    functionName: 'owner',
+    args: [],
   });
 }
 

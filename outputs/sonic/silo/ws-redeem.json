@@ -5,7 +5,10 @@
     "0x095ea7b3010200fffffffffff55902de87bd80c6a35614b48d7f8b612a083c12",
     "0x095ea7b3010200ffffffffff039e2fb66102314ce7b64ce5ce3e5183bc94ad38",
     "0x70a082310101ffffffffff02f55902de87bd80c6a35614b48d7f8b612a083c12",
-    "0xba08765201020101fffffffff55902de87bd80c6a35614b48d7f8b612a083c12"
+    "0xba08765201020101fffffffff55902de87bd80c6a35614b48d7f8b612a083c12",
+    "0x70a082310101ffffffffff01039e2fb66102314ce7b64ce5ce3e5183bc94ad38",
+    "0x8da5cb5b01ffffffffffff0207899ac8be7462151d6515fcd4773dd9267c9911",
+    "0xa9059cbb010201ffffffffff039e2fb66102314ce7b64ce5ce3e5183bc94ad38"
   ],
   "state": ["0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "0x", "0x"]
 }
