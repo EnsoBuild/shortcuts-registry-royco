@@ -4,16 +4,16 @@ import { AddressArg, ChainIds, WeirollScript } from '@ensofinance/shortcuts-buil
 
 import { chainIdToDeFiAddresses, chainIdToTokenHolder } from '../../constants';
 import type { AddressData, Input, Output, Shortcut } from '../../types';
-import { getBalance, mintErc4626 } from '../../utils';
+import { getBalance, redeemErc4626 } from '../../utils';
 
-export class Silo_Ws_Shortcut implements Shortcut {
-  name = 'silo-ws';
+export class Silo_Ws_Redeem_Shortcut implements Shortcut {
+  name = 'silo-ws-redeem';
   description = '';
   supportedChains = [ChainIds.Sonic];
   inputs: Record<number, Input> = {
     [ChainIds.Sonic]: {
-      wS: chainIdToDeFiAddresses[ChainIds.Sonic].wS,
       vault: '0xf55902DE87Bd80c6a35614b48d7f8B612a083C12',
+      wS: chainIdToDeFiAddresses[ChainIds.Sonic].wS,
     },
   };
 
@@ -24,12 +24,12 @@ export class Silo_Ws_Shortcut implements Shortcut {
     const { wS, vault } = inputs;
 
     const builder = new Builder(chainId, client, {
-      tokensIn: [wS],
-      tokensOut: [vault],
+      tokensIn: [vault],
+      tokensOut: [wS],
     });
-    const wsAmount = getBalance(wS, builder);
+    const vaultAmount = getBalance(vault, builder);
 
-    await mintErc4626(wS, vault, wsAmount, builder);
+    await redeemErc4626(vault, wS, vaultAmount, builder);
 
     const payload = await builder.build({
       requireWeiroll: true,

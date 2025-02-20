@@ -23,8 +23,8 @@ export type Output = {
 }
 
 export type RoycoOutput = {
-  weirollCommands: WeirollScript['commands'];
-  weirollState: WeirollScript['state'];
+  commands: WeirollScript['commands'];
+  state: WeirollScript['state'];
 }
 
 

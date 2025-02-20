@@ -48,6 +48,18 @@ export async function mintErc4626(tokenIn: AddressArg, tokenOut: AddressArg, amo
   return amountOut as FromContractCallArg;
 }
 
+export async function redeemErc4626(tokenIn: AddressArg, tokenOut: AddressArg, amountIn: NumberArg, builder: Builder) {
+  const erc4626 = getStandardByProtocol('erc4626', builder.chainId);
+  const { amountOut } = await erc4626.redeem.addToBuilder(builder, {
+    tokenIn,
+    tokenOut,
+    amountIn: [amountIn],
+    primaryAddress: tokenIn,
+  });
+
+  return amountOut as FromContractCallArg;
+}
+
 export async function burnTokens(token: AddressArg, amount: NumberArg, builder: Builder) {
   const erc20 = getStandardByProtocol('erc20', builder.chainId);
   await erc20.transfer.addToBuilder(builder, {
@@ -78,8 +90,8 @@ export async function buildRoycoMarketShortcut(
   const output = await shortcut.build(chainId, provider);
 
   return {
-    weirollCommands: output.script.commands,
-    weirollState: output.script.state,
+    commands: output.script.commands,
+    state: output.script.state,
   };
 }
 
