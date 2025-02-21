@@ -74,7 +74,7 @@ export const chainIdToSimulationRoles: Map<ChainIds, SimulationRoles> = new Map(
         label: 'Caller',
       },
       recipeMarketHub: {
-        address: '0x7A1C91392462c55FB7F2eA98905eA8CeEEA04579',
+        address: '0xa2c139FFdeF281504601f3Db8ba49F58Dc1498e4',
         label: 'RecipeMarketHub',
       },
       multiCall: {
