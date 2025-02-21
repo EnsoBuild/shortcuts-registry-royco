@@ -5,7 +5,7 @@ import { Standards, getStandardByProtocol } from '@ensofinance/shortcuts-standar
 
 import { chainIdToDeFiAddresses } from '../../constants';
 import type { AddressData, Input, Output, Shortcut } from '../../types';
-import { getBalance } from '../../utils';
+import { getBalance, sendTokensToOwner } from '../../utils';
 
 export class StableJack_PtSts_Redeem_Shortcut implements Shortcut {
   name = 'stablejack-pt-sts-redeem';
@@ -40,6 +40,9 @@ export class StableJack_PtSts_Redeem_Shortcut implements Shortcut {
       amountIn: [amountPtSts],
       primaryAddress: protocol,
     });
+
+    const amountSts = getBalance(stS, builder);
+    await sendTokensToOwner(stS, amountSts, builder);
 
     const payload = await builder.build({
       requireWeiroll: true,

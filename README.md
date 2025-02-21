@@ -46,14 +46,14 @@ pnpm generate:all sonic
 Pass the chain name (e.g., sonic), the protocol (e.g., dolomite) and the market (e.g., dhoney):
 
 ```sh
-pnpm generate sonic dolomite dhoney
+pnpm generate sonic silo ws-deposit
 ```
 
 Default output example:
 
 ```json
 {
-  "weirollCommands": [
+  "commands": [
     "0xb65d95ec01ffffffffffff0507899ac8be7462151d6515fcd4773dd9267c9911",
     "0x2e1cc2f601ffffffffffff0607899ac8be7462151d6515fcd4773dd9267c9911",
     "0x095ea7b3010600ffffffffff015fd589f4f1a33ce4487e12714e1b15129c9329",
@@ -64,7 +64,7 @@ Default output example:
     "0x095ea7b3010406ffffffffffd137593cdb341ccc78426c54fb98435c60da193c",
     "0x6e553f65010605ffffffffff7f2b60fdff1494a0e3e060532c9980d7fad0404b"
   ],
-  "weirollState": [
+  "state": [
     "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
     "0x000000000000000000000000a81f0019d442f19f66880bcf2698b4e5d5ec249a",
     "0x000000000000000000000000015fd589f4f1a33ce4487e12714e1b15129c9329",
@@ -96,105 +96,70 @@ pnpm build sonic 0xd4d6596bdc7cb7f8b214961f895c2d79d884f9c3dfcac62996c3f94c1641a
 
 ## Simulate
 
-Simulation supported modes are: `forge`, and `quoter`. Simulation mode is set via `--mode=<simulationMode>`. By default
-simulation is done via the `quoter`.
+Simulation supported modes are: `forge`.
+
+Shortcut to simulate params:
+
+- blockNumber (`BigNumberish`): optional. Defaults to the latest `block.number` defined either by the fork or by the
+  previous shortcut to simulate. Use it thoughtfully.
+- blockTimestamp (`Number`): optional. Defaults to the latest `block.timestamp` defined either by the fork or by the
+  previous shortcut to simulate. Use it thoughtfully.
+
+- requiresFunding (`boolean`): optional. Whether the shortcut to simulate will fund first the caller address with the
+  `tokensIn` and their amounts from `amountsIn`. Use it thoughtfully.
+- shortcut (supported `Shortcut`): required.
+- amountsIn (`BigNumberish[]`): required.
 
 ### Forge
 
-Please set first:
+1. Create a test in [`test/integration/simulateShortcut.test.ts`](./test/integration/simulateShortcut.test.ts).
 
-- `RPC_URL_<network_name>` in the .env file.
-- `Shorcut.getTokenHolder(chainId)` TypeScript implementation (responsible of Weiroll wallet funding with `tokensIn`
-  before shortcut execution). Optionally, `Shorcut.getAddressData(chainId)` (responsible of labelling addresses).
+2. Define an array of transactions to simulate, for instance:
 
-```sh
-pnpm simulate sonic beraborrow mint-nect-lp 100000 --mode=forge
-```
+Both shortcuts (deposit & redeem) happen in the same block.
 
-Optionally set the fork block number via `--block=`:
-
-```sh
-pnpm simulate sonic beraborrow mint-nect-lp 100000 --mode=forge --block=1835295
-```
-
-Output example:
-
-```sh
-[⠊] Compiling...
-No files changed, compilation skipped
-
-Ran 1 test for test/foundry/fork/EnsoWeirollWallet_Fork_sonic_Test.t.sol:EnsoWeirollWallet_Fork_sonic_Test
-[PASS] test_executeWeiroll_1() (gas: 875370)
-Logs:
-  ╔══════════════════════════════════════════╗
-  ║              SIMULATION RESULTS          ║
-  ╚══════════════════════════════════════════╝
-  | Chain ID    :  80000
-  | Block Number (Latest):  2276308
-  |────────────────────────────────────────────
-  | - TOKENS IN -------------
-  | Addr    :  0x015fd589F4f1A33ce4487E12714e1B15129c9329
-  | Name    :  ERC20:USDC
-  | Amount  :
-  |   Pre   :  0
-  |   In    :  1000000
-  |   Post  :  0
-  |────────────────────────────────────────────
-  | - TOKENS OUT -------------
-  | Addr    :  0x7f2B60fDff1494A0E3e060532c9980d7fad0404B
-  | Name    :  ERC20:dHONEY
-  | Amount  :  998000000000000000
-  |   Pre   :  0
-  |   Post  :  998000000000000000
-  |────────────────────────────────────────────
-  |- DUST TOKENS -------------
-  | Addr    :  0x015fd589F4f1A33ce4487E12714e1B15129c9329
-  | Name    :  ERC20:USDC
-  | Amount  :  0
-  |   Pre   :  0
-  |   Post  :  0
-  |--------------------------------------------
-  | Addr    :  0xd137593CDB341CcC78426c54Fb98435C60Da193c
-  | Name    :  ERC20:HONEY
-  | Amount  :  0
-  |   Pre   :  0
-  |   Post  :  0
-  |────────────────────────────────────────────
-  |- Gas --------------------
-  | Used    :  865188
-  ╚══════════════════════════════════════════╝
-
-Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 6.17s (5.73s CPU time)
-
-Ran 1 test suite in 6.17s (6.17s CPU time): 1 tests passed, 0 failed, 0 skipped (1 total tests)
-```
-
-### Quoter
-
-Please set `QUOTER_URL` in the .env file.
-
-Pass the amount(s) that you want to simulate (e.g., 1000000). If you shortcut that takes multiple tokens, pass the
-amounts as comma separated values (e.g., 100,100).
-
-```sh
-pnpm simulate sonic kodiak honey-mim 10000000,100000000
-```
-
-```sh
-pnpm simulate sonic kodiak honey-mim 10000000,100000000 --slippage=3 --mode=quoter
-```
-
-Output example:
-
-```sh
-Simulation:  {
-  quote: { '0x150683BF3f0a344e271fc1b7dac3783623e7208A': '271725' },
-  dust: {
-    '0x08B918dD18E087893bb9d711d9E0BBaA7a63Ef63': '16',
-    '0x015fd589F4f1A33ce4487E12714e1B15129c9329': '99600399'
+```typescript
+const txsToSim = [
+  {
+    blockNumber: '8455854',
+    requiresFunding: true,
+    shortcut: new Silo_Ws_Deposit_Shortcut(),
+    amountsIn: [parseUnits('1', 18).toString()],
   },
-  gas: '1334335'
-}
+  {
+    shortcut: new Silo_Ws_Redeem_Shortcut(),
+    amountsIn: [parseUnits('1', 18).toString()],
+  },
+];
+```
+
+First shortcut (deposit) happens at block `8865840` (with the proper `block.timestamp` set), whilst the second shortcut
+is executed at the same `block.number` but 1 second after.
+
+```typescript
+const provider = getProviderByChainId(ChainIds.Sonic);
+const blockNumber = '8865840';
+const blockTimestamp = await getBlockTimestamp(provider, blockNumber);
+
+const txsToSim = [
+  {
+    blockNumber,
+    requiresFunding: true,
+    shortcut: new StableJack_YtSts_Deposit_Shortcut(),
+    amountsIn: [parseUnits('10', 18).toString()],
+  },
+  {
+    blockTimestamp: blockTimestamp + 1, // NOTE: YT-stS cooldown period is 1 second for redeems
+    shortcut: new StableJack_YtSts_Redeem_Shortcut(),
+    amountsIn: [parseUnits('1', 18).toString()],
+  },
+];
+```
+
+3. Execute the test(s) with:
+
+```sh
+pnpm test:simulations
 ```
 
 ## Execute

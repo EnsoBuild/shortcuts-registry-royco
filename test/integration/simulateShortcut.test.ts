@@ -74,8 +74,6 @@ describe('Successfully simulates Sonic shortcuts for', () => {
             amountsIn: [parseUnits('1', 18).toString()],
           },
           {
-            blockNumber: '8455854',
-            requiresFunding: true,
             shortcut: new Silo_Ws_Redeem_Shortcut(),
             amountsIn: [parseUnits('1', 18).toString()],
           },
