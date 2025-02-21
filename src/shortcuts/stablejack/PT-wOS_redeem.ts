@@ -5,11 +5,11 @@ import { Standards, getStandardByProtocol } from '@ensofinance/shortcuts-standar
 
 import { chainIdToDeFiAddresses } from '../../constants';
 import type { AddressData, Input, Output, Shortcut } from '../../types';
-import { getBalance, mintErc4626, mint_OS, unwrap_wrappedNativeToken } from '../../utils';
+import { getBalance, redeemErc4626, sendTokensToOwner } from '../../utils';
 
-export class StableJack_PtWos_Deposit_Shortcut implements Shortcut {
-  name = 'stablejack-pt-wos-deposit';
-  description = 'Market 3 Deposit: wS -> S -> OS -> wOS -> PT-wOS';
+export class StableJack_PtWos_Redeem_Shortcut implements Shortcut {
+  name = 'stablejack-pt-wos-redeem';
+  description = 'Market 3 Redeem: PT-wOS -> wOS -> OS'; // TODO: missing OS -> S -> wS
   supportedChains = [ChainIds.Sonic];
   inputs: Record<number, Input> = {
     [ChainIds.Sonic]: {
@@ -26,29 +26,26 @@ export class StableJack_PtWos_Deposit_Shortcut implements Shortcut {
     const client = new RoycoClient();
 
     const inputs = this.inputs[chainId];
-    const { protocol, OS, PT_wOS, S, wOS, wS } = inputs;
+    const { protocol, OS, PT_wOS, wOS } = inputs;
 
     const builder = new Builder(chainId, client, {
-      tokensIn: [wS],
-      tokensOut: [PT_wOS],
+      tokensIn: [PT_wOS],
+      tokensOut: [OS],
     });
-    const amountWs = getBalance(wS, builder);
 
-    await unwrap_wrappedNativeToken(wS, S, amountWs, builder);
-    const amountS = getBalance(S, builder);
-
-    await mint_OS(S, OS, amountS, builder);
-    const amountOs = getBalance(OS, builder);
-
-    await mintErc4626(OS, wOS, amountOs, builder);
-    const amountWos = getBalance(wOS, builder);
-
-    getStandardByProtocol('stable-jack', builder.chainId).deposit.addToBuilder(builder, {
-      tokenIn: [wOS],
-      tokenOut: PT_wOS,
-      amountIn: [amountWos],
+    const amountPtWos = getBalance(PT_wOS, builder);
+    getStandardByProtocol('stable-jack', builder.chainId).redeem.addToBuilder(builder, {
+      tokenIn: [PT_wOS],
+      tokenOut: wOS,
+      amountIn: [amountPtWos],
       primaryAddress: protocol,
     });
+
+    const amountWos = getBalance(wOS, builder);
+    await redeemErc4626(wOS, OS, amountWos, builder);
+
+    const amountOs = getBalance(OS, builder);
+    await sendTokensToOwner(OS, amountOs, builder);
 
     const payload = await builder.build({
       requireWeiroll: true,

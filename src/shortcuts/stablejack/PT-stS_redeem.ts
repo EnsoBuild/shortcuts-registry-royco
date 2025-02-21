@@ -9,7 +9,7 @@ import { getBalance, sendTokensToOwner } from '../../utils';
 
 export class StableJack_PtSts_Redeem_Shortcut implements Shortcut {
   name = 'stablejack-pt-sts-redeem';
-  description = 'Market 1 Redeem: PT-stS -> stS -> S -> wS'; // TODO
+  description = 'Market 1 Redeem: PT-stS -> stS'; // TODO: missing stS -> S -> wS
   supportedChains = [ChainIds.Sonic];
   inputs: Record<number, Input> = {
     [ChainIds.Sonic]: {
@@ -29,7 +29,6 @@ export class StableJack_PtSts_Redeem_Shortcut implements Shortcut {
 
     const builder = new Builder(chainId, client, {
       tokensIn: [PT_stS],
-      // tokensOut: [wS], // TODO
       tokensOut: [stS],
     });
     const amountPtSts = getBalance(PT_stS, builder);
