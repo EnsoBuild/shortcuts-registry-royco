@@ -6,6 +6,7 @@ import {
 } from "@ensofinance/shortcuts-builder/types";
 import { BigNumber, BigNumberish } from "@ethersproject/bignumber";
 import { StaticJsonRpcProvider } from "@ethersproject/providers";
+import type { ForgeTestLogFormat } from "../constants";
 
 export interface Shortcut {
   name: string;
@@ -25,11 +26,13 @@ export interface BuiltShortcut {
 export interface TransactionToSimulate {
   shortcut: Shortcut;
   amountsIn: BigNumberish[];
+  requiresFunding?: boolean;
   blockNumber?: BigNumberish;
   blockTimestamp?: number;
 }
 
 export interface TransactionToSimulateForgeData {
+  shortcutName: string;
   blockNumber: number;
   blockTimestamp: number;
   txData: string;
@@ -37,6 +40,10 @@ export interface TransactionToSimulateForgeData {
   tokensIn: AddressArg[];
   tokensInHolders: AddressArg[];
   amountsIn: string[];
+  // NOTE: `requiresFunding` triggers the logic that funds the wallet with each `tokensIn` and `amountsIn`.
+  // 1st tx probably requires it set to `true`. If further txs have it set to `true` as well it may
+  // skew the simulation results (e.g., tokens dust amounts). Use it thoughtfully.
+  requiresFunding: boolean;
   tokensOut: AddressArg[];
   tokensDust: AddressArg[];
 }
@@ -90,6 +97,7 @@ export interface SimulationRoles {
 
 export interface SimulationForgeData {
   path: string;
+  forgeTestLogFormat: ForgeTestLogFormat
   contract: string;
   contractABI: Record<string, unknown>[];
   test: string;

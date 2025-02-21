@@ -1,10 +1,10 @@
-import { AddressArg, ChainIds, WeirollScript } from '@ensofinance/shortcuts-builder/types';
+import { AddressArg, ChainIds } from '@ensofinance/shortcuts-builder/types';
 import { getAddress } from '@ensofinance/shortcuts-standards/helpers';
 import { Interface } from '@ethersproject/abi';
 import { BigNumberish } from '@ethersproject/bignumber';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 
-import { CONTRCT_SIMULATION_FORK_TEST_EVENTS_ABI, FUNCTION_ID_ERC20_APPROVE, chainIdToTokenHolder } from '../constants';
+import { CONTRCT_SIMULATION_FORK_TEST_EVENTS_ABI, FUNCTION_ID_ERC20_APPROVE, ForgeTestLogFormat } from '../constants';
 import { simulateTransactionOnForge } from '../simulations/simulateOnForge';
 import type {
   BuiltShortcut,
@@ -50,10 +50,12 @@ export async function simulateShortcutOnForge(
   forgePath: string,
   roles: SimulationRoles,
   tokenToHolder: Map<AddressArg, AddressArg>,
+  forgeTestLogFormat: ForgeTestLogFormat,
   simulationLogConfig: SimulationLogConfig,
 ): Promise<Report> {
   const forgeData = {
     path: forgePath,
+    forgeTestLogFormat: forgeTestLogFormat,
     contract: 'Simulation_Fork_Test',
     contractABI: CONTRCT_SIMULATION_FORK_TEST_EVENTS_ABI,
     test: 'test_simulateShortcut_1',
@@ -90,6 +92,7 @@ export async function simulateShortcutOnForge(
   }
 
   const nativeToken = roles.nativeToken.address as AddressArg;
+  const shortcutNames: string[] = [];
   const blockNumbers: number[] = [];
   const blockTimestamps: number[] = [];
   const txData: string[] = [];
@@ -97,6 +100,7 @@ export async function simulateShortcutOnForge(
   const tokensIn: AddressArg[][] = [];
   const tokensInHolders: AddressArg[][] = [];
   const amountsIn: string[][] = [];
+  const requiresFunding: boolean[] = [];
   const tokensOut: AddressArg[][] = [];
   const tokensDust: AddressArg[][] = [];
   for (const [index, txToSim] of txsToSim.entries()) {
@@ -113,6 +117,7 @@ export async function simulateShortcutOnForge(
       throw new Error(`Unexpected error getting forge tx data for tx at index: ${index}. Reason: ${error}`);
     }
 
+    shortcutNames.push(txForgeData.shortcutName);
     blockNumbers.push(txForgeData.blockNumber);
     blockTimestamps.push(txForgeData.blockTimestamp);
     txData.push(txForgeData.txData);
@@ -120,6 +125,7 @@ export async function simulateShortcutOnForge(
     tokensIn.push(txForgeData.tokensIn);
     tokensInHolders.push(txForgeData.tokensInHolders);
     amountsIn.push(txForgeData.amountsIn);
+    requiresFunding.push(txForgeData.requiresFunding);
     tokensOut.push(txForgeData.tokensOut);
     tokensDust.push(txForgeData.tokensDust);
   }
@@ -127,6 +133,7 @@ export async function simulateShortcutOnForge(
   const forgeTestLog = simulateTransactionOnForge(
     chainId,
     provider,
+    shortcutNames,
     blockNumbers,
     blockTimestamps,
     txData,
@@ -134,6 +141,7 @@ export async function simulateShortcutOnForge(
     tokensIn,
     tokensInHolders,
     amountsIn,
+    requiresFunding,
     tokensOut,
     tokensDust,
     roles,
@@ -224,7 +232,7 @@ function getTxToSimulateForgeData(
   const { tokensIn, tokensOut } = builtShortcut.metadata as { tokensIn: AddressArg[]; tokensOut: AddressArg[] };
   const txValue = getAmountInForNativeToken(nativeToken, tokensIn, txToSim.amountsIn) || DEFAULT_TX_VALUE;
   const amountsIn = txToSim.amountsIn.map((amountIn) => amountIn.toString());
-
+  const requiresFunding = txToSim.requiresFunding ?? false;
   const tokensInHolders: AddressArg[] = [];
   if (tokenToHolder) {
     for (let i = 0; i < (tokensIn as AddressArg[]).length; i++) {
@@ -256,6 +264,7 @@ function getTxToSimulateForgeData(
   const blockTimestamp = txToSim.blockTimestamp ?? DEFAULT_BLOCK_TIMESTAMP;
 
   return {
+    shortcutName: txToSim.shortcut.name,
     blockNumber,
     blockTimestamp,
     txData,
@@ -263,6 +272,7 @@ function getTxToSimulateForgeData(
     tokensIn,
     tokensInHolders,
     amountsIn,
+    requiresFunding,
     tokensOut,
     tokensDust,
   };

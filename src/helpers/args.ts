@@ -4,16 +4,24 @@ import dotenv from 'dotenv';
 import { execSync } from 'node:child_process';
 import os from 'node:os';
 
-import { MAX_BPS, ShortcutOutputFormat, SimulationMode } from '../constants';
+import { ForgeTestLogFormat, MAX_BPS, ShortcutOutputFormat, SimulationMode } from '../constants';
 import type { TransactionToSimulate } from '../types';
 import { shortcuts, supportedShortcuts } from './shortcuts';
 import { getChainId } from './utils';
 
 dotenv.config();
 
-// TODO: validate blockNumber and blockTimestamp increment from previous one
+export function validateForgeTestLogFormat(format: ForgeTestLogFormat): void {
+  if (!Object.values(ForgeTestLogFormat).includes(format)) {
+    throw new Error(`Invalid forge test log format: ${format}`);
+  }
+}
+
 export function validateSimulatedTransactions(txs: TransactionToSimulate[]): void {
   if (!txs.length) throw new Error('Invalid txs array. Must contain at least one tx');
+
+  let prevBlockNumber: BigNumber | undefined;
+  let prevBlockTimestamp: number | undefined;
 
   for (const [index, tx] of txs.entries()) {
     if (!tx.shortcut || !supportedShortcuts.find((shortcut) => tx.shortcut instanceof shortcut)) {
@@ -36,8 +44,9 @@ export function validateSimulatedTransactions(txs: TransactionToSimulate[]): voi
     }
 
     if ('blockNumber' in tx) {
+      let currentBlockNumber: BigNumber;
       try {
-        BigNumber.from(tx.blockNumber);
+        currentBlockNumber = BigNumber.from(tx.blockNumber);
       } catch (error) {
         console.error(error);
         throw new Error(
@@ -45,12 +54,34 @@ export function validateSimulatedTransactions(txs: TransactionToSimulate[]): voi
         );
       }
 
+      // NOTE: `blockNumber` must be greater or equal to the last defined one
+      if (prevBlockNumber && currentBlockNumber.lt(prevBlockNumber)) {
+        throw new Error(
+          `Invalid tx at index ${index}: 'blockNumber' (${tx.blockNumber}) is less than previous (${prevBlockNumber.toString()})`,
+        );
+      }
+      prevBlockNumber = currentBlockNumber;
+
       if ('blockTimestamp' in tx) {
         if (typeof tx.blockTimestamp !== 'number' || tx.blockTimestamp < 0) {
           throw new Error(
             `Invalid tx at index ${index}: ${JSON.stringify(tx)}. 'blockTimestamp' must be a number >= 0`,
           );
         }
+
+        // NOTE: `blockTimestamp` must be greater or equal to the last defined one
+        if (prevBlockTimestamp !== undefined && tx.blockTimestamp < prevBlockTimestamp) {
+          throw new Error(
+            `Invalid tx at index ${index}: 'blockTimestamp' (${tx.blockTimestamp}) is less than previous (${prevBlockTimestamp})`,
+          );
+        }
+        prevBlockTimestamp = tx.blockTimestamp;
+      }
+    }
+
+    if ('requiresFunding' in tx) {
+      if (typeof tx.requiresFunding !== 'boolean') {
+        throw new Error(`Invalid tx at index ${index}: ${JSON.stringify(tx)}. 'requiresFunding' must be a boolean`);
       }
     }
   }

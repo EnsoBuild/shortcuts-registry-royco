@@ -4,11 +4,12 @@ import { spawnSync } from 'node:child_process';
 import os from 'node:os';
 
 import { ForgeTestLogFormat } from '../constants';
-import type { ForgeTestLogJSON, SimulationForgeData, SimulationRoles, SimulationTokensData } from '../types';
+import type { ForgeTestLogJSON, SimulationForgeData, SimulationRoles } from '../types';
 
 export function simulateTransactionOnForge(
   chainId: number,
   provider: StaticJsonRpcProvider,
+  shortcutNames: string[],
   blockNumbers: number[],
   blockTimestamps: number[],
   txData: string[],
@@ -16,6 +17,7 @@ export function simulateTransactionOnForge(
   tokensIn: AddressArg[][],
   tokensInHolders: AddressArg[][],
   amountsIn: string[][],
+  requiresFunding: boolean[],
   tokensOut: AddressArg[][],
   tokensDust: AddressArg[][],
   roles: SimulationRoles,
@@ -33,8 +35,9 @@ export function simulateTransactionOnForge(
   const simulationJsonDataRaw = {
     chainId,
     rpcUrl,
-    blockNumbers: blockNumbers,
-    blockTimestamps: blockTimestamps,
+    shortcutNames,
+    blockNumbers,
+    blockTimestamps,
     caller: roles.caller.address,
     recipeMarketHub: roles.recipeMarketHub.address,
     callee: roles.callee.address,
@@ -44,19 +47,24 @@ export function simulateTransactionOnForge(
     tokensIn,
     tokensInHolders,
     amountsIn,
+    requiresFunding,
     tokensOut,
     tokensDust,
     labelKeys: [...addressToLabel.keys()],
     labelValues: [...addressToLabel.values()],
   };
-  console.warn('Simulation (JSON Data):\n', simulationJsonDataRaw, '\n');
+  process.stdout.write('Simulation (JSON Data):\n');
+  process.stdout.write(JSON.stringify(simulationJsonDataRaw, null, 2));
+  process.stdout.write('\n');
+  // console.warn('Simulation (JSON Data):\n', JSON.stringify(simulationJsonDataRaw), '\n');
 
   // NOTE: foundry JSON parsing cheatcodes don't support multidimensional arrays, therefore we stringify them
   const simulationJsonData = {
     chainId,
     rpcUrl,
-    blockNumbers: blockNumbers,
-    blockTimestamps: blockTimestamps,
+    shortcutNames,
+    blockNumbers,
+    blockTimestamps,
     caller: roles.caller.address,
     recipeMarketHub: roles.recipeMarketHub.address,
     callee: roles.callee.address,
@@ -65,13 +73,13 @@ export function simulateTransactionOnForge(
     txValues,
     tokensIn: tokensIn.map((tokens) => JSON.stringify(tokens)),
     tokensInHolders: tokensInHolders.map((addresses) => JSON.stringify(addresses)),
+    requiresFunding,
     amountsIn: amountsIn.map((amounts) => JSON.stringify(amounts)),
-    tokensOut: tokensIn.map((tokens) => JSON.stringify(tokens)),
-    tokensDust: tokensIn.map((tokens) => JSON.stringify(tokens)),
+    tokensOut: tokensOut.map((tokens) => JSON.stringify(tokens)),
+    tokensDust: tokensDust.map((tokens) => JSON.stringify(tokens)),
     labelKeys: [...addressToLabel.keys()],
     labelValues: [...addressToLabel.values()],
   };
-  const logFormat = ForgeTestLogFormat.DEFAULT;
   const forgeCmd = os.platform() === 'win32' ? 'forge.cmd' : 'forge'; // ! untested on Windows
   // NOTE: `spawnSync` forge call return can optionally be read from both `return.stdout` and `return.stderr`, and processed.
   // NOTE: calling forge with `--json` will print the deployment information as JSON.
@@ -80,7 +88,15 @@ export function simulateTransactionOnForge(
   // tests. To make visible successful test traces, use `-vvvv`.
   const result = spawnSync(
     forgeCmd,
-    ['test', '--match-contract', forgeData.contract, '--match-test', forgeData.test, '-vvv', logFormat],
+    [
+      'test',
+      '--match-contract',
+      forgeData.contract,
+      '--match-test',
+      forgeData.test,
+      '-vvv',
+      forgeData.forgeTestLogFormat,
+    ],
     {
       encoding: 'utf-8',
       env: {
@@ -103,7 +119,7 @@ export function simulateTransactionOnForge(
     );
   }
 
-  if ([ForgeTestLogFormat.DEFAULT].includes(logFormat)) {
+  if ([ForgeTestLogFormat.DEFAULT].includes(forgeData.forgeTestLogFormat)) {
     process.stdout.write(result.stdout);
     throw new Error('Forced termination to inspect forge test log');
   }
