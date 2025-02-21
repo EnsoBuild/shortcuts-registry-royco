@@ -10,10 +10,10 @@ import type {
   BuiltShortcut,
   Report,
   ShortcutReport,
+  ShortcutToSimulate,
+  ShortcutToSimulateForgeData,
   SimulationLogConfig,
   SimulationRoles,
-  TransactionToSimulate,
-  TransactionToSimulateForgeData,
 } from '../types';
 import { getEncodedData } from './call';
 
@@ -46,7 +46,7 @@ function getAmountInForNativeToken(
 export async function simulateShortcutOnForge(
   chainId: ChainIds,
   provider: StaticJsonRpcProvider,
-  txsToSim: TransactionToSimulate[],
+  txsToSim: ShortcutToSimulate[],
   builtShortcuts: BuiltShortcut[],
   forgePath: string,
   roles: SimulationRoles,
@@ -104,7 +104,7 @@ export async function simulateShortcutOnForge(
   const tokensOut: AddressArg[][] = [];
   const tokensDust: AddressArg[][] = [];
   for (const [index, txToSim] of txsToSim.entries()) {
-    let txForgeData: TransactionToSimulateForgeData;
+    let txForgeData: ShortcutToSimulateForgeData;
     try {
       txForgeData = getTxToSimulateForgeData(
         txToSim,
@@ -155,24 +155,26 @@ export async function simulateShortcutOnForge(
   const testResult = testLog.test_results[`${forgeData.test}()`];
 
   if (testResult.status === 'Failure') {
-    console.log('Result: ', testResult);
+    process.stdout.write('Result: ');
+    process.stdout.write(JSON.stringify(testResult, null, 2));
+    process.stdout.write('\n');
     throw new Error(
       `Forge simulation test failed. Uncomment '--json' and re-run this script to inspect the forge logs`,
     );
   }
 
-  if (simulationLogConfig.isReportLogged) {
-    console.log('Simulation (Forge):\n', testResult.decoded_logs.join('\n'), '\n');
+  if (simulationLogConfig.isForgeLogsLogged) {
+    process.stdout.write('Simulation (Forge):\n');
+    process.stdout.write(testResult.decoded_logs.join('\n'));
+    process.stdout.write('\n');
   }
 
   // Decode logs to write report
   const contractInterface = new Interface(forgeData.contractABI);
 
   // Decode Gas
-
   const gasUsedTopic = contractInterface.getEventTopic('SimulationReportGasUsed');
   const gasUsedLogs = testResult.logs.filter((log) => log.topics[0] === gasUsedTopic);
-  console.log('*** Gas Used Logs: ', gasUsedLogs);
   if (!gasUsedLogs) throw new Error('simulateShortcutOnForge: missing "SimulationReportGasUsed" used log');
 
   // Decode Quote
@@ -231,12 +233,12 @@ async function getNextWeirollWalletFromMockRecipeMarketHub(
 }
 
 function getTxToSimulateForgeData(
-  txToSim: TransactionToSimulate,
+  txToSim: ShortcutToSimulate,
   builtShortcut: BuiltShortcut,
   nativeToken: AddressArg,
   tokenToHolder: Map<AddressArg, AddressArg>,
   addressToLabel: Map<AddressArg, string>,
-): TransactionToSimulateForgeData {
+): ShortcutToSimulateForgeData {
   const { commands, state } = builtShortcut.script;
   const txData = getEncodedData(commands, state);
 

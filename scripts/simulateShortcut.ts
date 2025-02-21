@@ -9,19 +9,19 @@ import {
   getTokenToHolderByChainId,
   simulateShortcutOnForge,
   validateForgeTestLogFormat,
-  validateSimulatedTransactions,
+  validateShortcutsToSimulate,
 } from '../src/helpers';
-import type { BuiltShortcut, Report, SimulationLogConfig, TransactionToSimulate } from '../src/types';
+import type { BuiltShortcut, Report, ShortcutToSimulate, SimulationLogConfig } from '../src/types';
 
 const failedSimulationReport = { status: 'Simulation failed', error: '' };
 
 export async function main(
   chainId: ChainIds,
-  txs: TransactionToSimulate[],
+  txs: ShortcutToSimulate[],
   simulationLogConfig: SimulationLogConfig,
 ): Promise<Report> {
   validateForgeTestLogFormat(simulationLogConfig.forgeTestLogFormat);
-  validateSimulatedTransactions(txs);
+  validateShortcutsToSimulate(txs);
 
   const tokenToHolder = getTokenToHolderByChainId(chainId);
 

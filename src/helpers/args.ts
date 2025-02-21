@@ -5,7 +5,7 @@ import { execSync } from 'node:child_process';
 import os from 'node:os';
 
 import { ForgeTestLogFormat, MAX_BPS, ShortcutOutputFormat, SimulationMode } from '../constants';
-import type { TransactionToSimulate } from '../types';
+import type { ShortcutToSimulate } from '../types';
 import { shortcuts, supportedShortcuts } from './shortcuts';
 import { getChainId } from './utils';
 
@@ -17,7 +17,7 @@ export function validateForgeTestLogFormat(format: ForgeTestLogFormat): void {
   }
 }
 
-export function validateSimulatedTransactions(txs: TransactionToSimulate[]): void {
+export function validateShortcutsToSimulate(txs: ShortcutToSimulate[]): void {
   if (!txs.length) throw new Error('Invalid txs array. Must contain at least one tx');
 
   let prevBlockNumber: BigNumber | undefined;

@@ -23,7 +23,7 @@ export interface BuiltShortcut {
   metadata: ShortcutMetadata;
 }
 
-export interface TransactionToSimulate {
+export interface ShortcutToSimulate {
   shortcut: Shortcut;
   amountsIn: BigNumberish[];
   requiresFunding?: boolean;
@@ -31,7 +31,7 @@ export interface TransactionToSimulate {
   blockTimestamp?: number;
 }
 
-export interface TransactionToSimulateForgeData {
+export interface ShortcutToSimulateForgeData {
   shortcutName: string;
   blockNumber: number;
   blockTimestamp: number;
@@ -87,6 +87,7 @@ export interface SimulationLogConfig {
   forgeTestLogFormat: ForgeTestLogFormat;
   isForgeTxDataLogged?: boolean;
   isCalldataLogged?: boolean;
+  isForgeLogsLogged?: boolean;
   isReportLogged?: boolean;
 }
 

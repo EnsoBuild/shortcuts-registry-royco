@@ -43,7 +43,7 @@ pnpm generate:all sonic
 
 ### Single Protocol & Market
 
-Pass the chain name (e.g., sonic), the protocol (e.g., dolomite) and the market (e.g., dhoney):
+Pass the chain name (e.g., sonic), the protocol (e.g., silo) and the market (e.g., ws-deposit, ws-redeem):
 
 ```sh
 pnpm generate sonic silo ws-deposit
@@ -96,23 +96,76 @@ pnpm build sonic 0xd4d6596bdc7cb7f8b214961f895c2d79d884f9c3dfcac62996c3f94c1641a
 
 ## Simulate
 
-Simulation supported modes are: `forge`.
+### Shortcut to Simulate Params
 
-Shortcut to simulate params:
+```typescript
+export interface ShortcutToSimulate {
+  shortcut: Shortcut;
+  amountsIn: BigNumberish[];
+  requiresFunding?: boolean;
+  blockNumber?: BigNumberish;
+  blockTimestamp?: number;
+}
+```
 
-- blockNumber (`BigNumberish`): optional. Defaults to the latest `block.number` defined either by the fork or by the
-  previous shortcut to simulate. Use it thoughtfully.
-- blockTimestamp (`Number`): optional. Defaults to the latest `block.timestamp` defined either by the fork or by the
-  previous shortcut to simulate. Use it thoughtfully.
+- `blockNumber`: defaults to the latest `block.number` defined either by the fork or by the previous shortcut to
+  simulate. Use it thoughtfully.
+- `blockTimestamp`: defaults to the latest `block.timestamp` defined either by the fork or by the previous shortcut to
+  simulate. Use it thoughtfully.
 
-- requiresFunding (`boolean`): optional. Whether the shortcut to simulate will fund first the caller address with the
-  `tokensIn` and their amounts from `amountsIn`. Use it thoughtfully.
-- shortcut (supported `Shortcut`): required.
-- amountsIn (`BigNumberish[]`): required.
+- `requiresFunding`: whether the shortcut to simulate will fund first the caller address with the `tokensIn` and their
+  amounts from `amountsIn`. Use it thoughtfully.
+- `shortcut`: only supported `Shortcut` instances.
+- `amountsIn`: `0` items are not allowed.
 
-### Forge
+### Logging Options
+
+```typescript
+export interface SimulationLogConfig {
+  forgeTestLogFormat: ForgeTestLogFormat; // Set to `ForgeTestLogFormat.JSON` by default. Switch to `ForgeTestLogFormat.DEFAULT` to log the forge test traces
+  isForgeTxDataLogged?: boolean; // Helpful to debug which data is sent to the forge test
+  isCalldataLogged?: boolean;
+  isForgeLogsLogged?: boolean; // Log the forge decoded logs for successful tests
+  isReportLogged?: boolean; // Log the simulation report
+}
+```
+
+### First Steps
 
 1. Create a test in [`test/integration/simulateShortcut.test.ts`](./test/integration/simulateShortcut.test.ts).
+
+```typescript
+describe('silo', () => {
+  describe('deposits', () => {
+    it('ws', async () => {
+      // Arrange
+      const txsToSim = [
+        {
+          blockNumber: '8455854',
+          requiresFunding: true,
+          shortcut: new Silo_Ws_Deposit_Shortcut(),
+          amountsIn: [parseUnits('1', 18).toString()],
+        },
+      ];
+
+      // Act
+      const report = await main(ChainIds.Sonic, txsToSim, {
+        forgeTestLogFormat: ForgeTestLogFormat.JSON,
+      });
+
+      // Assert
+      expect(report.length).toBe(1);
+      expect(report[0]).toMatchObject({
+        amountsIn: ['1000000000000000000'],
+        dust: { '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38': '0' },
+        quote: { '0xf55902DE87Bd80c6a35614b48d7f8B612a083C12': '998297853831134388682' },
+        weirollWallet: '0xBa8F5f80C41BF5e169d9149Cd4977B1990Fc2736',
+        gas: '417625', // '368502',
+      });
+    });
+  });
+});
+```
 
 2. Define an array of transactions to simulate, for instance:
 

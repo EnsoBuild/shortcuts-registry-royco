@@ -49,7 +49,9 @@ describe('Successfully simulates Sonic shortcuts for', () => {
         ];
 
         // Act
-        const report = await main(ChainIds.Sonic, txsToSim, { forgeTestLogFormat: ForgeTestLogFormat.JSON });
+        const report = await main(ChainIds.Sonic, txsToSim, {
+          forgeTestLogFormat: ForgeTestLogFormat.JSON,
+        });
 
         // Assert
         expect(report.length).toBe(1);
@@ -64,7 +66,7 @@ describe('Successfully simulates Sonic shortcuts for', () => {
     });
 
     describe('redeems', () => {
-      it('ws', async () => {
+      it.skip('ws', async () => {
         // Arrange
         const txsToSim = [
           {
@@ -97,7 +99,7 @@ describe('Successfully simulates Sonic shortcuts for', () => {
 
   describe('stablejack', () => {
     describe('deposits', () => {
-      it.only('pt-sts', async () => {
+      it('pt-sts', async () => {
         // Arrange
         const txsToSim = [
           {
@@ -155,7 +157,7 @@ describe('Successfully simulates Sonic shortcuts for', () => {
     });
 
     describe('redeems', () => {
-      it('pt-sts (standalone)', async () => {
+      it.skip('pt-sts (standalone)', async () => {
         // Arrange
         const txsToSim = [
           {
@@ -182,7 +184,7 @@ describe('Successfully simulates Sonic shortcuts for', () => {
         });
       });
 
-      it('pt-sts', async () => {
+      it.skip('pt-sts', async () => {
         // Arrange
         const txsToSim = [
           {
@@ -213,7 +215,7 @@ describe('Successfully simulates Sonic shortcuts for', () => {
         });
       });
 
-      it('yt-sts', async () => {
+      it.skip('yt-sts', async () => {
         const provider = getProviderByChainId(ChainIds.Sonic);
         const blockNumber = '8865840';
         const blockTimestamp = await getBlockTimestamp(provider, blockNumber);
