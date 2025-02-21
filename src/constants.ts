@@ -114,7 +114,7 @@ export const chainIdToDeFiAddresses: Record<number, Record<string, AddressArg>> 
     wOS: '0x9F0dF7799f6FDAd409300080cfF680f5A23df4b1',
     wS: '0x039e2fb66102314ce7b64ce5ce3e5183bc94ad38',
     YT_stS: '0x0fa31f0d5a574F083E0be272a6CF807270352b3f',
-    YT_wos: '0xe16Bb6061B3567ee86285ab7780187cB39aCC55E',
+    YT_wOS: '0xe16Bb6061B3567ee86285ab7780187cB39aCC55E',
   },
 };
 
@@ -131,7 +131,7 @@ const tokenToHolderSonic: Map<AddressArg, AddressArg> = new Map([
   [chainIdToDeFiAddresses[ChainIds.Sonic].wOS, '0xF3c631B979EB59d8333374baA7c58B5Aff5e24D2'],
   [chainIdToDeFiAddresses[ChainIds.Sonic].wS, '0xE223C8e92AA91e966CA31d5C6590fF7167E25801'],
   [chainIdToDeFiAddresses[ChainIds.Sonic].YT_stS, '0xaC207c599e4A07F9A8cc5E9cf49B02E20AB7ba69'],
-  [chainIdToDeFiAddresses[ChainIds.Sonic].YT_wos, '0xaC207c599e4A07F9A8cc5E9cf49B02E20AB7ba69'],
+  [chainIdToDeFiAddresses[ChainIds.Sonic].YT_wOS, '0xaC207c599e4A07F9A8cc5E9cf49B02E20AB7ba69'],
 ]);
 
 export const chainIdToTokenHolder: Map<ChainIds, Map<AddressArg, AddressArg>> = new Map([

@@ -10,6 +10,7 @@ import {
 } from '@ensofinance/shortcuts-builder/types';
 import { Standards, getStandardByProtocol } from '@ensofinance/shortcuts-standards';
 import { GeneralAddresses, helperAddresses } from '@ensofinance/shortcuts-standards/addresses';
+import { getForks } from '@ensofinance/shortcuts-standards/helpers';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 
 import { chainIdToSimulationRoles } from '../constants';
@@ -156,6 +157,21 @@ export async function mint_stS(tokenIn: AddressArg, tokenOut: AddressArg, amount
     tokenOut,
     amountIn,
     primaryAddress: Standards.Beets_Sts.protocol.addresses![getChainName(builder.chainId)]!.primary as AddressArg,
+  });
+
+  return amountOut as FromContractCallArg;
+}
+
+export async function mint_OS(tokenIn: AddressArg, tokenOut: AddressArg, amountIn: NumberArg, builder: Builder) {
+  const forksRocketPool = getForks(Standards.Rocketpool);
+  const originOs = forksRocketPool['origin-os'];
+
+  const standard = getStandardByProtocol('origin-os', builder.chainId);
+  const { amountOut } = await standard.deposit.addToBuilder(builder, {
+    tokenIn,
+    tokenOut,
+    amountIn,
+    primaryAddress: originOs![getChainName(builder.chainId)]!.primary as AddressArg,
   });
 
   return amountOut as FromContractCallArg;

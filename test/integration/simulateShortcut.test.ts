@@ -11,8 +11,10 @@ import { Silo_Ws_Deposit_Shortcut } from '../../src/shortcuts/silo/ws_deposit';
 import { Silo_Ws_Redeem_Shortcut } from '../../src/shortcuts/silo/ws_redeem';
 import { StableJack_PtSts_Deposit_Shortcut } from '../../src/shortcuts/stablejack/PT-stS_deposit';
 import { StableJack_PtSts_Redeem_Shortcut } from '../../src/shortcuts/stablejack/PT-stS_redeem';
+import { StableJack_PtWos_Deposit_Shortcut } from '../../src/shortcuts/stablejack/PT-wOS_deposit';
 import { StableJack_YtSts_Deposit_Shortcut } from '../../src/shortcuts/stablejack/YT-stS_deposit';
 import { StableJack_YtSts_Redeem_Shortcut } from '../../src/shortcuts/stablejack/YT-stS_redeem';
+import { StableJack_YtWos_Deposit_Shortcut } from '../../src/shortcuts/stablejack/YT-wOS_deposit';
 
 export async function getBlockTimestamp(provider: StaticJsonRpcProvider, blockNumber: BigNumberish): Promise<number> {
   const block = await provider.getBlock(Number(blockNumber));
@@ -127,6 +129,33 @@ describe('Successfully simulates Sonic shortcuts for', () => {
         });
       });
 
+      it('pt-wos', async () => {
+        // Arrange
+        const txsToSim = [
+          {
+            blockNumber: '8865840',
+            requiresFunding: true,
+            shortcut: new StableJack_PtWos_Deposit_Shortcut(),
+            amountsIn: [parseUnits('1', 18).toString()],
+          },
+        ];
+
+        // Act
+        const report = await main(ChainIds.Sonic, txsToSim, { forgeTestLogFormat: ForgeTestLogFormat.JSON });
+
+        // Assert
+        expect(report.length).toBe(1);
+        expect(report[0]).toMatchObject({
+          weirollWallet: '0xBa8F5f80C41BF5e169d9149Cd4977B1990Fc2736',
+          amountsIn: ['1000000000000000000'],
+          quote: { '0xbe1B1dd422d94f9c1784FB9356ef83A29E1A8cFa': '999999999999999998' },
+          dust: {
+            '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38': '0',
+          },
+          gas: '1339893',
+        });
+      });
+
       it('yt-sts', async () => {
         // Arrange
         const txsToSim = [
@@ -152,6 +181,33 @@ describe('Successfully simulates Sonic shortcuts for', () => {
             '0xE5DA20F15420aD15DE0fa650600aFc998bbE3955': '0',
           },
           gas: '1324216',
+        });
+      });
+
+      it('yt-wos', async () => {
+        // Arrange
+        const txsToSim = [
+          {
+            blockNumber: '8865840',
+            requiresFunding: true,
+            shortcut: new StableJack_YtWos_Deposit_Shortcut(),
+            amountsIn: [parseUnits('1', 18).toString()],
+          },
+        ];
+
+        // Act
+        const report = await main(ChainIds.Sonic, txsToSim, { forgeTestLogFormat: ForgeTestLogFormat.JSON });
+
+        // Assert
+        expect(report.length).toBe(1);
+        expect(report[0]).toMatchObject({
+          weirollWallet: '0xBa8F5f80C41BF5e169d9149Cd4977B1990Fc2736',
+          amountsIn: ['1000000000000000000'],
+          quote: { '0xbe1B1dd422d94f9c1784FB9356ef83A29E1A8cFa': '995866865659706485' },
+          dust: {
+            '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38': '0',
+          },
+          gas: '1586421',
         });
       });
     });
