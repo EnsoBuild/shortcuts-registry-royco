@@ -17,7 +17,7 @@ contract Simulation_Fork_Test is Test {
     // --- Simulation environment variables --
     string private constant SIMULATION_JSON_ENV_VAR = "SIMULATION_JSON_DATA";
     uint256 private constant NUMBER_OF_JSON_STRINGIFIED_ARRAYS_PER_TX_TO_SIM = 11; // NB: keep it up to date with the
-        // number of JSON arrays
+    // number of JSON arrays
     string private constant JSON_CHAIN_ID = ".chainId";
     string private constant JSON_RPC_URL = ".rpcUrl";
     string private constant JSON_SHORTCUT_NAMES = ".shortcutNames";
@@ -299,9 +299,14 @@ contract Simulation_Fork_Test is Test {
             console2.log("|");
 
             // --- Execute shortcut ---
+            // Do not affect gas metrics by storage reads when executing the shortcut
+            uint256 txValue = s_txValues[sIdx];
+            bytes memory txData = s_txData[sIdx];
+            address callee = s_callee;
+
             vm.prank(s_caller);
             uint256 gasStart = gasleft();
-            (bool success, bytes memory data) = s_callee.call{ value: s_txValues[sIdx] }(s_txData[sIdx]);
+            (bool success, bytes memory data) = s_callee.call{ value: txValue }(txData);
             uint256 gasEnd = gasleft();
             if (!success) {
                 revert Simulation_Fork_Test__SimulationCallFailed(sIdx, data);
