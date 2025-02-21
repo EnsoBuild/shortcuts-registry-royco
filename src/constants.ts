@@ -43,21 +43,26 @@ export const CONTRCT_SIMULATION_FORK_TEST_EVENTS_ABI = [
     type: 'event',
     name: 'SimulationReportDust',
     inputs: [
+      { name: 'shortcutIndex', type: 'uint256', indexed: false, internalType: 'uint256' },
       { name: 'tokensDust', type: 'address[]', indexed: false, internalType: 'address[]' },
-      { name: 'amountsDust', type: 'uint256[]', indexed: false, internalType: 'uint256[]' },
+      { name: 'amountsDust', type: 'int256[]', indexed: false, internalType: 'int256[]' },
     ],
     anonymous: false,
   },
   {
     type: 'event',
     name: 'SimulationReportGasUsed',
-    inputs: [{ name: 'gasUsed', type: 'uint256', indexed: false, internalType: 'uint256' }],
+    inputs: [
+      { name: 'shortcutIndex', type: 'uint256', indexed: false, internalType: 'uint256' },
+      { name: 'gasUsed', type: 'uint256', indexed: false, internalType: 'uint256' },
+    ],
     anonymous: false,
   },
   {
     type: 'event',
     name: 'SimulationReportQuote',
     inputs: [
+      { name: 'shortcutIndex', type: 'uint256', indexed: false, internalType: 'uint256' },
       { name: 'tokensOut', type: 'address[]', indexed: false, internalType: 'address[]' },
       { name: 'amountsOut', type: 'uint256[]', indexed: false, internalType: 'uint256[]' },
     ],

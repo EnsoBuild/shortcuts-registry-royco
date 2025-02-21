@@ -1,7 +1,6 @@
 import { ChainIds } from '@ensofinance/shortcuts-builder/types';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 
-import { ForgeTestLogFormat } from '../src/constants';
 import {
   buildShortcut,
   getForgePath,
@@ -12,16 +11,16 @@ import {
   validateForgeTestLogFormat,
   validateSimulatedTransactions,
 } from '../src/helpers';
-import type { BuiltShortcut, Report, TransactionToSimulate } from '../src/types';
+import type { BuiltShortcut, Report, SimulationLogConfig, TransactionToSimulate } from '../src/types';
 
 const failedSimulationReport = { status: 'Simulation failed', error: '' };
 
 export async function main(
   chainId: ChainIds,
   txs: TransactionToSimulate[],
-  forgeTestLogFormat = ForgeTestLogFormat.JSON,
+  simulationLogConfig: SimulationLogConfig,
 ): Promise<Report> {
-  validateForgeTestLogFormat(forgeTestLogFormat);
+  validateForgeTestLogFormat(simulationLogConfig.forgeTestLogFormat);
   validateSimulatedTransactions(txs);
 
   const tokenToHolder = getTokenToHolderByChainId(chainId);
@@ -31,10 +30,6 @@ export async function main(
     url: rpcUrl,
   });
   const roles = getSimulationRolesByChainId(chainId);
-  const simulationLogConfig = {
-    isReportLogged: true,
-    isCalldataLogged: false, // TODO
-  };
 
   const builtShortcuts: BuiltShortcut[] = [];
   for (const tx of txs) {
@@ -53,7 +48,6 @@ export async function main(
       forgePath,
       roles,
       tokenToHolder,
-      forgeTestLogFormat,
       simulationLogConfig,
     );
 

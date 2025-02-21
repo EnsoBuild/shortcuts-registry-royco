@@ -67,7 +67,8 @@ export interface SimulationResult {
   transaction: Transaction;
 }
 
-export type Report = {
+export interface ShortcutReport {
+  shortcutName: string;
   weirollWallet: AddressArg;
   amountsIn: string[];
   quote: Record<string, string>;
@@ -75,14 +76,18 @@ export type Report = {
   gas: string;
 };
 
+export type Report = ShortcutReport[];
+
 export interface AddressData {
   address?: AddressArg;
   label: string;
 }
 
 export interface SimulationLogConfig {
-  isReportLogged: boolean;
-  isCalldataLogged: boolean;
+  forgeTestLogFormat: ForgeTestLogFormat;
+  isForgeTxDataLogged?: boolean;
+  isCalldataLogged?: boolean;
+  isReportLogged?: boolean;
 }
 
 export interface SimulationRoles {

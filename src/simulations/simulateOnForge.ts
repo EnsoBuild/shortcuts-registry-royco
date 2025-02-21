@@ -4,7 +4,7 @@ import { spawnSync } from 'node:child_process';
 import os from 'node:os';
 
 import { ForgeTestLogFormat } from '../constants';
-import type { ForgeTestLogJSON, SimulationForgeData, SimulationRoles } from '../types';
+import type { ForgeTestLogJSON, SimulationForgeData, SimulationLogConfig, SimulationRoles } from '../types';
 
 export function simulateTransactionOnForge(
   chainId: number,
@@ -23,6 +23,7 @@ export function simulateTransactionOnForge(
   roles: SimulationRoles,
   addressToLabel: Map<AddressArg, string>,
   forgeData: SimulationForgeData,
+  simulationLogConfig: SimulationLogConfig,
 ): ForgeTestLogJSON {
   const rpcUrl = provider.connection.url;
   if (!roles.callee?.address) {
@@ -53,10 +54,13 @@ export function simulateTransactionOnForge(
     labelKeys: [...addressToLabel.keys()],
     labelValues: [...addressToLabel.values()],
   };
-  process.stdout.write('Simulation (JSON Data):\n');
-  process.stdout.write(JSON.stringify(simulationJsonDataRaw, null, 2));
-  process.stdout.write('\n');
-  // console.warn('Simulation (JSON Data):\n', JSON.stringify(simulationJsonDataRaw), '\n');
+
+  if (simulationLogConfig.isForgeTxDataLogged) {
+    process.stdout.write('Simulation (JSON Data):\n');
+    process.stdout.write(JSON.stringify(simulationJsonDataRaw, null, 2));
+    process.stdout.write('\n');
+    // console.warn('Simulation (JSON Data):\n', JSON.stringify(simulationJsonDataRaw), '\n');
+  }
 
   // NOTE: foundry JSON parsing cheatcodes don't support multidimensional arrays, therefore we stringify them
   const simulationJsonData = {

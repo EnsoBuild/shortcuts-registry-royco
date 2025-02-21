@@ -4,11 +4,12 @@ import { Interface } from '@ethersproject/abi';
 import { BigNumberish } from '@ethersproject/bignumber';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 
-import { CONTRCT_SIMULATION_FORK_TEST_EVENTS_ABI, FUNCTION_ID_ERC20_APPROVE, ForgeTestLogFormat } from '../constants';
+import { CONTRCT_SIMULATION_FORK_TEST_EVENTS_ABI, FUNCTION_ID_ERC20_APPROVE } from '../constants';
 import { simulateTransactionOnForge } from '../simulations/simulateOnForge';
 import type {
   BuiltShortcut,
   Report,
+  ShortcutReport,
   SimulationLogConfig,
   SimulationRoles,
   TransactionToSimulate,
@@ -50,12 +51,11 @@ export async function simulateShortcutOnForge(
   forgePath: string,
   roles: SimulationRoles,
   tokenToHolder: Map<AddressArg, AddressArg>,
-  forgeTestLogFormat: ForgeTestLogFormat,
   simulationLogConfig: SimulationLogConfig,
 ): Promise<Report> {
   const forgeData = {
     path: forgePath,
-    forgeTestLogFormat: forgeTestLogFormat,
+    forgeTestLogFormat: simulationLogConfig.forgeTestLogFormat,
     contract: 'Simulation_Fork_Test',
     contractABI: CONTRCT_SIMULATION_FORK_TEST_EVENTS_ABI,
     test: 'test_simulateShortcut_1',
@@ -147,6 +147,7 @@ export async function simulateShortcutOnForge(
     roles,
     addressToLabel,
     forgeData,
+    simulationLogConfig,
   );
 
   // console.log('forgeTestLog:\n', JSON.stringify(forgeTestLog, null, 2), '\n');
@@ -168,40 +169,50 @@ export async function simulateShortcutOnForge(
   const contractInterface = new Interface(forgeData.contractABI);
 
   // Decode Gas
+
   const gasUsedTopic = contractInterface.getEventTopic('SimulationReportGasUsed');
-  const gasUsedLog = testResult.logs.find((log) => log.topics[0] === gasUsedTopic);
-  if (!gasUsedLog) throw new Error('simulateShortcutOnForge: missing "SimulationReportGasUsed" used log');
-  const gasUsed = contractInterface.parseLog(gasUsedLog).args.gasUsed;
+  const gasUsedLogs = testResult.logs.filter((log) => log.topics[0] === gasUsedTopic);
+  console.log('*** Gas Used Logs: ', gasUsedLogs);
+  if (!gasUsedLogs) throw new Error('simulateShortcutOnForge: missing "SimulationReportGasUsed" used log');
 
   // Decode Quote
   const quoteTopic = contractInterface.getEventTopic('SimulationReportQuote');
-  const quoteLog = testResult.logs.find((log) => log.topics[0] === quoteTopic);
-  if (!quoteLog) throw new Error('simulateShortcutOnForge: missing "SimulationReportQuote" used log');
-  const quoteTokensOut = contractInterface.parseLog(quoteLog).args.tokensOut;
-  const quoteAmountsOut = contractInterface.parseLog(quoteLog).args.amountsOut;
+  const quoteLogs = testResult.logs.filter((log) => log.topics[0] === quoteTopic);
+  if (!quoteLogs) throw new Error('simulateShortcutOnForge: missing "SimulationReportQuote" used log');
 
   // Decode Dust
   const dustTopic = contractInterface.getEventTopic('SimulationReportDust');
-  const dustLog = testResult.logs.find((log) => log.topics[0] === dustTopic);
-  if (!dustLog) throw new Error('simulateShortcutOnForge: missing "SimulationReportDust" used log');
-  const dustTokensDust = contractInterface.parseLog(dustLog).args.tokensDust;
-  const dustAmountsDust = contractInterface.parseLog(dustLog).args.amountsDust;
+  const dustLogs = testResult.logs.filter((log) => log.topics[0] === dustTopic);
+  if (!dustLogs) throw new Error('simulateShortcutOnForge: missing "SimulationReportDust" used log');
 
-  // Instantiate Report
-  const report = {
-    weirollWallet: getAddress(roles.weirollWallet!.address!),
-    amountsIn,
-    quote: Object.fromEntries(
-      quoteTokensOut.map((key: AddressArg, idx: number) => [key, quoteAmountsOut[idx].toString()]),
-    ),
-    dust: Object.fromEntries(
-      dustTokensDust.map((key: AddressArg, idx: number) => [key, dustAmountsDust[idx].toString()]),
-    ),
-    gas: gasUsed.toString(),
-  };
+  const report: Report = [];
+  for (const [index, txToSim] of txsToSim.entries()) {
+    const gasUsed = contractInterface.parseLog(gasUsedLogs[index]).args.gasUsed;
+    const quoteTokensOut = contractInterface.parseLog(quoteLogs[index]).args.tokensOut;
+    const quoteAmountsOut = contractInterface.parseLog(quoteLogs[index]).args.amountsOut;
+    const dustTokensDust = contractInterface.parseLog(dustLogs[index]).args.tokensDust;
+    const dustAmountsDust = contractInterface.parseLog(dustLogs[index]).args.amountsDust;
+
+    // Instantiate Report
+    const shortcutReport: ShortcutReport = {
+      shortcutName: txToSim.shortcut.name,
+      weirollWallet: getAddress(roles.weirollWallet!.address!),
+      amountsIn: amountsIn[index],
+      quote: Object.fromEntries(
+        quoteTokensOut.map((key: AddressArg, idx: number) => [key, quoteAmountsOut[idx].toString()]),
+      ),
+      dust: Object.fromEntries(
+        dustTokensDust.map((key: AddressArg, idx: number) => [key, dustAmountsDust[idx].toString()]),
+      ),
+      gas: gasUsed.toString(),
+    };
+    report.push(shortcutReport);
+  }
 
   if (simulationLogConfig.isReportLogged) {
-    console.log('Simulation (Report):\n', report, '\n');
+    process.stdout.write('Simulation (Report):\n');
+    process.stdout.write(JSON.stringify(report, null, 2));
+    process.stdout.write('\n');
   }
 
   return report;
