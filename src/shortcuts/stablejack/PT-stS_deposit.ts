@@ -3,7 +3,7 @@ import { RoycoClient } from '@ensofinance/shortcuts-builder/client/implementatio
 import { AddressArg, ChainIds, WeirollScript } from '@ensofinance/shortcuts-builder/types';
 import { Standards, getStandardByProtocol } from '@ensofinance/shortcuts-standards';
 
-import { chainIdToDeFiAddresses, chainIdToTokenHolder } from '../../constants';
+import { chainIdToDeFiAddresses } from '../../constants';
 import type { AddressData, Input, Output, Shortcut } from '../../types';
 import { getBalance, mint_stS, unwrap_wrappedNativeToken } from '../../utils';
 
@@ -70,11 +70,5 @@ export class StableJack_PtSts_Deposit_Shortcut implements Shortcut {
       default:
         throw new Error(`Unsupported chainId: ${chainId}`);
     }
-  }
-  getTokenHolder(chainId: number): Map<AddressArg, AddressArg> {
-    const tokenToHolder = chainIdToTokenHolder.get(chainId);
-    if (!tokenToHolder) throw new Error(`Unsupported 'chainId': ${chainId}`);
-
-    return tokenToHolder as Map<AddressArg, AddressArg>;
   }
 }

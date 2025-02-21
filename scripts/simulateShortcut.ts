@@ -31,6 +31,7 @@ export async function main(
   });
   const roles = getSimulationRolesByChainId(chainId);
 
+  // NOTE: this could use `Promise.all`
   const builtShortcuts: BuiltShortcut[] = [];
   for (const tx of txs) {
     const builtShortcut = await buildShortcut(chainId, provider, tx.shortcut, tx.amountsIn);

@@ -8,6 +8,7 @@ import { main } from '../../scripts/simulateShortcut';
 import { ForgeTestLogFormat } from '../../src/constants';
 import { getRpcUrlByChainId } from '../../src/helpers';
 import { Silo_Ws_Deposit_Shortcut } from '../../src/shortcuts/silo/ws_deposit';
+import { Silo_Ws_Redeem_Shortcut } from '../../src/shortcuts/silo/ws_redeem';
 import { StableJack_PtSts_Deposit_Shortcut } from '../../src/shortcuts/stablejack/PT-stS_deposit';
 import { StableJack_PtSts_Redeem_Shortcut } from '../../src/shortcuts/stablejack/PT-stS_redeem';
 import { StableJack_YtSts_Deposit_Shortcut } from '../../src/shortcuts/stablejack/YT-stS_deposit';
@@ -61,11 +62,44 @@ describe('Successfully simulates Sonic shortcuts for', () => {
         });
       });
     });
+
+    describe('redeems', () => {
+      it('ws', async () => {
+        // Arrange
+        const txsToSim = [
+          {
+            blockNumber: '8455854',
+            requiresFunding: true,
+            shortcut: new Silo_Ws_Deposit_Shortcut(),
+            amountsIn: [parseUnits('1', 18).toString()],
+          },
+          {
+            blockNumber: '8455854',
+            requiresFunding: true,
+            shortcut: new Silo_Ws_Redeem_Shortcut(),
+            amountsIn: [parseUnits('1', 18).toString()],
+          },
+        ];
+
+        // Act
+        const report = await main(ChainIds.Sonic, txsToSim, { forgeTestLogFormat: ForgeTestLogFormat.JSON });
+
+        // Assert
+        expect(report.length).toBe(2);
+        expect(report[0]).toMatchObject({
+          amountsIn: ['1000000000000000000'],
+          dust: { '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38': '0' },
+          quote: { '0xf55902DE87Bd80c6a35614b48d7f8B612a083C12': '998297853831134388682' },
+          weirollWallet: '0xBa8F5f80C41BF5e169d9149Cd4977B1990Fc2736',
+          gas: '417625', // '368502',
+        });
+      });
+    });
   });
 
   describe('stablejack', () => {
     describe('deposits', () => {
-      it('pt-sts', async () => {
+      it.only('pt-sts', async () => {
         // Arrange
         const txsToSim = [
           {

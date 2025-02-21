@@ -12,6 +12,7 @@ import { Standards, getStandardByProtocol } from '@ensofinance/shortcuts-standar
 import { GeneralAddresses, helperAddresses } from '@ensofinance/shortcuts-standards/addresses';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 
+import { chainIdToSimulationRoles } from '../constants';
 import { getNativeToken } from '../helpers/utils';
 import type { RoycoOutput, Shortcut, SimulationResult } from '../types';
 
@@ -48,12 +49,43 @@ export async function mintErc4626(tokenIn: AddressArg, tokenOut: AddressArg, amo
   return amountOut as FromContractCallArg;
 }
 
+export async function redeemErc4626(tokenIn: AddressArg, tokenOut: AddressArg, amountIn: NumberArg, builder: Builder) {
+  const erc4626 = getStandardByProtocol('erc4626', builder.chainId);
+  const { amountOut } = await erc4626.redeem.addToBuilder(builder, {
+    tokenIn,
+    tokenOut,
+    amountIn: [amountIn],
+    primaryAddress: tokenIn,
+  });
+
+  return amountOut as FromContractCallArg;
+}
+
 export async function burnTokens(token: AddressArg, amount: NumberArg, builder: Builder) {
   const erc20 = getStandardByProtocol('erc20', builder.chainId);
   await erc20.transfer.addToBuilder(builder, {
     token,
     receiver: GeneralAddresses.null,
     amount,
+  });
+}
+
+export function getWalletOwner(builder: Builder) {
+  return builder.add({
+    address: chainIdToSimulationRoles.get(builder.chainId)?.roycoWalletHelpers.address as AddressArg,
+    abi: ['function owner() external view returns (address)'],
+    functionName: 'owner',
+    args: [],
+  });
+}
+
+export async function sendTokensToOwner(token: AddressArg, amount: NumberArg, builder: Builder) {
+  const owner = getWalletOwner(builder);
+  builder.add({
+    address: token,
+    functionName: 'transfer',
+    abi: ['function transfer(address,uint256)'],
+    args: [owner, amount],
   });
 }
 
@@ -78,8 +110,8 @@ export async function buildRoycoMarketShortcut(
   const output = await shortcut.build(chainId, provider);
 
   return {
-    weirollCommands: output.script.commands,
-    weirollState: output.script.state,
+    commands: output.script.commands,
+    state: output.script.state,
   };
 }
 

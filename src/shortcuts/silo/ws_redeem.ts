@@ -4,16 +4,16 @@ import { AddressArg, ChainIds, WeirollScript } from '@ensofinance/shortcuts-buil
 
 import { chainIdToDeFiAddresses } from '../../constants';
 import type { AddressData, Input, Output, Shortcut } from '../../types';
-import { getBalance, mintErc4626 } from '../../utils';
+import { getBalance, redeemErc4626, sendTokensToOwner } from '../../utils';
 
-export class Silo_Ws_Deposit_Shortcut implements Shortcut {
-  name = 'silo-ws-deposit';
-  description = 'Market 1 Deposit: wS -> bwS-20';
+export class Silo_Ws_Redeem_Shortcut implements Shortcut {
+  name = 'silo-ws-redeem';
+  description = 'Market 1 Redeem: bwS-20 -> wS';
   supportedChains = [ChainIds.Sonic];
   inputs: Record<number, Input> = {
     [ChainIds.Sonic]: {
+      vault: '0xf55902DE87Bd80c6a35614b48d7f8B612a083C12',
       wS: chainIdToDeFiAddresses[ChainIds.Sonic].wS,
-      vault: '0xf55902DE87Bd80c6a35614b48d7f8B612a083C12', // bwS-20
     },
   };
 
@@ -24,12 +24,13 @@ export class Silo_Ws_Deposit_Shortcut implements Shortcut {
     const { wS, vault } = inputs;
 
     const builder = new Builder(chainId, client, {
-      tokensIn: [wS],
-      tokensOut: [vault],
+      tokensIn: [vault],
+      tokensOut: [wS],
     });
-    const wsAmount = getBalance(wS, builder);
-
-    await mintErc4626(wS, vault, wsAmount, builder);
+    const vaultAmount = getBalance(vault, builder);
+    await redeemErc4626(vault, wS, vaultAmount, builder);
+    const wSAmount = getBalance(wS, builder);
+    await sendTokensToOwner(wS, wSAmount, builder);
 
     const payload = await builder.build({
       requireWeiroll: true,
@@ -46,8 +47,8 @@ export class Silo_Ws_Deposit_Shortcut implements Shortcut {
     switch (chainId) {
       case ChainIds.Sonic:
         return new Map([
-          [this.inputs[ChainIds.Sonic].wS, { label: 'wS' }],
-          [this.inputs[ChainIds.Sonic].vault, { label: 'bwS-20' }],
+          [this.inputs[ChainIds.Sonic].wS, { label: 'ERC20:wS' }],
+          [this.inputs[ChainIds.Sonic].vault, { label: 'ERC20:Silo Vault' }],
         ]);
       default:
         throw new Error(`Unsupported chainId: ${chainId}`);

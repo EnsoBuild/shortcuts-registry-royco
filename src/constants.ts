@@ -79,7 +79,8 @@ export const chainIdToSimulationRoles: Map<ChainIds, SimulationRoles> = new Map(
         label: 'Caller',
       },
       recipeMarketHub: {
-        address: '0x7A1C91392462c55FB7F2eA98905eA8CeEEA04579',
+        address: '0x7A1C91392462c55FB7F2eA98905eA8CeEEA04579', // NB: new contract is left as dust
+        // address: '0xa2c139FFdeF281504601f3Db8ba49F58Dc1498e4',
         label: 'RecipeMarketHub',
       },
       multiCall: {
@@ -101,6 +102,7 @@ export const chainIdToSimulationRoles: Map<ChainIds, SimulationRoles> = new Map(
 // Keep it sorted kinda alphabetically but case insensitive :)
 export const chainIdToDeFiAddresses: Record<number, Record<string, AddressArg>> = {
   [ChainIds.Sonic]: {
+    bwS_20: '0xf55902DE87Bd80c6a35614b48d7f8B612a083C12',
     OS: '0xb1e25689D55734FD3ffFc939c4C3Eb52DFf8A794',
     PT_stS: '0xFCA91fEEe65DB34448A83a74f4f8970b5dddfa7c',
     PT_wOS: '0xbe1B1dd422d94f9c1784FB9356ef83A29E1A8cFa',
@@ -118,6 +120,7 @@ export const chainIdToDeFiAddresses: Record<number, Record<string, AddressArg>> 
 
 const tokenToHolderSonic: Map<AddressArg, AddressArg> = new Map([
   // NOTE: Native Token (funded via `vm.deal(<address>, 1_000 ether)`)
+  [chainIdToDeFiAddresses[ChainIds.Sonic].bwS_20, '0x8D4D19405Ba352e4767681C28936fc0a9A8C8dFe'],
   [chainIdToDeFiAddresses[ChainIds.Sonic].OS, '0xa76Beaf111BaD5dD866fa4835D66b9aA2Eb1FdEc'],
   [chainIdToDeFiAddresses[ChainIds.Sonic].PT_stS, '0x36804ABb20cb8c19B860d3C9bF7219a88B8fc57A'],
   [chainIdToDeFiAddresses[ChainIds.Sonic].PT_wOS, '0xb8022c515174F41C4EF9211FE5dcFff27B01DE87'],
