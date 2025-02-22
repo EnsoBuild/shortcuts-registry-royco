@@ -25,7 +25,8 @@ export async function main_(args: string[]) {
     switch (outputFmt) {
       case ShortcutOutputFormat.ROYCO:
         output = await buildRoycoMarketShortcut(shortcut, chainId, provider);
-        console.log(JSON.stringify([output.commands, output.state], null, 2), '\n');
+        console.log(JSON.stringify(output, null, 2), '\n');
+
         break;
       case ShortcutOutputFormat.FULL:
         output = await shortcut.build(chainId, provider);
@@ -38,7 +39,7 @@ export async function main_(args: string[]) {
     if ([ShortcutOutputFormat.FULL].includes(outputFmt)) return;
 
     // Save output to file in ROYCO format
-    const outputJson = JSON.stringify([(output as RoycoOutput).commands, (output as RoycoOutput).state], null, 2);
+    const outputJson = JSON.stringify(output, null, 2);
     const outputHash = hashContent(outputJson);
     const outputDir = path.join(__dirname, `../outputs/${chain}`, protocol);
     const outputFile = path.join(outputDir, `${market}.json`);

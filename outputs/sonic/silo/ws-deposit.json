@@ -1,5 +1,5 @@
-[
-  [
+{
+  "commands": [
     "0xb65d95ec01ffffffffffff0207899ac8be7462151d6515fcd4773dd9267c9911",
     "0x2e1cc2f601ffffffffffff0307899ac8be7462151d6515fcd4773dd9267c9911",
     "0x095ea7b3010300ffffffffff039e2fb66102314ce7b64ce5ce3e5183bc94ad38",
@@ -8,10 +8,10 @@
     "0x095ea7b3010103ffffffffff039e2fb66102314ce7b64ce5ce3e5183bc94ad38",
     "0x6e553f65010302fffffffffff55902de87bd80c6a35614b48d7f8b612a083c12"
   ],
-  [
+  "state": [
     "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
     "0x000000000000000000000000f55902de87bd80c6a35614b48d7f8b612a083c12",
     "0x",
     "0x"
   ]
-]
+}
