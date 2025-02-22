@@ -64,7 +64,7 @@ describe('Successfully simulates Sonic shortcuts for', () => {
           dust: { '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38': '0' },
           quote: { '0xf55902DE87Bd80c6a35614b48d7f8B612a083C12': '998297853831134388682' },
           weirollWallet: '0xBa8F5f80C41BF5e169d9149Cd4977B1990Fc2736',
-          gas: '366489',
+          gas: '366225',
         });
       });
     });
@@ -127,7 +127,7 @@ describe('Successfully simulates Sonic shortcuts for', () => {
             '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38': '0',
             '0xE5DA20F15420aD15DE0fa650600aFc998bbE3955': '0',
           },
-          gas: '1077397',
+          gas: '1077133',
         });
       });
 
@@ -150,11 +150,11 @@ describe('Successfully simulates Sonic shortcuts for', () => {
         expect(report[0]).toMatchObject({
           weirollWallet: '0xBa8F5f80C41BF5e169d9149Cd4977B1990Fc2736',
           amountsIn: ['1000000000000000000'],
-          quote: { '0xbe1B1dd422d94f9c1784FB9356ef83A29E1A8cFa': '999999999999999998' },
+          quote: { '0xbe1B1dd422d94f9c1784FB9356ef83A29E1A8cFa': '999999999999999997' },
           dust: {
             '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38': '0',
           },
-          gas: '1339893',
+          gas: '1339629',
         });
       });
 
@@ -182,7 +182,7 @@ describe('Successfully simulates Sonic shortcuts for', () => {
             '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38': '0',
             '0xE5DA20F15420aD15DE0fa650600aFc998bbE3955': '0',
           },
-          gas: '1324216',
+          gas: '1323952',
         });
       });
 
@@ -209,7 +209,7 @@ describe('Successfully simulates Sonic shortcuts for', () => {
           dust: {
             '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38': '0',
           },
-          gas: '1586421',
+          gas: '1586157',
         });
       });
     });

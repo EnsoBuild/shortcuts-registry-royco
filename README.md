@@ -82,18 +82,6 @@ Optionally, get a full output by adding `--output=full` (this output won't be sa
 pnpm generate sonic dolomite dhoney --output=full
 ```
 
-## Build
-
-```sh
-pnpm build <network> <marketHash> <...args>
-```
-
-e.g.
-
-```sh
-pnpm build sonic 0xd4d6596bdc7cb7f8b214961f895c2d79d884f9c3dfcac62996c3f94c1641af0d --slippage=100 --skewRatio=9990 --minAmount0Bps=9950 --minAmount1Bps=9950
-```
-
 ## Simulate
 
 ### Shortcut to Simulate Params
@@ -214,16 +202,3 @@ const txsToSim = [
 ```sh
 pnpm test:simulations
 ```
-
-## Execute
-
-To actually execute on-chain you can use the following command:
-
-```sh
-pnpm execute sonic dolomite dhoney 0x0a26df1d9EE5e99dF92552979E83BEeA54653E8a
-```
-
-Where the address passed is the wallet that will be executing the call. You must set the private key to `PRIVATE_KEY` in
-the .env file or pass it directly via `--privateKey=`
-
-The script will only work if the wallet is already deployed and funded.

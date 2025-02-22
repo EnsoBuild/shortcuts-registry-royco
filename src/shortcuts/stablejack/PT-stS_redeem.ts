@@ -1,7 +1,7 @@
 import { Builder } from '@ensofinance/shortcuts-builder';
 import { RoycoClient } from '@ensofinance/shortcuts-builder/client/implementations/roycoClient';
 import { AddressArg, ChainIds, WeirollScript } from '@ensofinance/shortcuts-builder/types';
-import { Standards, getStandardByProtocol } from '@ensofinance/shortcuts-standards';
+import { Standards } from '@ensofinance/shortcuts-standards';
 
 import { chainIdToDeFiAddresses } from '../../constants';
 import type { AddressData, Input, Output, Shortcut } from '../../types';
@@ -25,7 +25,7 @@ export class StableJack_PtSts_Redeem_Shortcut implements Shortcut {
     const client = new RoycoClient();
 
     const inputs = this.inputs[chainId];
-    const { protocol, stS, PT_stS } = inputs;
+    const { stS, PT_stS } = inputs;
 
     const builder = new Builder(chainId, client, {
       tokensIn: [PT_stS],
@@ -33,15 +33,7 @@ export class StableJack_PtSts_Redeem_Shortcut implements Shortcut {
     });
     const amountPtSts = getBalance(PT_stS, builder);
 
-    getStandardByProtocol('stable-jack', builder.chainId).redeem.addToBuilder(builder, {
-      tokenIn: [PT_stS],
-      tokenOut: stS,
-      amountIn: [amountPtSts],
-      primaryAddress: protocol,
-    });
-
-    const amountSts = getBalance(stS, builder);
-    await sendTokensToOwner(stS, amountSts, builder);
+    await sendTokensToOwner(PT_stS, amountPtSts, builder);
 
     const payload = await builder.build({
       requireWeiroll: true,
