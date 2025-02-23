@@ -304,6 +304,8 @@ contract Simulation_Fork_Test is Test {
             bytes memory txData = s_txData[sIdx];
             address callee = s_callee;
 
+            console2.log("| - CALLLER ", s_caller);
+
             vm.prank(s_caller);
             uint256 gasStart = gasleft();
             (bool success, bytes memory data) = s_callee.call{ value: txValue }(txData);

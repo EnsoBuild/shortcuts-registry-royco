@@ -7,6 +7,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { main } from '../../scripts/simulateShortcut';
 import { ForgeTestLogFormat } from '../../src/constants';
 import { getRpcUrlByChainId } from '../../src/helpers';
+import { Origin_Wos_Deposit_Shortcut } from '../../src/shortcuts/origin/wos_deposit';
 import { Silo_Ws_Deposit_Shortcut } from '../../src/shortcuts/silo/ws_deposit';
 import { Silo_Ws_Redeem_Shortcut } from '../../src/shortcuts/silo/ws_redeem';
 import { StableJack_PtSts_Deposit_Shortcut } from '../../src/shortcuts/stablejack/PT-stS_deposit';
@@ -376,6 +377,37 @@ describe('Successfully simulates Sonic shortcuts for', () => {
             '0xe16Bb6061B3567ee86285ab7780187cB39aCC55E': '-995866865659706485', // TODO: 1 wei flicks. Required better assertion
           },
           gas: '567861',
+        });
+      });
+    });
+  });
+
+  describe('origin', () => {
+    describe('deposits', () => {
+      it('wos', async () => {
+        // Arrange
+        const txsToSim = [
+          {
+            blockNumber: '8455854',
+            requiresFunding: true,
+            shortcut: new Origin_Wos_Deposit_Shortcut(),
+            amountsIn: [parseUnits('1', 18).toString()],
+          },
+        ];
+
+        // Act
+        const report = await main(ChainIds.Sonic, txsToSim, {
+          forgeTestLogFormat: ForgeTestLogFormat.JSON,
+        });
+
+        // Assert
+        expect(report.length).toBe(1);
+        expect(report[0]).toMatchObject({
+          amountsIn: ['1000000000000000000'],
+          dust: { '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38': '0' },
+          quote: { '0x1d7E3726aFEc5088e11438258193A199F9D5Ba93': '988879598709803129000' },
+          weirollWallet: '0xBa8F5f80C41BF5e169d9149Cd4977B1990Fc2736',
+          gas: '695246',
         });
       });
     });
