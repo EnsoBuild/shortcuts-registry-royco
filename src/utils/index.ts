@@ -10,7 +10,7 @@ import {
 } from '@ensofinance/shortcuts-builder/types';
 import { Standards, getStandardByProtocol } from '@ensofinance/shortcuts-standards';
 import { GeneralAddresses, helperAddresses } from '@ensofinance/shortcuts-standards/addresses';
-import { getForks } from '@ensofinance/shortcuts-standards/helpers';
+import { getForks } from '@ensofinance/shortcuts-standards/helpers/shortcuts';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 
 import { chainIdToSimulationRoles } from '../constants';

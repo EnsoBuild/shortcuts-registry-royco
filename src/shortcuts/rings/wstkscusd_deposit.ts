@@ -2,19 +2,19 @@ import { Builder } from '@ensofinance/shortcuts-builder';
 import { RoycoClient } from '@ensofinance/shortcuts-builder/client/implementations/roycoClient';
 import { AddressArg, ChainIds, WeirollScript } from '@ensofinance/shortcuts-builder/types';
 
-import { chainIdToDeFiAddresses } from '../../constants';
+import { chainIdToDeFiAddresses, chainIdToTokenHolder } from '../../constants';
 import type { AddressData, Input, Output, Shortcut } from '../../types';
-import { getBalance, redeemErc4626 } from '../../utils';
+import { getBalance } from '../../utils';
+import { mintScusd } from './utils';
 
-export class Origin_Wos_Redeem_Shortcut implements Shortcut {
-  name = 'origin-wos-redeem';
-  description = 'Market 1 Redeem: bwOS-22 -> wS';
+export class Rings_Wstkscusd_Deposit_Shortcut implements Shortcut {
+  name = 'rings-wstkscusd-deposit';
+  description = 'Rings Market Deposit: usdce -> wstkscusd';
   supportedChains = [ChainIds.Sonic];
   inputs: Record<number, Input> = {
     [ChainIds.Sonic]: {
-      vault: '0x1d7E3726aFEc5088e11438258193A199F9D5Ba93',
-      wS: chainIdToDeFiAddresses[ChainIds.Sonic].wS,
-      wOS: chainIdToDeFiAddresses[ChainIds.Sonic].wOS,
+      usdce: chainIdToDeFiAddresses[ChainIds.Sonic].USDC_e,
+      scusd: chainIdToDeFiAddresses[ChainIds.Sonic].scUsd,
     },
   };
 
@@ -22,16 +22,15 @@ export class Origin_Wos_Redeem_Shortcut implements Shortcut {
     const client = new RoycoClient();
 
     const inputs = this.inputs[chainId];
-    const { vault, wOS } = inputs;
+    const { usdce, scusd } = inputs;
 
     const builder = new Builder(chainId, client, {
-      tokensIn: [vault],
-      tokensOut: [wOS],
+      tokensIn: [usdce],
+      tokensOut: [scusd],
     });
-    const vaultAmount = getBalance(vault, builder);
-    await redeemErc4626(vault, wOS, vaultAmount, builder);
-    // const wOSAmount = getBalance(wOS, builder);
-    // await sendTokensToOwner(wOS, wOSAmount, builder);
+
+    const usdceAmount = getBalance(usdce, builder);
+    await mintScusd(usdceAmount, builder);
 
     const payload = await builder.build({
       requireWeiroll: true,
@@ -48,11 +47,17 @@ export class Origin_Wos_Redeem_Shortcut implements Shortcut {
     switch (chainId) {
       case ChainIds.Sonic:
         return new Map([
-          [this.inputs[ChainIds.Sonic].wS, { label: 'ERC20:wS' }],
-          [this.inputs[ChainIds.Sonic].vault, { label: 'ERC20:Silo Vault' }],
+          [this.inputs[ChainIds.Sonic].usdce, { label: 'usdce' }],
+          [this.inputs[ChainIds.Sonic].scusd, { label: 'scusd' }],
         ]);
       default:
         throw new Error(`Unsupported chainId: ${chainId}`);
     }
+  }
+  getTokenHolder(chainId: number): Map<AddressArg, AddressArg> {
+    const tokenToHolder = chainIdToTokenHolder.get(chainId);
+    if (!tokenToHolder) throw new Error(`Unsupported 'chainId': ${chainId}`);
+
+    return tokenToHolder as Map<AddressArg, AddressArg>;
   }
 }

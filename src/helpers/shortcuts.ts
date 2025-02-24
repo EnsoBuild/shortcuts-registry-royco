@@ -4,6 +4,7 @@ import { StaticJsonRpcProvider } from '@ethersproject/providers';
 
 import { Origin_Wos_Deposit_Shortcut } from '../shortcuts/origin/wos_deposit';
 import { Origin_Wos_Redeem_Shortcut } from '../shortcuts/origin/wos_redeem';
+import { Rings_Wstkscusd_Deposit_Shortcut } from '../shortcuts/rings/wstkscusd_deposit';
 import { Silo_Ws_Deposit_Shortcut } from '../shortcuts/silo/ws_deposit';
 import { Silo_Ws_Redeem_Shortcut } from '../shortcuts/silo/ws_redeem';
 import { StableJack_PtSts_Deposit_Shortcut } from '../shortcuts/stablejack/PT-stS_deposit';
@@ -38,6 +39,9 @@ export const shortcuts: Record<string, Record<string, Shortcut>> = {
     'yt-wos-deposit': new StableJack_YtWos_Deposit_Shortcut(),
     'yt-wos-redeem': new StableJack_YtWos_Redeem_Shortcut(),
   },
+  rings: {
+    wstkscusd_deposit: new Rings_Wstkscusd_Deposit_Shortcut(),
+  },
 };
 
 export const supportedShortcuts = [
@@ -53,6 +57,7 @@ export const supportedShortcuts = [
   StableJack_YtWos_Redeem_Shortcut,
   Origin_Wos_Deposit_Shortcut,
   Origin_Wos_Redeem_Shortcut,
+  Rings_Wstkscusd_Deposit_Shortcut,
 ];
 
 export async function buildShortcutsHashMap(
