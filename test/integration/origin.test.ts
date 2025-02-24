@@ -22,7 +22,7 @@ describe('origin', () => {
       // Arrange
       const txsToSim = [
         {
-          blockNumber: '8455854',
+          blockNumber: '9872270',
           requiresFunding: true,
           shortcut: new Origin_Wos_Deposit_Shortcut(),
           amountsIn: [parseUnits('1', 18).toString()],
@@ -42,9 +42,9 @@ describe('origin', () => {
         '0xb1e25689D55734FD3ffFc939c4C3Eb52DFf8A794': '0',
         '0x9F0dF7799f6FDAd409300080cfF680f5A23df4b1': '0',
       });
-      expect(quote).toEqual({ '0x1d7E3726aFEc5088e11438258193A199F9D5Ba93': '988879598709803129000' });
-      expect(weirollWallet).toBe('0xBa8F5f80C41BF5e169d9149Cd4977B1990Fc2736');
-      expectBigIntToBeCloseTo(BigInt(gas), BigInt('695271'), BigInt('100'));
+      expect(quote).toEqual({ '0x1d7E3726aFEc5088e11438258193A199F9D5Ba93': '987401487320570718999' });
+      expect(weirollWallet).toBe('0xf338BceB2BE2560548d3600F48Ba4e2b4BE387C7');
+      expectBigIntToBeCloseTo(BigInt(gas), BigInt('701297'), BigInt('100'));
     });
   });
 
@@ -52,7 +52,7 @@ describe('origin', () => {
     it('wos', async () => {
       // Arrange
       const provider = getProviderByChainId(ChainIds.Sonic);
-      const blockNumber = '8455854';
+      const blockNumber = '9872270';
       const blockTimestamp = await getBlockTimestamp(provider, blockNumber);
 
       const txsToSim = [
@@ -71,6 +71,7 @@ describe('origin', () => {
 
       // Act
       const report = await main(ChainIds.Sonic, txsToSim, { forgeTestLogFormat: ForgeTestLogFormat.DEFAULT });
+      console.log('Report: ', report)
 
       // Assert
       expect(report.length).toBe(2);
@@ -83,7 +84,7 @@ describe('origin', () => {
         '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38': '999999999999999999',
       });
       expect(quote1).toEqual({ '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38': '999999999999999999' });
-      expect(weirollWallet1).toBe('0xBa8F5f80C41BF5e169d9149Cd4977B1990Fc2736');
+      expect(weirollWallet1).toBe('0xf338BceB2BE2560548d3600F48Ba4e2b4BE387C7');
       expectBigIntToBeCloseTo(BigInt(gas1), BigInt('150783'), BigInt('100'));
     });
   });

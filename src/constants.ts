@@ -88,7 +88,8 @@ export const chainIdToSimulationRoles: Map<ChainIds, SimulationRoles> = new Map(
       },
       recipeMarketHub: {
         // address: '0x7A1C91392462c55FB7F2eA98905eA8CeEEA04579', // NB: new contract is left as dust
-        address: '0xa2c139FFdeF281504601f3Db8ba49F58Dc1498e4',
+        //address: '0xa2c139FFdeF281504601f3Db8ba49F58Dc1498e4',
+        address: '0x0e8f5978e3645cAe8647b2e2A08fFD9e603D8C07',
         label: 'RecipeMarketHub',
       },
       multiCall: {
