@@ -29,6 +29,7 @@ export class Silo_Ws_Redeem_Shortcut implements Shortcut {
     });
     const vaultAmount = getBalance(vault, builder);
     await redeemErc4626(vault, wS, vaultAmount, builder);
+
     const wSAmount = getBalance(wS, builder);
     await sendTokensToOwner(wS, wSAmount, builder);
 

@@ -323,7 +323,7 @@ contract SimulateShortcuts_Fork_Test is Test {
       bytes memory txData = s_txData[sIdx];
       address callee = s_callee;
 
-      vm.prank(s_caller);
+      vm.StartPrank(s_caller);
       uint256 gasStart = gasleft();
       (bool success, bytes memory data) = callee.call{ value: txValue }(txData);
       uint256 gasEnd = gasleft();

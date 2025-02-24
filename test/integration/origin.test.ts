@@ -49,21 +49,28 @@ describe('origin', () => {
   });
 
   describe('redeems', () => {
-    it('wos', async () => {
+    it.only('wos', async () => {
       // Arrange
       const provider = getProviderByChainId(ChainIds.Sonic);
       const blockNumber = '9872270';
       const blockTimestamp = await getBlockTimestamp(provider, blockNumber);
 
+      // const txsToSim = [
+      //   {
+      //     blockNumber,
+      //     requiresFunding: true,
+      //     shortcut: new Origin_Wos_Deposit_Shortcut(),
+      //     amountsIn: [parseUnits('10', 18).toString()],
+      //   },
+      //   {
+      //     blockTimestamp: blockTimestamp + 1,
+      //     shortcut: new Origin_Wos_Redeem_Shortcut(),
+      //     amountsIn: [parseUnits('1', 18).toString()],
+      //   },
+      // ];
       const txsToSim = [
         {
-          blockNumber,
           requiresFunding: true,
-          shortcut: new Origin_Wos_Deposit_Shortcut(),
-          amountsIn: [parseUnits('10', 18).toString()],
-        },
-        {
-          blockTimestamp: blockTimestamp + 1,
           shortcut: new Origin_Wos_Redeem_Shortcut(),
           amountsIn: [parseUnits('1', 18).toString()],
         },
@@ -71,7 +78,7 @@ describe('origin', () => {
 
       // Act
       const report = await main(ChainIds.Sonic, txsToSim, { forgeTestLogFormat: ForgeTestLogFormat.DEFAULT });
-      console.log('Report: ', report)
+      console.log('Report: ', report);
 
       // Assert
       expect(report.length).toBe(2);
