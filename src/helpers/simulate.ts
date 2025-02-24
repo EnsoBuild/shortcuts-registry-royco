@@ -23,7 +23,7 @@ import type {
 import { getEncodedData } from './call';
 
 const recipeMarketHubInterface = new Interface([
-  'function createCampaign(uint256) external view returns (address)',
+  'function createCampaign(address, uint256) external view returns (address)',
   'function executeWeiroll(bytes32[] calldata commands, bytes[] calldata state) external payable returns (bytes[] memory)',
 ]);
 
@@ -248,9 +248,8 @@ async function getNextWeirollWalletFromMockRecipeMarketHub(
   mockRecipeMarketHub: AddressArg,
 ): Promise<AddressArg> {
   const weirollWalletBytes = await provider.call({
-    from: caller,
     to: mockRecipeMarketHub,
-    data: recipeMarketHubInterface.encodeFunctionData('createCampaign', [0]),
+    data: recipeMarketHubInterface.encodeFunctionData('createCampaign', [caller, 0]),
   });
 
   return `0x${weirollWalletBytes.slice(26)}`;

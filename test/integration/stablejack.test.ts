@@ -26,7 +26,7 @@ describe('stablejack', () => {
       // Arrange
       const txsToSim = [
         {
-          blockNumber: '8865840',
+          blockNumber: '9872270',
           requiresFunding: true,
           shortcut: new StableJack_PtSts_Deposit_Shortcut(),
           amountsIn: [parseUnits('1', 18).toString()],
@@ -39,14 +39,14 @@ describe('stablejack', () => {
       // Assert
       expect(report.length).toBe(1);
       expect(report[0]).toMatchObject({
-        weirollWallet: '0xBa8F5f80C41BF5e169d9149Cd4977B1990Fc2736',
+        weirollWallet: '0xf338BceB2BE2560548d3600F48Ba4e2b4BE387C7',
         amountsIn: ['1000000000000000000'],
-        quote: { '0xFCA91fEEe65DB34448A83a74f4f8970b5dddfa7c': '999999999999999998' },
+        quote: { '0xFCA91fEEe65DB34448A83a74f4f8970b5dddfa7c': '999999999999999997' },
         dust: {
           '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38': '0',
           '0xE5DA20F15420aD15DE0fa650600aFc998bbE3955': '0',
         },
-        gas: '1077133',
+        gas: '1079923',
       });
     });
 
@@ -54,7 +54,7 @@ describe('stablejack', () => {
       // Arrange
       const txsToSim = [
         {
-          blockNumber: '8865840',
+          blockNumber: '9872270',
           requiresFunding: true,
           shortcut: new StableJack_PtWos_Deposit_Shortcut(),
           amountsIn: [parseUnits('1', 18).toString()],
@@ -67,13 +67,13 @@ describe('stablejack', () => {
       // Assert
       expect(report.length).toBe(1);
       expect(report[0]).toMatchObject({
-        weirollWallet: '0xBa8F5f80C41BF5e169d9149Cd4977B1990Fc2736',
+        weirollWallet: '0xf338BceB2BE2560548d3600F48Ba4e2b4BE387C7',
         amountsIn: ['1000000000000000000'],
-        quote: { '0xbe1B1dd422d94f9c1784FB9356ef83A29E1A8cFa': '999999999999999997' },
+        quote: { '0xbe1B1dd422d94f9c1784FB9356ef83A29E1A8cFa': '999999999999999998' },
         dust: {
           '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38': '0',
         },
-        gas: '1339629',
+        gas: '1345645',
       });
     });
 
@@ -81,7 +81,7 @@ describe('stablejack', () => {
       // Arrange
       const txsToSim = [
         {
-          blockNumber: '8865840',
+          blockNumber: '9872270',
           requiresFunding: true,
           shortcut: new StableJack_YtSts_Deposit_Shortcut(),
           amountsIn: [parseUnits('1', 18).toString()],
@@ -94,14 +94,14 @@ describe('stablejack', () => {
       // Assert
       expect(report.length).toBe(1);
       expect(report[0]).toMatchObject({
-        weirollWallet: '0xBa8F5f80C41BF5e169d9149Cd4977B1990Fc2736',
+        weirollWallet: '0xf338BceB2BE2560548d3600F48Ba4e2b4BE387C7',
         amountsIn: ['1000000000000000000'],
-        quote: { '0x0fa31f0d5a574F083E0be272a6CF807270352b3f': '994382368395976610' },
+        quote: { '0x0fa31f0d5a574F083E0be272a6CF807270352b3f': '992991794843644995' },
         dust: {
           '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38': '0',
           '0xE5DA20F15420aD15DE0fa650600aFc998bbE3955': '0',
         },
-        gas: '1323952',
+        gas: '1326936',
       });
     });
 
@@ -122,7 +122,7 @@ describe('stablejack', () => {
       // Assert
       expect(report.length).toBe(1);
       expect(report[0]).toMatchObject({
-        weirollWallet: '0xBa8F5f80C41BF5e169d9149Cd4977B1990Fc2736',
+        weirollWallet: '0xf338BceB2BE2560548d3600F48Ba4e2b4BE387C7',
         amountsIn: ['1000000000000000000'],
         quote: { '0xe16Bb6061B3567ee86285ab7780187cB39aCC55E': '995866865659706485' },
         dust: {
@@ -151,7 +151,7 @@ describe('stablejack', () => {
       // Assert
       expect(report.length).toBe(1);
       expect(report[0]).toMatchObject({
-        weirollWallet: '0xBa8F5f80C41BF5e169d9149Cd4977B1990Fc2736',
+        weirollWallet: '0xf338BceB2BE2560548d3600F48Ba4e2b4BE387C7',
         amountsIn: ['1000000000000000000'],
         quote: { '0xE5DA20F15420aD15DE0fa650600aFc998bbE3955': '988965465237611473' },
         dust: {
@@ -182,7 +182,7 @@ describe('stablejack', () => {
       // Assert
       expect(report.length).toBe(2);
       expect(report[1]).toMatchObject({
-        weirollWallet: '0xBa8F5f80C41BF5e169d9149Cd4977B1990Fc2736',
+        weirollWallet: '0xf338BceB2BE2560548d3600F48Ba4e2b4BE387C7',
         amountsIn: ['100000000000000000'],
         quote: { '0xb1e25689D55734FD3ffFc939c4C3Eb52DFf8A794': '-999999999999999998' }, // TODO: 1 wei flicks. Required better assertion
         dust: {
@@ -213,7 +213,7 @@ describe('stablejack', () => {
       // Assert
       expect(report.length).toBe(2);
       expect(report[1]).toMatchObject({
-        weirollWallet: '0xBa8F5f80C41BF5e169d9149Cd4977B1990Fc2736',
+        weirollWallet: '0xf338BceB2BE2560548d3600F48Ba4e2b4BE387C7',
         amountsIn: ['1000000000000000000'],
         quote: { '0xE5DA20F15420aD15DE0fa650600aFc998bbE3955': '988965465237611472' },
         dust: {
@@ -249,7 +249,7 @@ describe('stablejack', () => {
       // Assert
       expect(report.length).toBe(2);
       expect(report[1]).toMatchObject({
-        weirollWallet: '0xBa8F5f80C41BF5e169d9149Cd4977B1990Fc2736',
+        weirollWallet: '0xf338BceB2BE2560548d3600F48Ba4e2b4BE387C7',
         amountsIn: ['1000000000000000000'],
         quote: { '0xE5DA20F15420aD15DE0fa650600aFc998bbE3955': '9889773405810373419' },
         dust: {
@@ -285,7 +285,7 @@ describe('stablejack', () => {
       // Assert
       expect(report.length).toBe(2);
       expect(report[1]).toMatchObject({
-        weirollWallet: '0xBa8F5f80C41BF5e169d9149Cd4977B1990Fc2736',
+        weirollWallet: '0xf338BceB2BE2560548d3600F48Ba4e2b4BE387C7',
         amountsIn: ['1000000000000000000'],
         quote: { '0xb1e25689D55734FD3ffFc939c4C3Eb52DFf8A794': '998999999999999998' }, // TODO: 1 wei flicks. Required better assertion
         dust: {
