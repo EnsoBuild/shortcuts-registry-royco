@@ -20,7 +20,7 @@ describe('silo', () => {
       // Arrange
       const txsToSim = [
         {
-          blockNumber: '8455854',
+          blockNumber: '9872270',
           requiresFunding: true,
           shortcut: new Silo_Ws_Deposit_Shortcut(),
           amountsIn: [parseUnits('1', 18).toString()],
@@ -38,9 +38,9 @@ describe('silo', () => {
       expect(dust).toEqual({
         '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38': '0',
       });
-      expect(quote).toEqual({ '0xf55902DE87Bd80c6a35614b48d7f8B612a083C12': '988879598709803129000' });
-      expect(weirollWallet).toBe('0xBa8F5f80C41BF5e169d9149Cd4977B1990Fc2736');
-      expectBigIntToBeCloseTo(BigInt(gas), BigInt('366250'), BigInt('100'));
+      expect(quote).toEqual({ '0xf55902DE87Bd80c6a35614b48d7f8B612a083C12': '998149443699976369530' });
+      expect(weirollWallet).toBe('0xf338BceB2BE2560548d3600F48Ba4e2b4BE387C7');
+      expectBigIntToBeCloseTo(BigInt(gas), BigInt('446873'), BigInt('100'));
     });
   });
 
@@ -49,7 +49,7 @@ describe('silo', () => {
       // Arrange
       const txsToSim = [
         {
-          blockNumber: '8455854',
+          blockNumber: '9872270',
           requiresFunding: true,
           shortcut: new Silo_Ws_Deposit_Shortcut(),
           amountsIn: [parseUnits('1', 18).toString()],
@@ -69,11 +69,11 @@ describe('silo', () => {
       const { amountsIn: amountIn1, dust: dust1, quote: quote1, weirollWallet: weirollWallet1, gas: gas1 } = report[1];
       expect(amountIn1).toEqual(['1000000000000000000']);
       expect(dust1).toEqual({
-        '0xf55902DE87Bd80c6a35614b48d7f8B612a083C12': '-998297853831134388682',
-        '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38': '999999999999999999',
+        '0xf55902DE87Bd80c6a35614b48d7f8B612a083C12': '-998149443699976369530',
+        '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38': '0',
       });
       expect(quote1).toEqual({ '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38': '999999999999999999' });
-      expect(weirollWallet1).toBe('0xBa8F5f80C41BF5e169d9149Cd4977B1990Fc2736');
+      expect(weirollWallet1).toBe('0xf338BceB2BE2560548d3600F48Ba4e2b4BE387C7');
       expectBigIntToBeCloseTo(BigInt(gas1), BigInt('150783'), BigInt('100'));
     });
   });
