@@ -4,15 +4,20 @@ import { Interface } from '@ethersproject/abi';
 import { BigNumberish } from '@ethersproject/bignumber';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 
-import { CONTRCT_SIMULATION_FORK_TEST_EVENTS_ABI, FUNCTION_ID_ERC20_APPROVE } from '../constants';
-import { simulateTransactionOnForge } from '../simulations/simulateOnForge';
+import {
+  CONTRCT_SIMULATION_FORK_TEST_EVENTS_ABI,
+  FUNCTION_ID_ERC20_APPROVE,
+  ForgeTestLogFormat,
+  ForgeTestLogVerbosity,
+} from '../constants';
+import { simulateShortcutsOnForge } from '../simulations/simulateOnForge';
 import type {
   BuiltShortcut,
-  Report,
-  ShortcutReport,
   ShortcutToSimulate,
   ShortcutToSimulateForgeData,
+  SimulatedShortcutReport,
   SimulationLogConfig,
+  SimulationReport,
   SimulationRoles,
 } from '../types';
 import { getEncodedData } from './call';
@@ -43,7 +48,7 @@ function getAmountInForNativeToken(
   return amountInNativeToken;
 }
 
-export async function simulateShortcutOnForge(
+export async function simulateShortcutsWithForgeAndGenerateReport(
   chainId: ChainIds,
   provider: StaticJsonRpcProvider,
   txsToSim: ShortcutToSimulate[],
@@ -52,17 +57,22 @@ export async function simulateShortcutOnForge(
   roles: SimulationRoles,
   tokenToHolder: Map<AddressArg, AddressArg>,
   simulationLogConfig: SimulationLogConfig,
-): Promise<Report> {
+): Promise<SimulationReport> {
   const forgeData = {
     path: forgePath,
-    forgeTestLogFormat: simulationLogConfig.forgeTestLogFormat,
-    contract: 'Simulation_Fork_Test',
+    forgeTestLogFormat: simulationLogConfig.forgeTestLogFormat as ForgeTestLogFormat,
+    forgeTestLogVerbosity: simulationLogConfig.forgeTestLogVerbosity as ForgeTestLogVerbosity,
+    contract: 'SimulateShortcuts_Fork_Test',
     contractABI: CONTRCT_SIMULATION_FORK_TEST_EVENTS_ABI,
-    test: 'test_simulateShortcut_1',
-    testRelativePath: 'test/foundry/fork/Simulation_Fork_Test.t.sol',
+    test: 'test_simulateShortcuts_1',
+    testRelativePath: 'test/foundry/fork/SimulateShortcuts_Fork_Test.t.sol',
   };
 
-  const wallet = await getNextWeirollWalletFromMockRecipeMarketHub(provider, roles.recipeMarketHub.address!);
+  const wallet = await getNextWeirollWalletFromMockRecipeMarketHub(
+    provider,
+    roles.caller.address!,
+    roles.recipeMarketHub.address!,
+  );
   roles.weirollWallet = { address: wallet, label: 'WeirollWallet' };
   roles.callee = roles.recipeMarketHub;
 
@@ -130,7 +140,19 @@ export async function simulateShortcutOnForge(
     tokensDust.push(txForgeData.tokensDust);
   }
 
-  const forgeTestLog = simulateTransactionOnForge(
+  // TODO: remove tenderly simulation
+  // const tenderlySim = await simulateTransactionOnTenderly(
+  //   {
+  //     data: txData[0],
+  //     to: roles.callee.address!,
+  //     from: roles.caller.address!,
+  //     value: txValues[0],
+  //     operationType: 1,
+  //   },
+  //   chainId,
+  // );
+  // process.stdout.write(JSON.stringify(tenderlySim.simulationUrl, null, 2));
+  const forgeTestLog = simulateShortcutsOnForge(
     chainId,
     provider,
     shortcutNames,
@@ -164,7 +186,7 @@ export async function simulateShortcutOnForge(
   }
 
   if (simulationLogConfig.isForgeLogsLogged) {
-    process.stdout.write('Simulation (Forge):\n');
+    process.stdout.write('Simulation Forge Decoded Logs:\n');
     process.stdout.write(testResult.decoded_logs.join('\n'));
     process.stdout.write('\n');
   }
@@ -175,19 +197,19 @@ export async function simulateShortcutOnForge(
   // Decode Gas
   const gasUsedTopic = contractInterface.getEventTopic('SimulationReportGasUsed');
   const gasUsedLogs = testResult.logs.filter((log) => log.topics[0] === gasUsedTopic);
-  if (!gasUsedLogs) throw new Error('simulateShortcutOnForge: missing "SimulationReportGasUsed" used log');
+  if (!gasUsedLogs) throw new Error('missing "SimulationReportGasUsed" used log');
 
   // Decode Quote
   const quoteTopic = contractInterface.getEventTopic('SimulationReportQuote');
   const quoteLogs = testResult.logs.filter((log) => log.topics[0] === quoteTopic);
-  if (!quoteLogs) throw new Error('simulateShortcutOnForge: missing "SimulationReportQuote" used log');
+  if (!quoteLogs) throw new Error('missing "SimulationReportQuote" used log');
 
   // Decode Dust
   const dustTopic = contractInterface.getEventTopic('SimulationReportDust');
   const dustLogs = testResult.logs.filter((log) => log.topics[0] === dustTopic);
-  if (!dustLogs) throw new Error('simulateShortcutOnForge: missing "SimulationReportDust" used log');
+  if (!dustLogs) throw new Error('missing "SimulationReportDust" used log');
 
-  const report: Report = [];
+  const simulationReport: SimulationReport = [];
   for (const [index, txToSim] of txsToSim.entries()) {
     const gasUsed = contractInterface.parseLog(gasUsedLogs[index]).args.gasUsed;
     const quoteTokensOut = contractInterface.parseLog(quoteLogs[index]).args.tokensOut;
@@ -195,8 +217,8 @@ export async function simulateShortcutOnForge(
     const dustTokensDust = contractInterface.parseLog(dustLogs[index]).args.tokensDust;
     const dustAmountsDust = contractInterface.parseLog(dustLogs[index]).args.amountsDust;
 
-    // Instantiate Report
-    const shortcutReport: ShortcutReport = {
+    // Instantiate SimulationReport
+    const simulatedShortcutReport: SimulatedShortcutReport = {
       shortcutName: txToSim.shortcut.name,
       weirollWallet: getAddress(roles.weirollWallet!.address!),
       amountsIn: amountsIn[index],
@@ -208,23 +230,25 @@ export async function simulateShortcutOnForge(
       ),
       gas: gasUsed.toString(),
     };
-    report.push(shortcutReport);
+    simulationReport.push(simulatedShortcutReport);
   }
 
   if (simulationLogConfig.isReportLogged) {
-    process.stdout.write('Simulation (Report):\n');
-    process.stdout.write(JSON.stringify(report, null, 2));
+    process.stdout.write('Simulation Report:\n');
+    process.stdout.write(JSON.stringify(simulationReport, null, 2));
     process.stdout.write('\n');
   }
 
-  return report;
+  return simulationReport;
 }
 
 async function getNextWeirollWalletFromMockRecipeMarketHub(
   provider: StaticJsonRpcProvider,
+  caller: AddressArg,
   mockRecipeMarketHub: AddressArg,
 ): Promise<AddressArg> {
   const weirollWalletBytes = await provider.call({
+    from: caller,
     to: mockRecipeMarketHub,
     data: recipeMarketHubInterface.encodeFunctionData('createCampaign', [0]),
   });

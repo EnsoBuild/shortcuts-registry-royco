@@ -6,7 +6,7 @@ import {
 } from "@ensofinance/shortcuts-builder/types";
 import { BigNumber, BigNumberish } from "@ethersproject/bignumber";
 import { StaticJsonRpcProvider } from "@ethersproject/providers";
-import type { ForgeTestLogFormat } from "../constants";
+import type { ForgeTestLogFormat, ForgeTestLogVerbosity } from "../constants";
 
 export interface Shortcut {
   name: string;
@@ -67,7 +67,7 @@ export interface SimulationResult {
   transaction: Transaction;
 }
 
-export interface ShortcutReport {
+export interface SimulatedShortcutReport {
   shortcutName: string;
   weirollWallet: AddressArg;
   amountsIn: string[];
@@ -76,7 +76,7 @@ export interface ShortcutReport {
   gas: string;
 };
 
-export type Report = ShortcutReport[];
+export type SimulationReport = SimulatedShortcutReport[];
 
 export interface AddressData {
   address?: AddressArg;
@@ -84,7 +84,8 @@ export interface AddressData {
 }
 
 export interface SimulationLogConfig {
-  forgeTestLogFormat: ForgeTestLogFormat;
+  forgeTestLogFormat?: ForgeTestLogFormat;
+  forgeTestLogVerbosity?: ForgeTestLogVerbosity;
   isForgeTxDataLogged?: boolean;
   isCalldataLogged?: boolean;
   isForgeLogsLogged?: boolean;
@@ -103,7 +104,8 @@ export interface SimulationRoles {
 
 export interface SimulationForgeData {
   path: string;
-  forgeTestLogFormat: ForgeTestLogFormat
+  forgeTestLogFormat: ForgeTestLogFormat;
+  forgeTestLogVerbosity: ForgeTestLogVerbosity;
   contract: string;
   contractABI: Record<string, unknown>[];
   test: string;

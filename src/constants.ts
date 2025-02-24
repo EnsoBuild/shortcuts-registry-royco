@@ -23,6 +23,14 @@ export enum ForgeTestLogFormat {
   JSON = '--json',
 }
 
+export enum ForgeTestLogVerbosity {
+  X1V = '-v',
+  X2V = '-vv',
+  X3V = '-vvv',
+  X4V = '-vvvv',
+  X5V = '-vvvvv',
+}
+
 export enum TraceItemPhase {
   DEPLOYMENT = 'Deployment',
   EXECUTION = 'Execution',
@@ -79,8 +87,8 @@ export const chainIdToSimulationRoles: Map<ChainIds, SimulationRoles> = new Map(
         label: 'Caller',
       },
       recipeMarketHub: {
-        address: '0x7A1C91392462c55FB7F2eA98905eA8CeEEA04579', // NB: new contract is left as dust
-        // address: '0xa2c139FFdeF281504601f3Db8ba49F58Dc1498e4',
+        // address: '0x7A1C91392462c55FB7F2eA98905eA8CeEEA04579', // NB: new contract is left as dust
+        address: '0xa2c139FFdeF281504601f3Db8ba49F58Dc1498e4',
         label: 'RecipeMarketHub',
       },
       multiCall: {

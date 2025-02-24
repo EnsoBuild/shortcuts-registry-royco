@@ -7,20 +7,20 @@ import {
   getRpcUrlByChainId,
   getSimulationRolesByChainId,
   getTokenToHolderByChainId,
-  simulateShortcutOnForge,
-  validateForgeTestLogFormat,
+  simulateShortcutsWithForgeAndGenerateReport,
+  validateAndGetSimulationConfig,
   validateShortcutsToSimulate,
 } from '../src/helpers';
-import type { BuiltShortcut, Report, ShortcutToSimulate, SimulationLogConfig } from '../src/types';
+import type { BuiltShortcut, ShortcutToSimulate, SimulationLogConfig, SimulationReport } from '../src/types';
 
 const failedSimulationReport = { status: 'Simulation failed', error: '' };
 
 export async function main(
   chainId: ChainIds,
   txs: ShortcutToSimulate[],
-  simulationLogConfig: SimulationLogConfig,
-): Promise<Report> {
-  validateForgeTestLogFormat(simulationLogConfig.forgeTestLogFormat);
+  simulationLogConfigInput?: SimulationLogConfig,
+): Promise<SimulationReport> {
+  const simulationLogConfig = validateAndGetSimulationConfig(simulationLogConfigInput);
   validateShortcutsToSimulate(txs);
 
   const tokenToHolder = getTokenToHolderByChainId(chainId);
@@ -38,10 +38,10 @@ export async function main(
     builtShortcuts.push(builtShortcut);
   }
 
-  let report: Report;
+  let report: SimulationReport;
   try {
     const forgePath = getForgePath();
-    report = await simulateShortcutOnForge(
+    report = await simulateShortcutsWithForgeAndGenerateReport(
       chainId,
       provider,
       txs,
@@ -55,6 +55,6 @@ export async function main(
     return report;
   } catch (error) {
     failedSimulationReport.error = (error as Error).message;
-    return failedSimulationReport as unknown as Report;
+    return failedSimulationReport as unknown as SimulationReport;
   }
 }

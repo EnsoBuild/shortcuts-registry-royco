@@ -6,7 +6,7 @@ import os from 'node:os';
 import { ForgeTestLogFormat } from '../constants';
 import type { ForgeTestLogJSON, SimulationForgeData, SimulationLogConfig, SimulationRoles } from '../types';
 
-export function simulateTransactionOnForge(
+export function simulateShortcutsOnForge(
   chainId: number,
   provider: StaticJsonRpcProvider,
   shortcutNames: string[],
@@ -27,10 +27,10 @@ export function simulateTransactionOnForge(
 ): ForgeTestLogJSON {
   const rpcUrl = provider.connection.url;
   if (!roles.callee?.address) {
-    throw new Error("simulateTransactionOnForge: missing 'callee' address in 'roles'");
+    throw new Error("simulateShortcutsOnForge: missing 'callee' address in 'roles'");
   }
   if (!roles.weirollWallet?.address) {
-    throw new Error("simulateTransactionOnForge: missing 'weirollWallet' address in 'roles'");
+    throw new Error("simulateShortcutsOnForge: missing 'weirollWallet' address in 'roles'");
   }
 
   const simulationJsonDataRaw = {
@@ -56,7 +56,7 @@ export function simulateTransactionOnForge(
   };
 
   if (simulationLogConfig.isForgeTxDataLogged) {
-    process.stdout.write('Simulation (JSON Data):\n');
+    process.stdout.write('Simulation JSON Data Sent to Forge:\n');
     process.stdout.write(JSON.stringify(simulationJsonDataRaw, null, 2));
     process.stdout.write('\n');
     // console.warn('Simulation (JSON Data):\n', JSON.stringify(simulationJsonDataRaw), '\n');
@@ -98,7 +98,7 @@ export function simulateTransactionOnForge(
       forgeData.contract,
       '--match-test',
       forgeData.test,
-      '-vvv',
+      forgeData.forgeTestLogVerbosity,
       forgeData.forgeTestLogFormat,
     ],
     {
@@ -113,26 +113,26 @@ export function simulateTransactionOnForge(
   );
 
   if (result.error) {
-    throw new Error(`simulateTransactionOnForge: unexpected error calling 'forge'. Reason: ${result.stderr}`);
+    throw new Error(`simulateShortcutsOnForge: unexpected error calling 'forge'. Reason: ${result.stderr}`);
   }
 
   if (!result.stdout) {
     throw new Error(
-      `simulateTransactionOnForge: unexpected error calling 'forge'. ` +
+      `simulateShortcutsOnForge: unexpected error calling 'forge'. ` +
         `Reason: it didn't error but 'stdout' is falsey: ${result.stdout}. 'stderr' is: ${result.stderr}`,
     );
   }
 
   if ([ForgeTestLogFormat.DEFAULT].includes(forgeData.forgeTestLogFormat)) {
     process.stdout.write(result.stdout);
-    throw new Error('Forced termination to inspect forge test log');
+    throw new Error('simulateShortcutsOnForge: Forced termination to inspect forge test log');
   }
 
   let forgeTestLog: ForgeTestLogJSON;
   try {
     forgeTestLog = JSON.parse(result.stdout) as ForgeTestLogJSON;
   } catch (error) {
-    throw new Error(`simulateTransactionOnForge: unexpected error parsing 'forge' JSON output. Reason: ${error}`);
+    throw new Error(`simulateShortcutsOnForge: unexpected error parsing 'forge' JSON output. Reason: ${error}`);
   }
 
   return forgeTestLog;

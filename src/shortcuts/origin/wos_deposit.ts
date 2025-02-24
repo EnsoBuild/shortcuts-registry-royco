@@ -65,10 +65,4 @@ export class Origin_Wos_Deposit_Shortcut implements Shortcut {
         throw new Error(`Unsupported chainId: ${chainId}`);
     }
   }
-  getTokenHolder(chainId: number): Map<AddressArg, AddressArg> {
-    const tokenToHolder = chainIdToTokenHolder.get(chainId);
-    if (!tokenToHolder) throw new Error(`Unsupported 'chainId': ${chainId}`);
-
-    return tokenToHolder as Map<AddressArg, AddressArg>;
-  }
 }

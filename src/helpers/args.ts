@@ -4,17 +4,94 @@ import dotenv from 'dotenv';
 import { execSync } from 'node:child_process';
 import os from 'node:os';
 
-import { ForgeTestLogFormat, MAX_BPS, ShortcutOutputFormat, SimulationMode } from '../constants';
-import type { ShortcutToSimulate } from '../types';
+import { ForgeTestLogFormat, ForgeTestLogVerbosity, MAX_BPS, ShortcutOutputFormat, SimulationMode } from '../constants';
+import type { ShortcutToSimulate, SimulationLogConfig } from '../types';
 import { shortcuts, supportedShortcuts } from './shortcuts';
 import { getChainId } from './utils';
 
 dotenv.config();
 
-export function validateForgeTestLogFormat(format: ForgeTestLogFormat): void {
-  if (!Object.values(ForgeTestLogFormat).includes(format)) {
-    throw new Error(`Invalid forge test log format: ${format}`);
+export function validateAndGetSimulationConfig(config?: SimulationLogConfig): SimulationLogConfig {
+  const defaultConfig: SimulationLogConfig = {
+    forgeTestLogFormat: ForgeTestLogFormat.JSON,
+    forgeTestLogVerbosity: ForgeTestLogVerbosity.X4V,
+    isForgeTxDataLogged: false,
+    isCalldataLogged: false,
+    isForgeLogsLogged: false,
+    isReportLogged: false,
+  };
+
+  if (!config) {
+    return defaultConfig;
   }
+
+  // Validate `forgeTestLogFormat`
+  if ('forgeTestLogFormat' in config) {
+    if (
+      typeof config.forgeTestLogFormat !== 'string' ||
+      !Object.values(ForgeTestLogFormat).includes(config.forgeTestLogFormat)
+    ) {
+      throw new Error(
+        `Invalid 'forgeTestLogFormat': ${config.forgeTestLogFormat}. Valid ones are: ${Object.keys(ForgeTestLogFormat).join(', ')}`,
+      );
+    }
+  } else {
+    config.forgeTestLogFormat = defaultConfig.forgeTestLogFormat;
+  }
+
+  // Validate `forgeTestLogVerbosity`
+  if ('forgeTestLogVerbosity' in config) {
+    if (
+      typeof config.forgeTestLogVerbosity !== 'string' ||
+      !Object.values(ForgeTestLogVerbosity).includes(config.forgeTestLogVerbosity)
+    ) {
+      throw new Error(
+        `Invalid 'forgeTestLogVerbosity': ${config.forgeTestLogVerbosity}. Valid ones are: ${Object.values(ForgeTestLogVerbosity).join(', ')}`,
+      );
+    }
+  } else {
+    config.forgeTestLogVerbosity = defaultConfig.forgeTestLogVerbosity;
+  }
+
+  // Validate `isForgeTxDataLogged`
+  if ('isForgeTxDataLogged' in config) {
+    if (typeof config.isForgeTxDataLogged !== 'boolean') {
+      throw new Error(
+        `Invalid 'isForgeTxDataLogged': ${JSON.stringify(config.isForgeTxDataLogged)}. Must be a boolean`,
+      );
+    }
+  } else {
+    config.isForgeTxDataLogged = defaultConfig.isForgeTxDataLogged;
+  }
+
+  // Validate `isCalldataLogged`
+  if ('isCalldataLogged' in config) {
+    if (typeof config.isCalldataLogged !== 'boolean') {
+      throw new Error(`Invalid 'isCalldataLogged': ${JSON.stringify(config.isCalldataLogged)}. Must be a boolean`);
+    }
+  } else {
+    config.isCalldataLogged = defaultConfig.isCalldataLogged;
+  }
+
+  // Validate `isForgeLogsLogged`
+  if ('isForgeLogsLogged' in config) {
+    if (typeof config.isForgeLogsLogged !== 'boolean') {
+      throw new Error(`Invalid 'isForgeLogsLogged': ${JSON.stringify(config.isForgeLogsLogged)}. Must be a boolean`);
+    }
+  } else {
+    config.isForgeLogsLogged = defaultConfig.isForgeLogsLogged;
+  }
+
+  // Validate `isReportLogged`
+  if ('isReportLogged' in config) {
+    if (typeof config.isReportLogged !== 'boolean') {
+      throw new Error(`Invalid 'isReportLogged': ${JSON.stringify(config.isReportLogged)}. Must be a boolean`);
+    }
+  } else {
+    config.isReportLogged = defaultConfig.isReportLogged;
+  }
+
+  return config;
 }
 
 export function validateShortcutsToSimulate(txs: ShortcutToSimulate[]): void {
