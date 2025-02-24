@@ -4,7 +4,7 @@ import { AddressArg, ChainIds, WeirollScript } from '@ensofinance/shortcuts-buil
 
 import { chainIdToDeFiAddresses } from '../../constants';
 import type { AddressData, Input, Output, Shortcut } from '../../types';
-import { getBalance, redeemErc4626 } from '../../utils';
+import { getBalance, redeemErc4626, sendTokensToOwner } from '../../utils';
 
 export class Origin_Wos_Redeem_Shortcut implements Shortcut {
   name = 'origin-wos-redeem';
@@ -30,8 +30,8 @@ export class Origin_Wos_Redeem_Shortcut implements Shortcut {
     });
     const vaultAmount = getBalance(vault, builder);
     await redeemErc4626(vault, wOS, vaultAmount, builder);
-    // const wOSAmount = getBalance(wOS, builder);
-    // await sendTokensToOwner(wOS, wOSAmount, builder);
+    const wOSAmount = getBalance(wOS, builder);
+    await sendTokensToOwner(wOS, wOSAmount, builder);
 
     const payload = await builder.build({
       requireWeiroll: true,

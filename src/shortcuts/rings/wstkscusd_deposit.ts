@@ -4,8 +4,8 @@ import { AddressArg, ChainIds, WeirollScript } from '@ensofinance/shortcuts-buil
 
 import { chainIdToDeFiAddresses, chainIdToTokenHolder } from '../../constants';
 import type { AddressData, Input, Output, Shortcut } from '../../types';
-import { getBalance } from '../../utils';
-import { mintScusd } from './utils';
+import { getBalance, mintErc4626 } from '../../utils';
+import { mintScusd, mintStkscusd } from './utils';
 
 export class Rings_Wstkscusd_Deposit_Shortcut implements Shortcut {
   name = 'rings-wstkscusd-deposit';
@@ -15,6 +15,8 @@ export class Rings_Wstkscusd_Deposit_Shortcut implements Shortcut {
     [ChainIds.Sonic]: {
       usdce: chainIdToDeFiAddresses[ChainIds.Sonic].USDC_e,
       scusd: chainIdToDeFiAddresses[ChainIds.Sonic].scUsd,
+      stkscusd: chainIdToDeFiAddresses[ChainIds.Sonic].stkscusd,
+      wstkscusd: chainIdToDeFiAddresses[ChainIds.Sonic].wstkscusd,
     },
   };
 
@@ -22,15 +24,19 @@ export class Rings_Wstkscusd_Deposit_Shortcut implements Shortcut {
     const client = new RoycoClient();
 
     const inputs = this.inputs[chainId];
-    const { usdce, scusd } = inputs;
+    const { usdce, stkscusd, wstkscusd } = inputs;
 
     const builder = new Builder(chainId, client, {
       tokensIn: [usdce],
-      tokensOut: [scusd],
+      tokensOut: [wstkscusd],
     });
 
     const usdceAmount = getBalance(usdce, builder);
-    await mintScusd(usdceAmount, builder);
+
+    const scusdAmount = await mintScusd(usdceAmount, builder);
+    const stkscusdAmount = await mintStkscusd(scusdAmount, builder);
+
+    await mintErc4626(stkscusd, wstkscusd, stkscusdAmount, builder);
 
     const payload = await builder.build({
       requireWeiroll: true,
@@ -49,6 +55,8 @@ export class Rings_Wstkscusd_Deposit_Shortcut implements Shortcut {
         return new Map([
           [this.inputs[ChainIds.Sonic].usdce, { label: 'usdce' }],
           [this.inputs[ChainIds.Sonic].scusd, { label: 'scusd' }],
+          [this.inputs[ChainIds.Sonic].stkscusd, { label: 'stkscusd' }],
+          [this.inputs[ChainIds.Sonic].wstkscusd, { label: 'wstkscusd' }],
         ]);
       default:
         throw new Error(`Unsupported chainId: ${chainId}`);

@@ -20,10 +20,10 @@ describe('rings', () => {
 
       const txsToSim = [
         {
-          blockNumber: '8455854',
+          blockNumber: '9872270',
           requiresFunding: true,
           shortcut: new Rings_Wstkscusd_Deposit_Shortcut(),
-          amountsIn: [parseUnits('1', 18).toString()],
+          amountsIn: [parseUnits('100', 6).toString()],
         },
       ];
 
@@ -34,13 +34,15 @@ describe('rings', () => {
       expect(report.length).toBe(1);
 
       const { amountsIn, dust, quote, weirollWallet, gas } = report[0];
-      expect(amountsIn).toEqual(['1000000000000000000']);
+      expect(amountsIn).toEqual(['100000000']);
       expect(dust).toEqual({
-        '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38': '0',
+        '0x4D85bA8c3918359c78Ed09581E5bc7578ba932ba': '0',
+        '0x29219dd400f2Bf60E5a23d13Be72B486D4038894': '0',
+        '0xd3DCe716f3eF535C5Ff8d041c1A41C3bd89b97aE': '0',
       });
-      expect(quote).toEqual({ '0xd3DCe716f3eF535C5Ff8d041c1A41C3bd89b97aE': '988879598709803129000' });
-      expect(weirollWallet).toBe('0xBa8F5f80C41BF5e169d9149Cd4977B1990Fc2736');
-      expectBigIntToBeCloseTo(BigInt(gas), BigInt('695271'), BigInt('100'));
+      expect(quote).toEqual({ '0x9fb76f7ce5FCeAA2C42887ff441D46095E494206': '100000000' });
+      expect(weirollWallet).toBe('0xf338BceB2BE2560548d3600F48Ba4e2b4BE387C7');
+      expectBigIntToBeCloseTo(BigInt(gas), BigInt('587082'), BigInt('100'));
     });
   });
 

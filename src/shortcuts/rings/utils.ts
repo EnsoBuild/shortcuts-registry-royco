@@ -1,35 +1,45 @@
 import { Builder } from '@ensofinance/shortcuts-builder';
-import { contractCall } from '@ensofinance/shortcuts-builder/helpers';
-import { FromContractCallArg, NumberArg } from '@ensofinance/shortcuts-builder/types';
-import { addApprovals } from '@ensofinance/shortcuts-standards/helpers/shortcuts';
+import { FromContractCallArg } from '@ensofinance/shortcuts-builder/types';
+import { getStandardByProtocol } from '@ensofinance/shortcuts-standards';
 
 import { chainIdToDeFiAddresses } from '../../constants';
-import { getBalance } from '../../utils';
 
-export async function mintScusd(amountIn: NumberArg, builder: Builder) {
+export async function mintScusd(amountIn: FromContractCallArg, builder: Builder) {
   const primaryAddress = chainIdToDeFiAddresses[builder.chainId].scUsdTeller;
   const tokenIn = chainIdToDeFiAddresses[builder.chainId].USDC_e;
   const tokenOut = chainIdToDeFiAddresses[builder.chainId].scUsd;
-  console.log(tokenOut);
 
-  await addApprovals(builder, {
-    tokens: [tokenIn],
-    spender: tokenOut,
-    amounts: [amountIn],
-  });
+  const standard = getStandardByProtocol('rings-scusd', builder.chainId);
+  const { amountOut } = await standard.deposit.addToBuilder(
+    builder,
+    {
+      tokenIn,
+      tokenOut,
+      amountIn,
+      primaryAddress,
+    },
+    ['amountOut'],
+  );
 
-  const action = contractCall({
-    address: primaryAddress,
-    functionName: 'deposit',
-    abi: [
-      'function deposit(address depositAsset, uint256 depositAmount, uint256 minimumMint) external payable returns (uint256 shares)',
-    ],
-    args: [tokenIn, amountIn, 0],
-  });
+  return amountOut as FromContractCallArg;
+}
 
-  builder.add(action);
+export async function mintStkscusd(amountIn: FromContractCallArg, builder: Builder) {
+  const primaryAddress = chainIdToDeFiAddresses[builder.chainId].stkscusdTeller;
+  const tokenIn = chainIdToDeFiAddresses[builder.chainId].scUsd;
+  const tokenOut = chainIdToDeFiAddresses[builder.chainId].stkscusd;
 
-  const amountOut = getBalance(tokenOut, builder);
+  const standard = getStandardByProtocol('rings-stkscusd', builder.chainId);
+  const { amountOut } = await standard.deposit.addToBuilder(
+    builder,
+    {
+      tokenIn,
+      tokenOut,
+      amountIn,
+      primaryAddress,
+    },
+    ['amountOut'],
+  );
 
   return amountOut as FromContractCallArg;
 }

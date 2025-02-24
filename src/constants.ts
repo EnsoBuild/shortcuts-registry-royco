@@ -118,6 +118,9 @@ export const chainIdToDeFiAddresses: Record<number, Record<string, AddressArg>> 
     S: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', // Native token
     scUsd: '0xd3DCe716f3eF535C5Ff8d041c1A41C3bd89b97aE',
     scUsdTeller: '0x358CFACf00d0B4634849821BB3d1965b472c776a',
+    stkscusdTeller: '0x5e39021Ae7D3f6267dc7995BB5Dd15669060DAe0',
+    stkscusd: '0x4D85bA8c3918359c78Ed09581E5bc7578ba932ba',
+    wstkscusd: '0x9fb76f7ce5FCeAA2C42887ff441D46095E494206',
     stS: '0xE5DA20F15420aD15DE0fa650600aFc998bbE3955',
     USDC_e: '0x29219dd400f2Bf60E5a23d13Be72B486D4038894',
     WETH: '0x50c42dEAcD8Fc9773493ED674b675bE577f2634b',
