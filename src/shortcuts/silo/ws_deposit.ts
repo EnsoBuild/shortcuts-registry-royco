@@ -8,12 +8,12 @@ import { getBalance, mintErc4626 } from '../../utils';
 
 export class Silo_Ws_Deposit_Shortcut implements Shortcut {
   name = 'silo-ws-deposit';
-  description = '';
+  description = 'Market 1 Deposit: wS -> bwS-20';
   supportedChains = [ChainIds.Sonic];
   inputs: Record<number, Input> = {
     [ChainIds.Sonic]: {
       wS: chainIdToDeFiAddresses[ChainIds.Sonic].wS,
-      vault: '0xf55902DE87Bd80c6a35614b48d7f8B612a083C12',
+      vault: '0xf55902DE87Bd80c6a35614b48d7f8B612a083C12', // bwS-20
     },
   };
 
@@ -46,8 +46,8 @@ export class Silo_Ws_Deposit_Shortcut implements Shortcut {
     switch (chainId) {
       case ChainIds.Sonic:
         return new Map([
-          [this.inputs[ChainIds.Sonic].wS, { label: 'ERC20:wS' }],
-          [this.inputs[ChainIds.Sonic].vault, { label: 'ERC20:Silo Vault' }],
+          [this.inputs[ChainIds.Sonic].wS, { label: 'wS' }],
+          [this.inputs[ChainIds.Sonic].vault, { label: 'bwS-20' }],
         ]);
       default:
         throw new Error(`Unsupported chainId: ${chainId}`);

@@ -3,21 +3,22 @@ import { RoycoClient } from '@ensofinance/shortcuts-builder/client/implementatio
 import { AddressArg, ChainIds, WeirollScript } from '@ensofinance/shortcuts-builder/types';
 import { Standards, getStandardByProtocol } from '@ensofinance/shortcuts-standards';
 
-import { chainIdToDeFiAddresses, chainIdToTokenHolder } from '../../constants';
+import { chainIdToDeFiAddresses } from '../../constants';
 import type { AddressData, Input, Output, Shortcut } from '../../types';
-import { getBalance, mint_stS } from '../../utils';
+import { getBalance, mintErc4626, mint_OS, unwrap_wrappedNativeToken } from '../../utils';
 
-// NOTE: this market does not work as expected on both quoter and forge simulations
-export class StableJack_PtSts_2_Shortcut implements Shortcut {
-  name = 'stablejack-pt-sts-2';
-  description = 'Market 1: S -> stS -> PT-stS';
+export class StableJack_YtWos_Deposit_Shortcut implements Shortcut {
+  name = 'stablejack-pt-wos-deposit';
+  description = 'Market 1 Deposit: wS -> S -> OS -> wOS -> YT-wOS';
   supportedChains = [ChainIds.Sonic];
   inputs: Record<number, Input> = {
     [ChainIds.Sonic]: {
       protocol: Standards.Stable_Jack.protocol.addresses!.sonic!.primary,
-      PT_stS: chainIdToDeFiAddresses[ChainIds.Sonic].PT_stS,
+      OS: chainIdToDeFiAddresses[ChainIds.Sonic].OS,
+      YT_wOS: chainIdToDeFiAddresses[ChainIds.Sonic].YT_wOS,
       S: chainIdToDeFiAddresses[ChainIds.Sonic].S,
-      stS: chainIdToDeFiAddresses[ChainIds.Sonic].stS,
+      wOS: chainIdToDeFiAddresses[ChainIds.Sonic].wOS,
+      wS: chainIdToDeFiAddresses[ChainIds.Sonic].wS,
     },
   };
 
@@ -25,26 +26,27 @@ export class StableJack_PtSts_2_Shortcut implements Shortcut {
     const client = new RoycoClient();
 
     const inputs = this.inputs[chainId];
-    const { protocol, S, stS, PT_stS } = inputs;
+    const { protocol, OS, YT_wOS, S, wOS, wS } = inputs;
 
     const builder = new Builder(chainId, client, {
-      tokensIn: [S],
-      tokensOut: [PT_stS],
+      tokensIn: [wS],
+      tokensOut: [YT_wOS],
     });
+    const amountWs = getBalance(wS, builder);
 
+    await unwrap_wrappedNativeToken(wS, S, amountWs, builder);
     const amountS = getBalance(S, builder);
 
-    // const amountSts = await mint_stS(S, stS, amountS, builder);
-    // TODO: this balance is not needed, better of using `mint_stS` return value
-    await mint_stS(S, stS, amountS, builder);
-    const amountSts = getBalance(stS, builder);
+    await mint_OS(S, OS, amountS, builder);
+    const amountOs = getBalance(OS, builder);
 
-    const standard = getStandardByProtocol('stable-jack', builder.chainId);
+    await mintErc4626(OS, wOS, amountOs, builder);
+    const amountWos = getBalance(wOS, builder);
 
-    await standard.deposit.addToBuilder(builder, {
-      tokenIn: [stS],
-      tokenOut: PT_stS,
-      amountIn: [amountSts], // NOTE: if I use `mint_stS` return value this complains about type
+    getStandardByProtocol('stable-jack', builder.chainId).deposit.addToBuilder(builder, {
+      tokenIn: [wOS],
+      tokenOut: YT_wOS,
+      amountIn: [amountWos],
       primaryAddress: protocol,
     });
 
@@ -64,18 +66,14 @@ export class StableJack_PtSts_2_Shortcut implements Shortcut {
       case ChainIds.Sonic:
         return new Map([
           [this.inputs[ChainIds.Sonic].protocol, { label: 'Protocol' }],
-          [this.inputs[ChainIds.Sonic].PT_stS, { label: 'PT_stS' }],
+          [this.inputs[ChainIds.Sonic].YT_wOS, { label: 'YT_wOS' }],
+          [this.inputs[ChainIds.Sonic].OS, { label: 'OS' }],
           [this.inputs[ChainIds.Sonic].S, { label: 'S (Native Token)' }],
-          [this.inputs[ChainIds.Sonic].stS, { label: 'stS' }],
+          [this.inputs[ChainIds.Sonic].wOS, { label: 'wOS' }],
+          [this.inputs[ChainIds.Sonic].wS, { label: 'wS' }],
         ]);
       default:
         throw new Error(`Unsupported chainId: ${chainId}`);
     }
-  }
-  getTokenHolder(chainId: number): Map<AddressArg, AddressArg> {
-    const tokenToHolder = chainIdToTokenHolder.get(chainId);
-    if (!tokenToHolder) throw new Error(`Unsupported 'chainId': ${chainId}`);
-
-    return tokenToHolder as Map<AddressArg, AddressArg>;
   }
 }

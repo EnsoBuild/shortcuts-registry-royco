@@ -1,90 +1,60 @@
+import { ChainIds } from '@ensofinance/shortcuts-builder/types';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 
-import { SimulationMode } from '../src/constants';
 import {
-  getAmountsInFromArgs,
-  getBlockNumberFromArgs,
+  buildShortcut,
   getForgePath,
-  getIsCalldataLoggedFromArgs,
   getRpcUrlByChainId,
-  getShortcut,
-  getSimulationModeFromArgs,
   getSimulationRolesByChainId,
+  getTokenToHolderByChainId,
+  simulateShortcutsWithForgeAndGenerateReport,
+  validateAndGetSimulationConfig,
+  validateShortcutsToSimulate,
 } from '../src/helpers';
-import { simulateShortcutOnForge, simulateShortcutOnQuoter } from '../src/helpers/simulate';
-import type { Report } from '../src/types';
+import type { BuiltShortcut, ShortcutToSimulate, SimulationLogConfig, SimulationReport } from '../src/types';
 
-export async function main_(args: string[]): Promise<Report> {
-  const { shortcut, chainId } = await getShortcut(args);
+const failedSimulationReport = { status: 'Simulation failed', error: '' };
 
-  const simulatonMode = getSimulationModeFromArgs(args);
-  const blockNumber = getBlockNumberFromArgs(args);
-  const amountsIn = getAmountsInFromArgs(args);
+export async function main(
+  chainId: ChainIds,
+  txs: ShortcutToSimulate[],
+  simulationLogConfigInput?: SimulationLogConfig,
+): Promise<SimulationReport> {
+  const simulationLogConfig = validateAndGetSimulationConfig(simulationLogConfigInput);
+  validateShortcutsToSimulate(txs);
+
+  const tokenToHolder = getTokenToHolderByChainId(chainId);
 
   const rpcUrl = getRpcUrlByChainId(chainId);
   const provider = new StaticJsonRpcProvider({
     url: rpcUrl,
   });
   const roles = getSimulationRolesByChainId(chainId);
-  const simulationLogConfig = {
-    isReportLogged: true,
-    isCalldataLogged: getIsCalldataLoggedFromArgs(args),
-  };
 
-  const { script, metadata } = await shortcut.build(chainId, provider);
-
-  // Validate tokens
-  const { tokensIn, tokensOut } = metadata;
-  if (!tokensIn || !tokensOut) throw 'Error: Invalid builder metadata. Missing eiter "tokensIn" or "tokensOut"';
-  if (amountsIn.length != tokensIn.length) {
-    throw `Error: Incorrect number of amounts for shortcut. Expected ${tokensIn.length} CSVs`;
+  // NOTE: this could use `Promise.all`
+  const builtShortcuts: BuiltShortcut[] = [];
+  for (const tx of txs) {
+    const builtShortcut = await buildShortcut(chainId, provider, tx.shortcut, tx.amountsIn);
+    builtShortcuts.push(builtShortcut);
   }
 
-  let report: Report;
-  switch (simulatonMode) {
-    case SimulationMode.FORGE: {
-      const forgePath = getForgePath();
-      report = await simulateShortcutOnForge(
-        provider,
-        shortcut,
-        chainId,
-        script,
-        amountsIn,
-        tokensIn,
-        tokensOut,
-        forgePath,
-        blockNumber,
-        roles,
-        simulationLogConfig,
-      );
-      break;
-    }
-    case SimulationMode.QUOTER: {
-      report = await simulateShortcutOnQuoter(
-        provider,
-        chainId,
-        script,
-        amountsIn,
-        tokensIn,
-        tokensOut,
-        roles,
-        simulationLogConfig,
-      );
-      break;
-    }
-    default:
-      throw new Error(`Unsupported simulaton 'mode': ${simulatonMode}. `);
-  }
-
-  return report;
-}
-
-async function main() {
+  let report: SimulationReport;
   try {
-    await main_(process.argv.slice(2));
+    const forgePath = getForgePath();
+    report = await simulateShortcutsWithForgeAndGenerateReport(
+      chainId,
+      provider,
+      txs,
+      builtShortcuts,
+      forgePath,
+      roles,
+      tokenToHolder,
+      simulationLogConfig,
+    );
+
+    return report;
   } catch (error) {
-    console.error(error);
+    failedSimulationReport.error = (error as Error).message;
+    return failedSimulationReport as unknown as SimulationReport;
   }
 }
-
-main();

@@ -1,22 +1,23 @@
 import { Builder } from '@ensofinance/shortcuts-builder';
 import { RoycoClient } from '@ensofinance/shortcuts-builder/client/implementations/roycoClient';
 import { AddressArg, ChainIds, WeirollScript } from '@ensofinance/shortcuts-builder/types';
-import { Standards, getStandardByProtocol } from '@ensofinance/shortcuts-standards';
+import { Standards } from '@ensofinance/shortcuts-standards';
 
-import { chainIdToDeFiAddresses, chainIdToTokenHolder } from '../../constants';
+import { chainIdToDeFiAddresses } from '../../constants';
 import type { AddressData, Input, Output, Shortcut } from '../../types';
-import { getBalance, mint_stS, unwrap_wrappedNativeToken } from '../../utils';
+import { getBalance, sendTokensToOwner } from '../../utils';
 
-export class StableJack_PtSts_Shortcut implements Shortcut {
-  name = 'stablejack-pt-sts';
-  description = 'Market 1: wS -> S -> stS -> PT-stS';
+export class StableJack_PtWos_Redeem_Shortcut implements Shortcut {
+  name = 'stablejack-pt-wos-redeem';
+  description = 'Market 3 Redeem: PT-wOS -> wOS -> OS'; // TODO: missing OS -> S -> wS
   supportedChains = [ChainIds.Sonic];
   inputs: Record<number, Input> = {
     [ChainIds.Sonic]: {
       protocol: Standards.Stable_Jack.protocol.addresses!.sonic!.primary,
-      PT_stS: chainIdToDeFiAddresses[ChainIds.Sonic].PT_stS,
+      OS: chainIdToDeFiAddresses[ChainIds.Sonic].OS,
+      PT_wOS: chainIdToDeFiAddresses[ChainIds.Sonic].PT_wOS,
       S: chainIdToDeFiAddresses[ChainIds.Sonic].S,
-      stS: chainIdToDeFiAddresses[ChainIds.Sonic].stS,
+      wOS: chainIdToDeFiAddresses[ChainIds.Sonic].wOS,
       wS: chainIdToDeFiAddresses[ChainIds.Sonic].wS,
     },
   };
@@ -25,26 +26,16 @@ export class StableJack_PtSts_Shortcut implements Shortcut {
     const client = new RoycoClient();
 
     const inputs = this.inputs[chainId];
-    const { protocol, S, stS, PT_stS, wS } = inputs;
+    const { OS, PT_wOS } = inputs;
 
     const builder = new Builder(chainId, client, {
-      tokensIn: [wS],
-      tokensOut: [PT_stS],
+      tokensIn: [PT_wOS],
+      tokensOut: [OS],
     });
-    const amountWs = getBalance(wS, builder);
 
-    await unwrap_wrappedNativeToken(wS, S, amountWs, builder);
-    const amountS = getBalance(S, builder);
+    const amountPtWos = getBalance(PT_wOS, builder);
 
-    await mint_stS(S, stS, amountS, builder);
-    const amountSts = getBalance(stS, builder);
-
-    getStandardByProtocol('stable-jack', builder.chainId).deposit.addToBuilder(builder, {
-      tokenIn: [stS],
-      tokenOut: PT_stS,
-      amountIn: [amountSts],
-      primaryAddress: protocol,
-    });
+    await sendTokensToOwner(PT_wOS, amountPtWos, builder);
 
     const payload = await builder.build({
       requireWeiroll: true,
@@ -62,19 +53,14 @@ export class StableJack_PtSts_Shortcut implements Shortcut {
       case ChainIds.Sonic:
         return new Map([
           [this.inputs[ChainIds.Sonic].protocol, { label: 'Protocol' }],
-          [this.inputs[ChainIds.Sonic].PT_stS, { label: 'PT_stS' }],
+          [this.inputs[ChainIds.Sonic].PT_wOS, { label: 'PT_wOS' }],
+          [this.inputs[ChainIds.Sonic].OS, { label: 'OS' }],
           [this.inputs[ChainIds.Sonic].S, { label: 'S (Native Token)' }],
-          [this.inputs[ChainIds.Sonic].stS, { label: 'stS' }],
+          [this.inputs[ChainIds.Sonic].wOS, { label: 'wOS' }],
           [this.inputs[ChainIds.Sonic].wS, { label: 'wS' }],
         ]);
       default:
         throw new Error(`Unsupported chainId: ${chainId}`);
     }
-  }
-  getTokenHolder(chainId: number): Map<AddressArg, AddressArg> {
-    const tokenToHolder = chainIdToTokenHolder.get(chainId);
-    if (!tokenToHolder) throw new Error(`Unsupported 'chainId': ${chainId}`);
-
-    return tokenToHolder as Map<AddressArg, AddressArg>;
   }
 }

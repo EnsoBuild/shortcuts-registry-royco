@@ -42,8 +42,6 @@ export type QuoteSuccessResponse<T> = {
 export type QuoteResponse<T = QuoteResult> = QuoteSuccessResponse<T> | QuoteErrorResponse;
 
 export async function simulateTransactionOnQuoter(request: QuoteRequest): Promise<QuoteResponse[]> {
-  console.warn(JSON.stringify(request, null, 2));
-
   const response = await axios.post(`${QUOTER_URL}/api/quote`, request, {
     headers: {
       Accept: 'application/json',

@@ -8,5 +8,6 @@ export default defineConfig({
       reporter: ['text', 'html'], // Coverage reporters
       exclude: ['node_modules'], // Files to exclude
     },
+    silent: false, // Suppresses console output
   },
 });
