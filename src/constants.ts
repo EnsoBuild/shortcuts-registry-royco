@@ -154,8 +154,8 @@ const tokenToHolderSonic: Map<AddressArg, AddressArg> = new Map([
   [chainIdToDeFiAddresses[ChainIds.Sonic].WETH, '0x427514a905fa6bEaed9A36E308Fcfa06cE54e95b'],
   [chainIdToDeFiAddresses[ChainIds.Sonic].wOS, '0xF3c631B979EB59d8333374baA7c58B5Aff5e24D2'],
   [chainIdToDeFiAddresses[ChainIds.Sonic].wS, '0xE223C8e92AA91e966CA31d5C6590fF7167E25801'],
-  [chainIdToDeFiAddresses[ChainIds.Sonic].YT_stS, '0xaC207c599e4A07F9A8cc5E9cf49B02E20AB7ba69'],
-  [chainIdToDeFiAddresses[ChainIds.Sonic].YT_wOS, '0xaC207c599e4A07F9A8cc5E9cf49B02E20AB7ba69'],
+  [chainIdToDeFiAddresses[ChainIds.Sonic].YT_stS, '0x15800782F6DC1F46871F90E282cB64643Bd67fd6'],
+  [chainIdToDeFiAddresses[ChainIds.Sonic].YT_wOS, '0x5882aa5d97391Af0889dd4d16C3194e96A7Abe00'],
   [chainIdToDeFiAddresses[ChainIds.Sonic].siloBws, '0x8D4D19405Ba352e4767681C28936fc0a9A8C8dFe'],
 ]);
 

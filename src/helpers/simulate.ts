@@ -300,15 +300,18 @@ function getTxToSimulateForgeData(
     }
   }
 
-  const tokensDustRaw: Set<AddressArg> = new Set();
+  const tokensDustRaw: Set<AddressArg> = new Set([]);
   for (const command of commands) {
     if (command.startsWith(FUNCTION_ID_ERC20_APPROVE)) {
       // NOTE: spender address is the last 20 bytes of the data (not checksum)
-      tokensDustRaw.add(getAddress(`0x${command.slice(-40)}`));
+      tokensDustRaw.add(`0x${command.slice(-40)}`.toLowerCase() as AddressArg);
     }
   }
+
   // NOTE: tokensOut shouldn't be flagged as dust
-  const tokensDust = Array.from(tokensDustRaw.difference(new Set(tokensOut) as Set<AddressArg>));
+  const tokensDust = Array.from(
+    tokensDustRaw.difference(new Set(tokensOut.map((address) => address.toLowerCase())) as Set<AddressArg>),
+  );
 
   const blockNumber = Number(txToSim.blockNumber ?? DEFAULT_BLOCK_NUMBER);
   const blockTimestamp = txToSim.blockTimestamp ?? DEFAULT_BLOCK_TIMESTAMP;

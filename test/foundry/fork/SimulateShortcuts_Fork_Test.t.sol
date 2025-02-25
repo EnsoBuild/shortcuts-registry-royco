@@ -365,7 +365,6 @@ contract SimulateShortcuts_Fork_Test is Test {
       console2.log('| Block Timestamp: ', block.timestamp);
       console2.log('| Tx Value: ', s_txValues[sIdx]);
       console2.log('| Requires Funding: ', s_requiresFunding[sIdx]);
-      console2.log('|');
 
       // --- Execute shortcut ---
       // Load storage vars in memory to do not affect gas metrics when executing the shortcut
@@ -384,7 +383,7 @@ contract SimulateShortcuts_Fork_Test is Test {
       // -- Log Shortcut post execution ---
       for (uint256 tabIdx = 0; tabIdx < taBalances.length; tabIdx++) {
         address trackedAddress = s_trackedAddresses[sIdx][tabIdx];
-        TrackedAddressBalance memory taBalance;
+        TrackedAddressBalance memory taBalance = taBalances[tabIdx];
         uint256[] memory tokensInBalancesPost = new uint256[](s_tokensIn[sIdx].length);
         int256[] memory tokensInBalancesDiff = new int256[](s_tokensIn[sIdx].length);
         uint256[] memory tokensOutBalancesPost = new uint256[](s_tokensOut[sIdx].length);
@@ -420,32 +419,29 @@ contract SimulateShortcuts_Fork_Test is Test {
       }
 
       // Tokens in
+      console2.log('|');
       console2.log('| - TOKENS IN -------------');
       if (tokensIn.length == 0) {
         console2.log('| No Tokens In');
       }
       for (uint256 i = 0; i < tokensIn.length; i++) {
-        console2.log('| Addr      : ', tokensIn[i]);
-        console2.log('| Name      : ', s_addressToLabel[tokensIn[i]]);
-        console2.log('| Is funded : ', s_requiresFunding[sIdx]);
-        console2.log('| Balances  : ');
+        console2.log('| Addr       : ', tokensIn[i]);
+        console2.log('| Name       : ', s_addressToLabel[tokensIn[i]]);
+        console2.log('| Is funded  : ', s_requiresFunding[sIdx]);
+        console2.log('| Balances   : ');
 
         for (uint256 tabIdx = 0; tabIdx < taBalances.length; tabIdx++) {
           address trackedAddress = s_trackedAddresses[sIdx][tabIdx];
           string memory trackedAddressLabel = s_addressToLabel[trackedAddress];
-
-          if (trackedAddress != address(0)) {
-            console2.log('|  ', trackedAddressLabel, ' : ', trackedAddress);
-          } else {
-            console2.log('|  Unknown : ', trackedAddress);
+          console2.log('|   Addr     : ', trackedAddress);
+          console2.log('|   Name     : ', trackedAddressLabel);
+          console2.log('|     Pre    : ', taBalances[tabIdx].tokensInPre[i]);
+          if (trackedAddress == s_caller && s_requiresFunding[sIdx]) {
+            console2.log('|     Funded : ', amountsIn[i]);
           }
-          console2.log('|   Pre    : ', taBalances[tabIdx].tokensInPre[i]);
-          if (trackedAddress == s_caller) {
-            console2.log('| Funded : ', amountsIn[i]);
-          }
-          console2.log('|   Post   : ', taBalances[tabIdx].tokensInPost[i]);
-          console2.log('|   Diff   : ', taBalances[tabIdx].tokensInDiff[i]);
-
+          console2.log('|     Post   : ', taBalances[tabIdx].tokensInPost[i]);
+          console2.log('|     Diff   : ', taBalances[tabIdx].tokensInDiff[i]);
+          console2.log('|');
           // Emit simulation report data
           emit SimulationReportBase(sIdx, trackedAddress, tokensIn, taBalances[tabIdx].tokensInDiff);
         }
@@ -461,23 +457,19 @@ contract SimulateShortcuts_Fork_Test is Test {
         console2.log('| No Tokens Out');
       }
       for (uint256 i = 0; i < tokensOut.length; i++) {
-        console2.log('| Addr      : ', tokensOut[i]);
-        console2.log('| Name      : ', s_addressToLabel[tokensOut[i]]);
-        console2.log('| Balances  : ');
+        console2.log('| Addr       : ', tokensOut[i]);
+        console2.log('| Name       : ', s_addressToLabel[tokensOut[i]]);
+        console2.log('| Balances   : ');
 
         for (uint256 tabIdx = 0; tabIdx < taBalances.length; tabIdx++) {
           address trackedAddress = s_trackedAddresses[sIdx][tabIdx];
           string memory trackedAddressLabel = s_addressToLabel[trackedAddress];
-
-          if (trackedAddress != address(0)) {
-            console2.log('|  ', trackedAddressLabel, ' : ', trackedAddress);
-          } else {
-            console2.log('|  Unknown : ', trackedAddress);
-          }
-          console2.log('|   Pre    : ', taBalances[tabIdx].tokensOutPre[i]);
-          console2.log('|   Post   : ', taBalances[tabIdx].tokensOutPost[i]);
-          console2.log('|   Diff   : ', taBalances[tabIdx].tokensOutDiff[i]);
-
+          console2.log('|   Addr     : ', trackedAddress);
+          console2.log('|   Name     : ', trackedAddressLabel);
+          console2.log('|     Pre    : ', taBalances[tabIdx].tokensOutPre[i]);
+          console2.log('|     Post   : ', taBalances[tabIdx].tokensOutPost[i]);
+          console2.log('|     Diff   : ', taBalances[tabIdx].tokensOutDiff[i]);
+          console2.log('|');
           // Emit simulation report data
           emit SimulationReportQuote(sIdx, trackedAddress, tokensOut, taBalances[tabIdx].tokensOutDiff);
         }
@@ -500,16 +492,12 @@ contract SimulateShortcuts_Fork_Test is Test {
         for (uint256 tabIdx = 0; tabIdx < taBalances.length; tabIdx++) {
           address trackedAddress = s_trackedAddresses[sIdx][tabIdx];
           string memory trackedAddressLabel = s_addressToLabel[trackedAddress];
-
-          if (trackedAddress != address(0)) {
-            console2.log('|  ', trackedAddressLabel, ' : ', trackedAddress);
-          } else {
-            console2.log('|  Unknown : ', trackedAddress);
-          }
-          console2.log('|   Pre    : ', taBalances[tabIdx].tokensDustPre[i]);
-          console2.log('|   Post   : ', taBalances[tabIdx].tokensDustPost[i]);
-          console2.log('|   Diff   : ', taBalances[tabIdx].tokensDustDiff[i]);
-
+          console2.log('|   Addr    : ', trackedAddress);
+          console2.log('|   Name    : ', trackedAddressLabel);
+          console2.log('|     Pre   : ', taBalances[tabIdx].tokensDustPre[i]);
+          console2.log('|     Post  : ', taBalances[tabIdx].tokensDustPost[i]);
+          console2.log('|     Diff  : ', taBalances[tabIdx].tokensDustDiff[i]);
+          console2.log('|');
           // Emit simulation report data
           emit SimulationReportDust(sIdx, trackedAddress, tokensDust, taBalances[tabIdx].tokensDustDiff);
         }

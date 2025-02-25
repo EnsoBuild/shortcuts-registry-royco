@@ -32,6 +32,10 @@ export interface ShortcutToSimulate {
   trackedAddresses?: AddressArg[];
 }
 
+export interface ScenarioToSimulate extends Omit<ShortcutToSimulate, 'shortcut'> {
+  shortcut: string;
+}
+
 export interface ShortcutToSimulateForgeData {
   shortcutName: string;
   blockNumber: number;

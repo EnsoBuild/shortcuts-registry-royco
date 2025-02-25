@@ -8,7 +8,7 @@ import type { AddressData, Input, Output, Shortcut } from '../../types';
 import { getBalance, mintErc4626, mint_OS, unwrap_wrappedNativeToken } from '../../utils';
 
 export class StableJack_YtWos_Deposit_Shortcut implements Shortcut {
-  name = 'stablejack-pt-wos-deposit';
+  name = 'stablejack-yt-wos-deposit';
   description = 'Market 1 Deposit: wS -> S -> OS -> wOS -> YT-wOS';
   supportedChains = [ChainIds.Sonic];
   inputs: Record<number, Input> = {

@@ -82,7 +82,7 @@ export function getWalletOwner(builder: Builder) {
 
 export async function sendTokensToOwner(token: AddressArg, amount: NumberArg, builder: Builder) {
   const owner = getWalletOwner(builder);
-  builder.add({
+  return builder.add({
     address: token,
     functionName: 'transfer',
     abi: ['function transfer(address,uint256)'],
