@@ -46,6 +46,47 @@ describe('rings', () => {
     });
   });
 
+  /*   describe('redeems', () => {
+    it('wstkscusdc', async () => {
+      // Arrange
+      const provider = getProviderByChainId(ChainIds.Sonic);
+      const blockNumber = '9872270';
+      const blockTimestamp = await getBlockTimestamp(provider, blockNumber);
+
+      const txsToSim = [
+        {
+          blockNumber,
+          requiresFunding: true,
+          shortcut: new Rings_Wstkscusd_Deposit_Shortcut(),
+          amountsIn: [parseUnits('100', 6).toString()],
+        },
+        {
+          blockTimestamp: blockTimestamp + 1,
+          shortcut: new Rings_Wstkscusd_Redeem_Shortcut(),
+          amountsIn: [parseUnits('50', 6).toString()],
+        },
+      ];
+
+      // Act
+      const report = await main(ChainIds.Sonic, txsToSim, { forgeTestLogFormat: ForgeTestLogFormat.DEFAULT });
+      console.log('Report: ', report);
+
+      // Assert
+      expect(report.length).toBe(2);
+      process.stdout.write(JSON.stringify(report, null, 2));
+
+      const { amountsIn: amountIn1, dust: dust1, quote: quote1, weirollWallet: weirollWallet1, gas: gas1 } = report[1];
+      expect(amountIn1).toEqual(['1000000000000000000']);
+      expect(dust1).toEqual({
+        '0xf55902DE87Bd80c6a35614b48d7f8B612a083C12': '-998297853831134388682',
+        '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38': '999999999999999999',
+      });
+      expect(quote1).toEqual({ '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38': '999999999999999999' });
+      expect(weirollWallet1).toBe('0xf338BceB2BE2560548d3600F48Ba4e2b4BE387C7');
+      expectBigIntToBeCloseTo(BigInt(gas1), BigInt('150783'), BigInt('100'));
+    });
+  }); */
+
   afterAll(() => {
     // Restore original methods after tests
     vi.restoreAllMocks();

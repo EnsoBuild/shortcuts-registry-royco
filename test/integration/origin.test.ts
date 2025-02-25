@@ -71,7 +71,7 @@ describe('origin', () => {
 
       // Act
       const report = await main(ChainIds.Sonic, txsToSim, { forgeTestLogFormat: ForgeTestLogFormat.DEFAULT });
-      console.log('Report: ', report)
+      console.log('Report: ', report);
 
       // Assert
       expect(report.length).toBe(2);
