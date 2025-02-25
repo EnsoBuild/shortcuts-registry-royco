@@ -15,7 +15,6 @@ export interface Shortcut {
   inputs: Record<number, Input>;
   build(chainId: number, provider: StaticJsonRpcProvider): Promise<Output>;
   getAddressData?(chainId: number): Map<AddressArg, AddressData>;
-  getTokenHolder?(chainId: number): Map<AddressArg, AddressArg>;
 }
 
 export interface BuiltShortcut {
@@ -75,11 +74,12 @@ export interface SimulationResult {
 
 export interface SimulatedShortcutReport {
   shortcutName: string;
+  caller: AddressArg;
   weirollWallet: AddressArg;
   amountsIn: string[];
-  base: Record<string, Record<string, string>>;
-  quote: Record<string, Record<string, string>>;
-  dust: Record<string, Record<string, string>>;
+  base?: Record<AddressArg, Record<AddressArg, string>>;
+  quote: Record<AddressArg, Record<AddressArg, string>>;
+  dust: Record<AddressArg, Record<AddressArg, string>>;
   gas: string;
 };
 

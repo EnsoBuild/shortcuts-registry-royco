@@ -2,7 +2,7 @@ import { Builder } from '@ensofinance/shortcuts-builder';
 import { RoycoClient } from '@ensofinance/shortcuts-builder/client/implementations/roycoClient';
 import { AddressArg, ChainIds, WeirollScript } from '@ensofinance/shortcuts-builder/types';
 
-import { chainIdToDeFiAddresses, chainIdToTokenHolder } from '../../constants';
+import { chainIdToDeFiAddresses } from '../../constants';
 import type { AddressData, Input, Output, Shortcut } from '../../types';
 import { getBalance, mintErc4626 } from '../../utils';
 
@@ -52,11 +52,5 @@ export class Silo_Ws_Deposit_Shortcut implements Shortcut {
       default:
         throw new Error(`Unsupported chainId: ${chainId}`);
     }
-  }
-  getTokenHolder(chainId: number): Map<AddressArg, AddressArg> {
-    const tokenToHolder = chainIdToTokenHolder.get(chainId);
-    if (!tokenToHolder) throw new Error(`Unsupported 'chainId': ${chainId}`);
-
-    return tokenToHolder as Map<AddressArg, AddressArg>;
   }
 }

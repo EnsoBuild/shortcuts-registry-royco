@@ -7,7 +7,8 @@ import { ForgeTestLogFormat } from '../../src/constants';
 import { Origin_Wos_Deposit_Shortcut } from '../../src/shortcuts/origin/wos_deposit';
 import { Origin_Wos_Redeem_Shortcut } from '../../src/shortcuts/origin/wos_redeem';
 import { expectBigIntToBeCloseTo } from '../helpers/expects';
-import { getBlockTimestamp, getProviderByChainId } from '../helpers/network';
+
+// import { getBlockTimestamp, getProviderByChainId } from '../helpers/network';
 
 describe('origin', () => {
   beforeAll(() => {
@@ -51,9 +52,9 @@ describe('origin', () => {
   describe('redeems', () => {
     it.only('wos', async () => {
       // Arrange
-      const provider = getProviderByChainId(ChainIds.Sonic);
-      const blockNumber = '9872270';
-      const blockTimestamp = await getBlockTimestamp(provider, blockNumber);
+      // const provider = getProviderByChainId(ChainIds.Sonic);
+      // const blockNumber = '9872270';
+      // const blockTimestamp = await getBlockTimestamp(provider, blockNumber);
 
       // const txsToSim = [
       //   {

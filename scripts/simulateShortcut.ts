@@ -99,7 +99,7 @@ async function main() {
   }
 
   const txsToSimulate: ShortcutToSimulate[] = [];
-  for (const [index, scenario] of Object.entries(scenariosToSimulate)) {
+  for (const [index, scenario] of scenariosToSimulate.entries()) {
     const [protocol, ...marketItems] = scenario.shortcut.split('-');
     let shortcut: Shortcut;
     try {
@@ -121,19 +121,18 @@ async function main() {
 
     txsToSimulate.push({
       ...scenario,
-      requiresFunding:
-        Number(index) === 0 && !('requiresFunding' in scenario) ? true : (scenario.requiresFunding ?? false), // NB: force funding caller on the 1st shortcut
+      requiresFunding: index === 0 && !('requiresFunding' in scenario) ? true : (scenario.requiresFunding ?? false), // NB: force funding caller on the 1st shortcut
       shortcut,
     });
   }
 
   const simulationLogConfigInput = {
-    forgeTestLogFormat: ForgeTestLogFormat.DEFAULT,
+    forgeTestLogFormat: ForgeTestLogFormat.JSON,
     forgeTestLogVerbosity: ForgeTestLogVerbosity.X3V,
     isForgeTxDataLogged: false,
     isCalldataLogged: false,
     isForgeLogsLogged: false,
-    isReportLogged: false,
+    isReportLogged: true,
   };
   try {
     await main_(ChainIds.Sonic, txsToSimulate, simulationLogConfigInput);

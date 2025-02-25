@@ -202,49 +202,76 @@ export async function simulateShortcutsWithForgeAndGenerateReport(
   const gasUsedTopic = contractInterface.getEventTopic('SimulationReportGasUsed');
   const gasUsedLogs = testResult.logs.filter((log) => log.topics[0] === gasUsedTopic);
   if (!gasUsedLogs) throw new Error('missing "SimulationReportGasUsed" used log');
+  const decodedGasUsed = gasUsedLogs.map((log) => contractInterface.parseLog(log));
+
+  // Decode Base
+  const baseTopic = contractInterface.getEventTopic('SimulationReportBase');
+  const baseLogs = testResult.logs.filter((log) => log.topics[0] === baseTopic);
+  if (!baseLogs) throw new Error('missing "SimulationReportBase" used log');
+  const decodedBaseLogs = baseLogs.map((log) => contractInterface.parseLog(log));
 
   // Decode Quote
   const quoteTopic = contractInterface.getEventTopic('SimulationReportQuote');
   const quoteLogs = testResult.logs.filter((log) => log.topics[0] === quoteTopic);
   if (!quoteLogs) throw new Error('missing "SimulationReportQuote" used log');
+  const decodedQuoteLogs = quoteLogs.map((log) => contractInterface.parseLog(log));
 
   // Decode Dust
   const dustTopic = contractInterface.getEventTopic('SimulationReportDust');
   const dustLogs = testResult.logs.filter((log) => log.topics[0] === dustTopic);
   if (!dustLogs) throw new Error('missing "SimulationReportDust" used log');
+  const decodedDustLogs = dustLogs.map((log) => contractInterface.parseLog(log));
 
-  process.stdout.write(JSON.stringify(quoteLogs, null, 2));
+  const simulationReport: SimulationReport = []; // TODO: fix this
+  for (const [index, txToSim] of txsToSim.entries()) {
+    const txGasUsed = decodedGasUsed[index].args.gasUsed.toString() as string;
 
-  const simulationReport: SimulationReport = [];
-  // for (const [index, txToSim] of txsToSim.entries()) {
-  //   const gasUsed = contractInterface.parseLog(gasUsedLogs[index]).args.gasUsed;
+    const txBaseLogs = decodedBaseLogs.filter((log) => log.args.shortcutIndex.toString() === index.toString());
+    const baseReport: Record<string, Record<AddressArg, string>> = {};
+    for (const txBaseLog of txBaseLogs) {
+      const trackedAddress = txBaseLog.args.trackedAddress as AddressArg;
+      const tokens = txBaseLog.args.tokens as AddressArg[];
+      const amountsDiff = txBaseLog.args.amountsDiff as AddressArg[];
+      baseReport[trackedAddress] = Object.fromEntries(
+        tokens.map((key: AddressArg, idx: number) => [key, amountsDiff[idx].toString()]),
+      );
+    }
 
-  //   const txQuoteLogs = quoteLogs.filter((log) => log.topics[1] === index);
-  //   const quoteReport: Record<string, Record<string, string>> = {};
-  //   for (const trackedAddress of trackedAddresses[index]) {
-  //     quoteReport[trackedAddress] = {};
-  //   }
+    const txQuoteLogs = decodedQuoteLogs.filter((log) => log.args.shortcutIndex.toString() === index.toString());
+    const quoteReport: Record<string, Record<AddressArg, string>> = {};
+    for (const txQuoteLog of txQuoteLogs) {
+      const trackedAddress = txQuoteLog.args.trackedAddress as AddressArg;
+      const tokens = txQuoteLog.args.tokens as AddressArg[];
+      const amountsDiff = txQuoteLog.args.amountsDiff as AddressArg[];
+      quoteReport[trackedAddress] = Object.fromEntries(
+        tokens.map((key: AddressArg, idx: number) => [key, amountsDiff[idx].toString()]),
+      );
+    }
 
-  //   const quoteTokensOut = contractInterface.parseLog(quoteLogs[index]).args.tokensOut;
-  //   const quoteAmountsOut = contractInterface.parseLog(quoteLogs[index]).args.amountsOut;
-  //   const dustTokensDust = contractInterface.parseLog(dustLogs[index]).args.tokensDust;
-  //   const dustAmountsDust = contractInterface.parseLog(dustLogs[index]).args.amountsDust;
+    const txDustLogs = decodedDustLogs.filter((log) => log.args.shortcutIndex.toString() === index.toString());
+    const dustReport: Record<string, Record<AddressArg, string>> = {};
+    for (const txDustLog of txDustLogs) {
+      const trackedAddress = txDustLog.args.trackedAddress as AddressArg;
+      const tokens = txDustLog.args.tokens as AddressArg[];
+      const amountsDiff = txDustLog.args.amountsDiff as AddressArg[];
+      dustReport[trackedAddress] = Object.fromEntries(
+        tokens.map((key: AddressArg, idx: number) => [key, amountsDiff[idx].toString()]),
+      );
+    }
 
-  //   // Instantiate SimulationReport
-  //   const simulatedShortcutReport: SimulatedShortcutReport = {
-  //     shortcutName: txToSim.shortcut.name,
-  //     weirollWallet: getAddress(roles.weirollWallet!.address!),
-  //     amountsIn: amountsIn[index],
-  //     quote: Object.fromEntries(
-  //       quoteTokensOut.map((key: AddressArg, idx: number) => [key, quoteAmountsOut[idx].toString()]),
-  //     ),
-  //     dust: Object.fromEntries(
-  //       dustTokensDust.map((key: AddressArg, idx: number) => [key, dustAmountsDust[idx].toString()]),
-  //     ),
-  //     gas: gasUsed.toString(),
-  //   };
-  //   simulationReport.push(simulatedShortcutReport);
-  // }
+    // Instantiate SimulationReport
+    const simulatedShortcutReport: SimulatedShortcutReport = {
+      shortcutName: txToSim.shortcut.name,
+      caller: getAddress(roles.caller.address!),
+      weirollWallet: getAddress(roles.weirollWallet!.address!),
+      amountsIn: amountsIn[index],
+      base: baseReport,
+      quote: quoteReport,
+      dust: dustReport,
+      gas: txGasUsed,
+    };
+    simulationReport.push(simulatedShortcutReport);
+  }
 
   if (simulationLogConfig.isReportLogged) {
     process.stdout.write('Simulation Report:\n');

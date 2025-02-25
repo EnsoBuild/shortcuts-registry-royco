@@ -53,8 +53,8 @@ export const CONTRCT_SIMULATION_FORK_TEST_EVENTS_ABI = [
     inputs: [
       { name: 'shortcutIndex', type: 'uint256', indexed: false, internalType: 'uint256' },
       { name: 'trackedAddress', type: 'address', indexed: false, internalType: 'address' },
-      { name: 'tokensIn', type: 'address[]', indexed: false, internalType: 'address[]' },
-      { name: 'amountsInDiff', type: 'int256[]', indexed: false, internalType: 'int256[]' },
+      { name: 'tokens', type: 'address[]', indexed: false, internalType: 'address[]' },
+      { name: 'amountsDiff', type: 'int256[]', indexed: false, internalType: 'int256[]' },
     ],
     anonymous: false,
   },
@@ -64,8 +64,8 @@ export const CONTRCT_SIMULATION_FORK_TEST_EVENTS_ABI = [
     inputs: [
       { name: 'shortcutIndex', type: 'uint256', indexed: false, internalType: 'uint256' },
       { name: 'trackedAddress', type: 'address', indexed: false, internalType: 'address' },
-      { name: 'tokensDust', type: 'address[]', indexed: false, internalType: 'address[]' },
-      { name: 'amountsDustDiff', type: 'int256[]', indexed: false, internalType: 'int256[]' },
+      { name: 'tokens', type: 'address[]', indexed: false, internalType: 'address[]' },
+      { name: 'amountsDiff', type: 'int256[]', indexed: false, internalType: 'int256[]' },
     ],
     anonymous: false,
   },
@@ -84,8 +84,8 @@ export const CONTRCT_SIMULATION_FORK_TEST_EVENTS_ABI = [
     inputs: [
       { name: 'shortcutIndex', type: 'uint256', indexed: false, internalType: 'uint256' },
       { name: 'trackedAddress', type: 'address', indexed: false, internalType: 'address' },
-      { name: 'tokensOut', type: 'address[]', indexed: false, internalType: 'address[]' },
-      { name: 'amountsOutDiff', type: 'int256[]', indexed: false, internalType: 'int256[]' },
+      { name: 'tokens', type: 'address[]', indexed: false, internalType: 'address[]' },
+      { name: 'amountsDiff', type: 'int256[]', indexed: false, internalType: 'int256[]' },
     ],
     anonymous: false,
   },
