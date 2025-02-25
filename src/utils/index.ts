@@ -10,7 +10,7 @@ import {
 } from '@ensofinance/shortcuts-builder/types';
 import { Standards, getStandardByProtocol } from '@ensofinance/shortcuts-standards';
 import { GeneralAddresses, helperAddresses } from '@ensofinance/shortcuts-standards/addresses';
-import { getForks } from '@ensofinance/shortcuts-standards/helpers';
+import { getForks } from '@ensofinance/shortcuts-standards/helpers/shortcuts';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 
 import { chainIdToSimulationRoles } from '../constants';
@@ -43,7 +43,7 @@ export async function mintErc4626(tokenIn: AddressArg, tokenOut: AddressArg, amo
   const { amountOut } = await erc4626.deposit.addToBuilder(builder, {
     tokenIn,
     tokenOut,
-    amountIn: [amountIn],
+    amountIn,
     primaryAddress: tokenOut,
   });
 
@@ -55,7 +55,7 @@ export async function redeemErc4626(tokenIn: AddressArg, tokenOut: AddressArg, a
   const { amountOut } = await erc4626.redeem.addToBuilder(builder, {
     tokenIn,
     tokenOut,
-    amountIn: [amountIn],
+    amountIn,
     primaryAddress: tokenIn,
   });
 

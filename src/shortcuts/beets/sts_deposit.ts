@@ -4,17 +4,17 @@ import { AddressArg, ChainIds, WeirollScript } from '@ensofinance/shortcuts-buil
 
 import { chainIdToDeFiAddresses } from '../../constants';
 import type { AddressData, Input, Output, Shortcut } from '../../types';
-import { getBalance, redeemErc4626, sendTokensToOwner } from '../../utils';
+import { getBalance, mint_stS, unwrap_wrappedNativeToken } from '../../utils';
 
-export class Origin_Wos_Redeem_Shortcut implements Shortcut {
-  name = 'origin-wos-redeem';
-  description = 'Market 1 Redeem: bwOS-22 -> wS';
+export class Beets_Sts_Deposit_Shortcut implements Shortcut {
+  name = 'beets-sts-deposit';
+  description = 'Market: Beets - Deposit: wS -> S -> stS';
   supportedChains = [ChainIds.Sonic];
   inputs: Record<number, Input> = {
     [ChainIds.Sonic]: {
-      vault: '0x1d7E3726aFEc5088e11438258193A199F9D5Ba93',
+      S: chainIdToDeFiAddresses[ChainIds.Sonic].S,
+      stS: chainIdToDeFiAddresses[ChainIds.Sonic].stS,
       wS: chainIdToDeFiAddresses[ChainIds.Sonic].wS,
-      wOS: chainIdToDeFiAddresses[ChainIds.Sonic].wOS,
     },
   };
 
@@ -22,16 +22,18 @@ export class Origin_Wos_Redeem_Shortcut implements Shortcut {
     const client = new RoycoClient();
 
     const inputs = this.inputs[chainId];
-    const { vault, wOS } = inputs;
+    const { S, stS, wS } = inputs;
 
     const builder = new Builder(chainId, client, {
-      tokensIn: [vault],
-      tokensOut: [wOS],
+      tokensIn: [wS],
+      tokensOut: [stS],
     });
-    const vaultAmount = getBalance(vault, builder);
-    await redeemErc4626(vault, wOS, vaultAmount, builder);
-    const wOSAmount = getBalance(wOS, builder);
-    await sendTokensToOwner(wOS, wOSAmount, builder);
+    const amountWs = getBalance(wS, builder);
+
+    await unwrap_wrappedNativeToken(wS, S, amountWs, builder);
+    const amountS = getBalance(S, builder);
+
+    await mint_stS(S, stS, amountS, builder);
 
     const payload = await builder.build({
       requireWeiroll: true,
@@ -48,8 +50,9 @@ export class Origin_Wos_Redeem_Shortcut implements Shortcut {
     switch (chainId) {
       case ChainIds.Sonic:
         return new Map([
-          [this.inputs[ChainIds.Sonic].wS, { label: 'ERC20:wS' }],
-          [this.inputs[ChainIds.Sonic].vault, { label: 'ERC20:Silo Vault' }],
+          [this.inputs[ChainIds.Sonic].S, { label: 'S (Native Token)' }],
+          [this.inputs[ChainIds.Sonic].stS, { label: 'stS' }],
+          [this.inputs[ChainIds.Sonic].wS, { label: 'wS' }],
         ]);
       default:
         throw new Error(`Unsupported chainId: ${chainId}`);

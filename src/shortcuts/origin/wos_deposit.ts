@@ -2,7 +2,7 @@ import { Builder } from '@ensofinance/shortcuts-builder';
 import { RoycoClient } from '@ensofinance/shortcuts-builder/client/implementations/roycoClient';
 import { AddressArg, ChainIds, WeirollScript } from '@ensofinance/shortcuts-builder/types';
 
-import { chainIdToDeFiAddresses, chainIdToTokenHolder } from '../../constants';
+import { chainIdToDeFiAddresses } from '../../constants';
 import type { AddressData, Input, Output, Shortcut } from '../../types';
 import { getBalance, mintErc4626, mint_OS, unwrap_wrappedNativeToken } from '../../utils';
 

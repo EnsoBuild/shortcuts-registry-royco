@@ -4,17 +4,17 @@ import { AddressArg, ChainIds, WeirollScript } from '@ensofinance/shortcuts-buil
 
 import { chainIdToDeFiAddresses } from '../../constants';
 import type { AddressData, Input, Output, Shortcut } from '../../types';
-import { getBalance, redeemErc4626, sendTokensToOwner } from '../../utils';
+import { getBalance, sendTokensToOwner } from '../../utils';
 
-export class Origin_Wos_Redeem_Shortcut implements Shortcut {
-  name = 'origin-wos-redeem';
-  description = 'Market 1 Redeem: bwOS-22 -> wS';
+export class Beets_Sts_Redeem_Shortcut implements Shortcut {
+  name = 'beets-sts-redeem';
+  description = 'Market: Beets Redeem stS';
   supportedChains = [ChainIds.Sonic];
   inputs: Record<number, Input> = {
     [ChainIds.Sonic]: {
-      vault: '0x1d7E3726aFEc5088e11438258193A199F9D5Ba93',
+      S: chainIdToDeFiAddresses[ChainIds.Sonic].S,
+      stS: chainIdToDeFiAddresses[ChainIds.Sonic].stS,
       wS: chainIdToDeFiAddresses[ChainIds.Sonic].wS,
-      wOS: chainIdToDeFiAddresses[ChainIds.Sonic].wOS,
     },
   };
 
@@ -22,16 +22,15 @@ export class Origin_Wos_Redeem_Shortcut implements Shortcut {
     const client = new RoycoClient();
 
     const inputs = this.inputs[chainId];
-    const { vault, wOS } = inputs;
+    const { stS } = inputs;
 
     const builder = new Builder(chainId, client, {
-      tokensIn: [vault],
-      tokensOut: [wOS],
+      tokensIn: [stS],
+      tokensOut: [stS],
     });
-    const vaultAmount = getBalance(vault, builder);
-    await redeemErc4626(vault, wOS, vaultAmount, builder);
-    const wOSAmount = getBalance(wOS, builder);
-    await sendTokensToOwner(wOS, wOSAmount, builder);
+    const amountSts = getBalance(stS, builder);
+
+    await sendTokensToOwner(stS, amountSts, builder);
 
     const payload = await builder.build({
       requireWeiroll: true,
@@ -48,8 +47,9 @@ export class Origin_Wos_Redeem_Shortcut implements Shortcut {
     switch (chainId) {
       case ChainIds.Sonic:
         return new Map([
-          [this.inputs[ChainIds.Sonic].wS, { label: 'ERC20:wS' }],
-          [this.inputs[ChainIds.Sonic].vault, { label: 'ERC20:Silo Vault' }],
+          [this.inputs[ChainIds.Sonic].S, { label: 'S (Native Token)' }],
+          [this.inputs[ChainIds.Sonic].stS, { label: 'stS' }],
+          [this.inputs[ChainIds.Sonic].wS, { label: 'wS' }],
         ]);
       default:
         throw new Error(`Unsupported chainId: ${chainId}`);
