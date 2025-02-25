@@ -9,15 +9,12 @@ import { getBalance, sendTokensToOwner } from '../../utils';
 
 export class StableJack_PtSts_Redeem_Shortcut implements Shortcut {
   name = 'stablejack-pt-sts-redeem';
-  description = 'Market 1 Redeem: PT-stS -> stS'; // TODO: missing stS -> S -> wS
+  description = 'Market 1 Redeem: PT-stS ';
   supportedChains = [ChainIds.Sonic];
   inputs: Record<number, Input> = {
     [ChainIds.Sonic]: {
       protocol: Standards.Stable_Jack.protocol.addresses!.sonic!.primary,
       PT_stS: chainIdToDeFiAddresses[ChainIds.Sonic].PT_stS,
-      S: chainIdToDeFiAddresses[ChainIds.Sonic].S,
-      stS: chainIdToDeFiAddresses[ChainIds.Sonic].stS,
-      wS: chainIdToDeFiAddresses[ChainIds.Sonic].wS,
     },
   };
 
@@ -25,11 +22,11 @@ export class StableJack_PtSts_Redeem_Shortcut implements Shortcut {
     const client = new RoycoClient();
 
     const inputs = this.inputs[chainId];
-    const { stS, PT_stS } = inputs;
+    const { PT_stS } = inputs;
 
     const builder = new Builder(chainId, client, {
       tokensIn: [PT_stS],
-      tokensOut: [stS],
+      tokensOut: [PT_stS],
     });
     const amountPtSts = getBalance(PT_stS, builder);
 
@@ -52,9 +49,6 @@ export class StableJack_PtSts_Redeem_Shortcut implements Shortcut {
         return new Map([
           [this.inputs[ChainIds.Sonic].protocol, { label: 'Protocol' }],
           [this.inputs[ChainIds.Sonic].PT_stS, { label: 'PT_stS' }],
-          [this.inputs[ChainIds.Sonic].S, { label: 'S (Native Token)' }],
-          [this.inputs[ChainIds.Sonic].stS, { label: 'stS' }],
-          [this.inputs[ChainIds.Sonic].wS, { label: 'wS' }],
         ]);
       default:
         throw new Error(`Unsupported chainId: ${chainId}`);

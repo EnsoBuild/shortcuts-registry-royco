@@ -9,16 +9,12 @@ import { getBalance, sendTokensToOwner } from '../../utils';
 
 export class StableJack_YtWos_Redeem_Shortcut implements Shortcut {
   name = 'stablejack-yt-wos-redeem';
-  description = 'Market 4 Redeem: YT-wOS -> wOS -> OS'; // TODO: missing OS -> S -> wS
+  description = 'Market 4 Redeem: YT-wOS';
   supportedChains = [ChainIds.Sonic];
   inputs: Record<number, Input> = {
     [ChainIds.Sonic]: {
       protocol: Standards.Stable_Jack.protocol.addresses!.sonic!.primary,
-      OS: chainIdToDeFiAddresses[ChainIds.Sonic].OS,
       YT_wOS: chainIdToDeFiAddresses[ChainIds.Sonic].YT_wOS,
-      S: chainIdToDeFiAddresses[ChainIds.Sonic].S,
-      wOS: chainIdToDeFiAddresses[ChainIds.Sonic].wOS,
-      wS: chainIdToDeFiAddresses[ChainIds.Sonic].wS,
     },
   };
 
@@ -26,11 +22,11 @@ export class StableJack_YtWos_Redeem_Shortcut implements Shortcut {
     const client = new RoycoClient();
 
     const inputs = this.inputs[chainId];
-    const { OS, YT_wOS } = inputs;
+    const { YT_wOS } = inputs;
 
     const builder = new Builder(chainId, client, {
       tokensIn: [YT_wOS],
-      tokensOut: [OS],
+      tokensOut: [YT_wOS],
     });
 
     const amountYtWos = getBalance(YT_wOS, builder);
@@ -54,10 +50,6 @@ export class StableJack_YtWos_Redeem_Shortcut implements Shortcut {
         return new Map([
           [this.inputs[ChainIds.Sonic].protocol, { label: 'Protocol' }],
           [this.inputs[ChainIds.Sonic].YT_wOS, { label: 'YT_wOS' }],
-          [this.inputs[ChainIds.Sonic].OS, { label: 'OS' }],
-          [this.inputs[ChainIds.Sonic].S, { label: 'S (Native Token)' }],
-          [this.inputs[ChainIds.Sonic].wOS, { label: 'wOS' }],
-          [this.inputs[ChainIds.Sonic].wS, { label: 'wS' }],
         ]);
       default:
         throw new Error(`Unsupported chainId: ${chainId}`);
