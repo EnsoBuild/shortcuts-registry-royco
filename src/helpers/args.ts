@@ -1,4 +1,6 @@
 import { getChainName } from '@ensofinance/shortcuts-builder/helpers';
+import { AddressArg } from '@ensofinance/shortcuts-builder/types';
+import { getAddress } from '@ethersproject/address';
 import { BigNumber } from '@ethersproject/bignumber';
 import dotenv from 'dotenv';
 import { execSync } from 'node:child_process';
@@ -94,7 +96,7 @@ export function validateAndGetSimulationConfig(config?: SimulationLogConfig): Si
   return config;
 }
 
-export function validateShortcutsToSimulate(txs: ShortcutToSimulate[]): void {
+export function validateAndGetShortcutsToSimulate(txs: ShortcutToSimulate[]): ShortcutToSimulate[] {
   if (!txs.length) throw new Error('Invalid txs array. Must contain at least one tx');
 
   let prevBlockNumber: BigNumber | undefined;
@@ -109,6 +111,8 @@ export function validateShortcutsToSimulate(txs: ShortcutToSimulate[]): void {
         `Invalid tx at index ${index}: ${JSON.stringify(tx)}. 'amountsIn' must be an array of stringified big numbers`,
       );
     }
+
+    const amountsIn: string[] = [];
     for (const amountIn of tx.amountsIn) {
       try {
         BigNumber.from(amountIn);
@@ -118,7 +122,9 @@ export function validateShortcutsToSimulate(txs: ShortcutToSimulate[]): void {
           `Invalid tx at index ${index}: ${JSON.stringify(tx)}. 'amountsIn' contains an invalid stringified big number: ${JSON.stringify(amountIn)}`,
         );
       }
+      amountsIn.push(amountIn.toString());
     }
+    tx.amountsIn = amountsIn;
 
     if ('blockNumber' in tx) {
       let currentBlockNumber: BigNumber;
@@ -130,6 +136,7 @@ export function validateShortcutsToSimulate(txs: ShortcutToSimulate[]): void {
           `Invalid tx at index ${index}: ${JSON.stringify(tx)}. 'blockNumber' contains an invalid stringified big number: ${JSON.stringify(tx.blockNumber)}`,
         );
       }
+      tx.blockNumber = currentBlockNumber.toString();
 
       // NOTE: `blockNumber` must be greater or equal to the last defined one
       if (prevBlockNumber && currentBlockNumber.lt(prevBlockNumber)) {
@@ -161,7 +168,30 @@ export function validateShortcutsToSimulate(txs: ShortcutToSimulate[]): void {
         throw new Error(`Invalid tx at index ${index}: ${JSON.stringify(tx)}. 'requiresFunding' must be a boolean`);
       }
     }
+
+    if ('trackedAddresses' in tx) {
+      if (!Array.isArray(tx.trackedAddresses)) {
+        throw new Error(
+          `Invalid tx at index ${index}: ${JSON.stringify(tx)}. 'trackedAddresses' must be an array of addresses`,
+        );
+      }
+      const checksumAddresses: AddressArg[] = [];
+      for (const address of tx.trackedAddresses) {
+        let checksumAddress: AddressArg;
+        try {
+          checksumAddress = getAddress(address) as AddressArg;
+        } catch {
+          throw new Error(
+            `Invalid tx at index ${index}: ${JSON.stringify(tx)}. 'trackedAddresses' contains an invalid address: ${address}`,
+          );
+        }
+        checksumAddresses.push(checksumAddress);
+      }
+      tx.trackedAddresses = checksumAddresses;
+    }
   }
+
+  return txs;
 }
 
 export async function getShortcut(args: string[]) {

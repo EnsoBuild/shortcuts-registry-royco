@@ -29,6 +29,7 @@ export interface ShortcutToSimulate {
   requiresFunding?: boolean;
   blockNumber?: BigNumberish;
   blockTimestamp?: number;
+  trackedAddresses?: AddressArg[];
 }
 
 export interface ShortcutToSimulateForgeData {
@@ -46,6 +47,7 @@ export interface ShortcutToSimulateForgeData {
   requiresFunding: boolean;
   tokensOut: AddressArg[];
   tokensDust: AddressArg[];
+  trackedAddresses: AddressArg[];
 }
 
 export type Output = {
@@ -71,8 +73,9 @@ export interface SimulatedShortcutReport {
   shortcutName: string;
   weirollWallet: AddressArg;
   amountsIn: string[];
-  quote: Record<string, string>;
-  dust: Record<string, string>;
+  base: Record<string, Record<string, string>>;
+  quote: Record<string, Record<string, string>>;
+  dust: Record<string, Record<string, string>>;
   gas: string;
 };
 

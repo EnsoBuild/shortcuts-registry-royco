@@ -16,7 +16,7 @@ export class Origin_Wos_Deposit_Shortcut implements Shortcut {
       S: chainIdToDeFiAddresses[ChainIds.Sonic].S,
       OS: chainIdToDeFiAddresses[ChainIds.Sonic].OS,
       wOS: chainIdToDeFiAddresses[ChainIds.Sonic].wOS,
-      vault: '0x1d7E3726aFEc5088e11438258193A199F9D5Ba93', // bwOS-22
+      vault: chainIdToDeFiAddresses[ChainIds.Sonic].bwOS_22,
     },
   };
 
@@ -59,7 +59,7 @@ export class Origin_Wos_Deposit_Shortcut implements Shortcut {
       case ChainIds.Sonic:
         return new Map([
           [this.inputs[ChainIds.Sonic].wS, { label: 'wS' }],
-          [this.inputs[ChainIds.Sonic].vault, { label: 'bwS-20' }],
+          [this.inputs[ChainIds.Sonic].vault, { label: 'bwOS-22' }],
         ]);
       default:
         throw new Error(`Unsupported chainId: ${chainId}`);

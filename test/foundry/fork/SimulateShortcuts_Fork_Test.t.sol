@@ -7,6 +7,22 @@ import { StdStorage, Test, console2, stdStorage } from 'forge-std-1.9.4/Test.sol
 contract SimulateShortcuts_Fork_Test is Test {
   using stdStorage for StdStorage;
 
+  // Structs
+  struct TrackedAddressBalance {
+    // Tokens In
+    uint256[] tokensInPre;
+    uint256[] tokensInPost;
+    int256[] tokensInDiff;
+    // Tokens Out
+    uint256[] tokensOutPre;
+    uint256[] tokensOutPost;
+    int256[] tokensOutDiff;
+    // Tokens Dust
+    uint256[] tokensDustPre;
+    uint256[] tokensDustPost;
+    int256[] tokensDustDiff;
+  }
+
   // --- Network environment variables ---
   int256 private constant SIMULATION_BLOCK_NUMBER_LATEST = -1;
   int256 private constant SIMULATION_BLOCK_TIMESTAMP_LATEST = -1;
@@ -16,7 +32,7 @@ contract SimulateShortcuts_Fork_Test is Test {
 
   // --- Simulation environment variables --
   string private constant SIMULATION_JSON_ENV_VAR = 'SIMULATION_JSON_DATA';
-  uint256 private constant NUMBER_OF_JSON_STRINGIFIED_ARRAYS_PER_TX_TO_SIM = 11; // NB: keep it up to date with the
+  uint256 private constant NUMBER_OF_JSON_STRINGIFIED_ARRAYS_PER_TX_TO_SIM = 12; // NB: keep it up to date with the
   // number of JSON arrays
   string private constant JSON_CHAIN_ID = '.chainId';
   string private constant JSON_RPC_URL = '.rpcUrl';
@@ -35,6 +51,7 @@ contract SimulateShortcuts_Fork_Test is Test {
   string private constant JSON_REQUIRES_FUNDING = '.requiresFunding';
   string private constant JSON_TOKENS_OUT = '.tokensOut';
   string private constant JSON_TOKENS_DUST = '.tokensDust';
+  string private constant JSON_TRACKED_ADDRESSES = '.trackedAddresses';
   string private constant JSON_LABEL_KEYS = '.labelKeys';
   string private constant JSON_LABEL_VALUES = '.labelValues';
 
@@ -56,12 +73,24 @@ contract SimulateShortcuts_Fork_Test is Test {
   bool[] private s_requiresFunding;
   address[][] private s_tokensOut;
   address[][] private s_tokensDust;
+  address[][] private s_trackedAddresses;
 
   mapping(address address_ => string label) private s_addressToLabel;
 
   // --- Events ---
-  event SimulationReportQuote(uint256 shortcutIndex, address[] tokensOut, uint256[] amountsOut);
-  event SimulationReportDust(uint256 shortcutIndex, address[] tokensDust, int256[] amountsDust);
+  event SimulationReportBase(uint256 shortcutIndex, address trackedAddress, address[] tokensIn, int256[] amountsInDiff);
+  event SimulationReportQuote(
+    uint256 shortcutIndex,
+    address trackedAddress,
+    address[] tokensOut,
+    int256[] amountsOutDiff
+  );
+  event SimulationReportDust(
+    uint256 shortcutIndex,
+    address trackedAddress,
+    address[] tokensDust,
+    int256[] amountsDustDiff
+  );
   event SimulationReportGasUsed(uint256 shortcutIndex, uint256 gasUsed);
 
   // --- Custom Errors ---
@@ -161,6 +190,12 @@ contract SimulateShortcuts_Fork_Test is Test {
       s_tokensDust.push(abi.decode(vm.parseJson(tokensDustJson[i]), (address[])));
     }
 
+    // trackedAddresses
+    string[] memory trackedAddressesJson = vm.parseJsonStringArray(jsonStr, JSON_TRACKED_ADDRESSES);
+    for (uint256 i = 0; i < trackedAddressesJson.length; i++) {
+      s_trackedAddresses.push(abi.decode(vm.parseJson(trackedAddressesJson[i]), (address[])));
+    }
+
     // Cross-check all JSON parsed arrays lengths
     uint256 totalLengths = s_shortcutNames.length +
       s_blockNumbers.length +
@@ -172,7 +207,8 @@ contract SimulateShortcuts_Fork_Test is Test {
       s_tokensInHolders.length +
       s_requiresFunding.length +
       s_tokensOut.length +
-      s_tokensDust.length;
+      s_tokensDust.length +
+      s_trackedAddresses.length;
     if (totalLengths % NUMBER_OF_JSON_STRINGIFIED_ARRAYS_PER_TX_TO_SIM != 0) {
       revert SimulateShortcuts_Fork_Test__TxToSimulateArrayLengthsAreNotEq();
     }
@@ -254,9 +290,8 @@ contract SimulateShortcuts_Fork_Test is Test {
           vm.warp(uint256(blockTimestamp));
         }
       }
-      uint256[] memory tokensInBalancesPre = new uint256[](s_tokensIn[sIdx].length);
-      uint256[] memory tokensOutBalancesPre = new uint256[](s_tokensOut[sIdx].length);
-      uint256[] memory tokensDustBalancesPre = new uint256[](s_tokensDust[sIdx].length);
+
+      TrackedAddressBalance[] memory taBalances = new TrackedAddressBalance[](s_trackedAddresses[sIdx].length);
 
       // --- Calculate balances before ---
       address[] memory tokensIn = s_tokensIn[sIdx];
@@ -265,17 +300,32 @@ contract SimulateShortcuts_Fork_Test is Test {
       address[] memory tokensOut = s_tokensOut[sIdx];
       address[] memory tokensDust = s_tokensDust[sIdx];
 
-      // Tokens in (before funding them)
-      for (uint256 i = 0; i < tokensIn.length; i++) {
-        tokensInBalancesPre[i] = getBalanceOf(tokensIn[i], s_weirollWallet);
-      }
-      // Tokens out
-      for (uint256 i = 0; i < tokensOut.length; i++) {
-        tokensOutBalancesPre[i] = getBalanceOf(tokensOut[i], s_weirollWallet);
-      }
-      // Tokens dust
-      for (uint256 i = 0; i < tokensDust.length; i++) {
-        tokensDustBalancesPre[i] = getBalanceOf(tokensDust[i], s_weirollWallet);
+      for (uint256 tabIdx = 0; tabIdx < taBalances.length; tabIdx++) {
+        address trackedAddress = s_trackedAddresses[sIdx][tabIdx];
+        TrackedAddressBalance memory taBalance;
+        uint256[] memory tokensInBalancesPre = new uint256[](s_tokensIn[sIdx].length);
+        uint256[] memory tokensOutBalancesPre = new uint256[](s_tokensOut[sIdx].length);
+        uint256[] memory tokensDustBalancesPre = new uint256[](s_tokensDust[sIdx].length);
+
+        // Tokens in (before funding them)
+        for (uint256 i = 0; i < tokensIn.length; i++) {
+          tokensInBalancesPre[i] = getBalanceOf(tokensIn[i], trackedAddress);
+        }
+        taBalance.tokensInPre = tokensInBalancesPre;
+
+        // Tokens out
+        for (uint256 i = 0; i < tokensOut.length; i++) {
+          tokensOutBalancesPre[i] = getBalanceOf(tokensOut[i], trackedAddress);
+        }
+        taBalance.tokensOutPre = tokensOutBalancesPre;
+
+        // Tokens dust
+        for (uint256 i = 0; i < tokensDust.length; i++) {
+          tokensDustBalancesPre[i] = getBalanceOf(tokensDust[i], trackedAddress);
+        }
+        taBalance.tokensDustPre = tokensDustBalancesPre;
+
+        taBalances[tabIdx] = taBalance;
       }
 
       // Fund wallet from Tokens In holders (except for native token)
@@ -323,7 +373,7 @@ contract SimulateShortcuts_Fork_Test is Test {
       bytes memory txData = s_txData[sIdx];
       address callee = s_callee;
 
-      vm.StartPrank(s_caller);
+      vm.prank(s_caller);
       uint256 gasStart = gasleft();
       (bool success, bytes memory data) = callee.call{ value: txValue }(txData);
       uint256 gasEnd = gasleft();
@@ -332,20 +382,73 @@ contract SimulateShortcuts_Fork_Test is Test {
       }
 
       // -- Log Shortcut post execution ---
+      for (uint256 tabIdx = 0; tabIdx < taBalances.length; tabIdx++) {
+        address trackedAddress = s_trackedAddresses[sIdx][tabIdx];
+        TrackedAddressBalance memory taBalance;
+        uint256[] memory tokensInBalancesPost = new uint256[](s_tokensIn[sIdx].length);
+        int256[] memory tokensInBalancesDiff = new int256[](s_tokensIn[sIdx].length);
+        uint256[] memory tokensOutBalancesPost = new uint256[](s_tokensOut[sIdx].length);
+        int256[] memory tokensOutBalancesDiff = new int256[](s_tokensOut[sIdx].length);
+        uint256[] memory tokensDustBalancesPost = new uint256[](s_tokensDust[sIdx].length);
+        int256[] memory tokensDustBalancesDiff = new int256[](s_tokensDust[sIdx].length);
+
+        // Tokens in (before funding them)
+        for (uint256 i = 0; i < tokensIn.length; i++) {
+          tokensInBalancesPost[i] = getBalanceOf(tokensIn[i], trackedAddress);
+          tokensInBalancesDiff[i] = int256(tokensInBalancesPost[i]) - int256(taBalances[tabIdx].tokensInPre[i]);
+        }
+        taBalance.tokensInPost = tokensInBalancesPost;
+        taBalance.tokensInDiff = tokensInBalancesDiff;
+
+        // Tokens out
+        for (uint256 i = 0; i < tokensOut.length; i++) {
+          tokensOutBalancesPost[i] = getBalanceOf(tokensOut[i], trackedAddress);
+          tokensOutBalancesDiff[i] = int256(tokensOutBalancesPost[i]) - int256(taBalances[tabIdx].tokensOutPre[i]);
+        }
+        taBalance.tokensOutPost = tokensOutBalancesPost;
+        taBalance.tokensOutDiff = tokensOutBalancesDiff;
+
+        // Tokens dust
+        for (uint256 i = 0; i < tokensDust.length; i++) {
+          tokensDustBalancesPost[i] = getBalanceOf(tokensDust[i], trackedAddress);
+          tokensDustBalancesDiff[i] = int256(tokensDustBalancesPost[i]) - int256(taBalances[tabIdx].tokensDustPre[i]);
+        }
+        taBalance.tokensDustPost = tokensDustBalancesPost;
+        taBalance.tokensDustDiff = tokensDustBalancesDiff;
+
+        taBalances[tabIdx] = taBalance;
+      }
+
       // Tokens in
       console2.log('| - TOKENS IN -------------');
       if (tokensIn.length == 0) {
         console2.log('| No Tokens In');
       }
       for (uint256 i = 0; i < tokensIn.length; i++) {
-        uint256 tokenInBalancePost = getBalanceOf(tokensIn[i], s_weirollWallet);
-        console2.log('| Addr    : ', tokensIn[i]);
-        console2.log('| Name    : ', s_addressToLabel[tokensIn[i]]);
-        console2.log('| Is funded: ', s_requiresFunding[sIdx]);
-        console2.log('| Amount  : ');
-        console2.log('|   Pre   : ', tokensInBalancesPre[i]);
-        console2.log('|   In    : ', amountsIn[i]);
-        console2.log('|   Post  : ', tokenInBalancePost);
+        console2.log('| Addr      : ', tokensIn[i]);
+        console2.log('| Name      : ', s_addressToLabel[tokensIn[i]]);
+        console2.log('| Is funded : ', s_requiresFunding[sIdx]);
+        console2.log('| Balances  : ');
+
+        for (uint256 tabIdx = 0; tabIdx < taBalances.length; tabIdx++) {
+          address trackedAddress = s_trackedAddresses[sIdx][tabIdx];
+          string memory trackedAddressLabel = s_addressToLabel[trackedAddress];
+
+          if (trackedAddress != address(0)) {
+            console2.log('|  ', trackedAddressLabel, ' : ', trackedAddress);
+          } else {
+            console2.log('|  Unknown : ', trackedAddress);
+          }
+          console2.log('|   Pre    : ', taBalances[tabIdx].tokensInPre[i]);
+          if (trackedAddress == s_caller) {
+            console2.log('| Funded : ', amountsIn[i]);
+          }
+          console2.log('|   Post   : ', taBalances[tabIdx].tokensInPost[i]);
+          console2.log('|   Diff   : ', taBalances[tabIdx].tokensInDiff[i]);
+
+          // Emit simulation report data
+          emit SimulationReportBase(sIdx, trackedAddress, tokensIn, taBalances[tabIdx].tokensInDiff);
+        }
         if (i != tokensIn.length - 1) {
           console2.log(unicode'|--------------------------------------------');
         }
@@ -357,15 +460,27 @@ contract SimulateShortcuts_Fork_Test is Test {
       if (tokensOut.length == 0) {
         console2.log('| No Tokens Out');
       }
-      uint256[] memory tokensOutAmounts = new uint256[](tokensOut.length);
       for (uint256 i = 0; i < tokensOut.length; i++) {
-        uint256 tokenOutBalancePost = getBalanceOf(tokensOut[i], s_weirollWallet);
-        console2.log('| Addr    : ', tokensOut[i]);
-        console2.log('| Name    : ', s_addressToLabel[tokensOut[i]]);
-        tokensOutAmounts[i] = tokenOutBalancePost - tokensOutBalancesPre[i];
-        console2.log('| Amount  : ', tokenOutBalancePost - tokensOutBalancesPre[i]);
-        console2.log('|   Pre   : ', tokensOutBalancesPre[i]);
-        console2.log('|   Post  : ', tokenOutBalancePost);
+        console2.log('| Addr      : ', tokensOut[i]);
+        console2.log('| Name      : ', s_addressToLabel[tokensOut[i]]);
+        console2.log('| Balances  : ');
+
+        for (uint256 tabIdx = 0; tabIdx < taBalances.length; tabIdx++) {
+          address trackedAddress = s_trackedAddresses[sIdx][tabIdx];
+          string memory trackedAddressLabel = s_addressToLabel[trackedAddress];
+
+          if (trackedAddress != address(0)) {
+            console2.log('|  ', trackedAddressLabel, ' : ', trackedAddress);
+          } else {
+            console2.log('|  Unknown : ', trackedAddress);
+          }
+          console2.log('|   Pre    : ', taBalances[tabIdx].tokensOutPre[i]);
+          console2.log('|   Post   : ', taBalances[tabIdx].tokensOutPost[i]);
+          console2.log('|   Diff   : ', taBalances[tabIdx].tokensOutDiff[i]);
+
+          // Emit simulation report data
+          emit SimulationReportQuote(sIdx, trackedAddress, tokensOut, taBalances[tabIdx].tokensOutDiff);
+        }
         if (i != tokensOut.length - 1) {
           console2.log(unicode'|--------------------------------------------');
         }
@@ -377,26 +492,38 @@ contract SimulateShortcuts_Fork_Test is Test {
       if (tokensDust.length == 0) {
         console2.log('| No Dust Tokens');
       }
-      int256[] memory tokensDustAmounts = new int256[](tokensDust.length);
       for (uint256 i = 0; i < tokensDust.length; i++) {
-        int256 tokenDustBalancePost = int256(getBalanceOf(tokensDust[i], s_weirollWallet));
-        console2.log('| Addr    : ', tokensDust[i]);
-        console2.log('| Name    : ', s_addressToLabel[tokensDust[i]]);
-        tokensDustAmounts[i] = tokenDustBalancePost - int256(tokensDustBalancesPre[i]);
-        console2.log('| Amount  : ', tokenDustBalancePost - int256(tokensDustBalancesPre[i]));
-        console2.log('|   Pre   : ', int256(tokensDustBalancesPre[i]));
-        console2.log('|   Post  : ', tokenDustBalancePost);
+        console2.log('| Addr      : ', tokensDust[i]);
+        console2.log('| Name      : ', s_addressToLabel[tokensDust[i]]);
+        console2.log('| Balances  : ');
+
+        for (uint256 tabIdx = 0; tabIdx < taBalances.length; tabIdx++) {
+          address trackedAddress = s_trackedAddresses[sIdx][tabIdx];
+          string memory trackedAddressLabel = s_addressToLabel[trackedAddress];
+
+          if (trackedAddress != address(0)) {
+            console2.log('|  ', trackedAddressLabel, ' : ', trackedAddress);
+          } else {
+            console2.log('|  Unknown : ', trackedAddress);
+          }
+          console2.log('|   Pre    : ', taBalances[tabIdx].tokensDustPre[i]);
+          console2.log('|   Post   : ', taBalances[tabIdx].tokensDustPost[i]);
+          console2.log('|   Diff   : ', taBalances[tabIdx].tokensDustDiff[i]);
+
+          // Emit simulation report data
+          emit SimulationReportDust(sIdx, trackedAddress, tokensDust, taBalances[tabIdx].tokensDustDiff);
+        }
         if (i != tokensDust.length - 1) {
           console2.log(unicode'|--------------------------------------------');
         }
       }
+
+      // Gas metrics
       console2.log('|');
       console2.log('|- GAS --------------------');
       console2.log('| Used    : ', gasStart - gasEnd);
 
       // Emit simulation report data
-      emit SimulationReportQuote(sIdx, tokensOut, tokensOutAmounts);
-      emit SimulationReportDust(sIdx, tokensDust, tokensDustAmounts);
       emit SimulationReportGasUsed(sIdx, gasStart - gasEnd);
     }
 

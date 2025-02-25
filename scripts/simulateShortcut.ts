@@ -8,8 +8,8 @@ import {
   getSimulationRolesByChainId,
   getTokenToHolderByChainId,
   simulateShortcutsWithForgeAndGenerateReport,
+  validateAndGetShortcutsToSimulate,
   validateAndGetSimulationConfig,
-  validateShortcutsToSimulate,
 } from '../src/helpers';
 import type { BuiltShortcut, ShortcutToSimulate, SimulationLogConfig, SimulationReport } from '../src/types';
 
@@ -17,11 +17,11 @@ const failedSimulationReport = { status: 'Simulation failed', error: '' };
 
 export async function main(
   chainId: ChainIds,
-  txs: ShortcutToSimulate[],
+  txsToSimInput: ShortcutToSimulate[],
   simulationLogConfigInput?: SimulationLogConfig,
 ): Promise<SimulationReport> {
   const simulationLogConfig = validateAndGetSimulationConfig(simulationLogConfigInput);
-  validateShortcutsToSimulate(txs);
+  const txsToSim = validateAndGetShortcutsToSimulate(txsToSimInput);
 
   const tokenToHolder = getTokenToHolderByChainId(chainId);
 
@@ -33,7 +33,7 @@ export async function main(
 
   // NOTE: this could use `Promise.all`
   const builtShortcuts: BuiltShortcut[] = [];
-  for (const tx of txs) {
+  for (const tx of txsToSim) {
     const builtShortcut = await buildShortcut(chainId, provider, tx.shortcut, tx.amountsIn);
     builtShortcuts.push(builtShortcut);
   }
@@ -44,7 +44,7 @@ export async function main(
     report = await simulateShortcutsWithForgeAndGenerateReport(
       chainId,
       provider,
-      txs,
+      txsToSim,
       builtShortcuts,
       forgePath,
       roles,

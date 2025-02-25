@@ -12,7 +12,7 @@ export class Origin_Wos_Redeem_Shortcut implements Shortcut {
   supportedChains = [ChainIds.Sonic];
   inputs: Record<number, Input> = {
     [ChainIds.Sonic]: {
-      vault: '0x1d7E3726aFEc5088e11438258193A199F9D5Ba93',
+      vault: chainIdToDeFiAddresses[ChainIds.Sonic].bwOS_22,
       wS: chainIdToDeFiAddresses[ChainIds.Sonic].wS,
       wOS: chainIdToDeFiAddresses[ChainIds.Sonic].wOS,
     },
@@ -50,7 +50,7 @@ export class Origin_Wos_Redeem_Shortcut implements Shortcut {
       case ChainIds.Sonic:
         return new Map([
           [this.inputs[ChainIds.Sonic].wS, { label: 'ERC20:wS' }],
-          [this.inputs[ChainIds.Sonic].vault, { label: 'ERC20:Silo Vault' }],
+          [this.inputs[ChainIds.Sonic].vault, { label: 'ERC20:Origin Vault' }],
         ]);
       default:
         throw new Error(`Unsupported chainId: ${chainId}`);

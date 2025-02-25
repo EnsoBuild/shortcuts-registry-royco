@@ -49,11 +49,23 @@ export const DEFAULT_MIN_AMOUNT_BPS = BigNumber.from('9900');
 export const CONTRCT_SIMULATION_FORK_TEST_EVENTS_ABI = [
   {
     type: 'event',
+    name: 'SimulationReportBase',
+    inputs: [
+      { name: 'shortcutIndex', type: 'uint256', indexed: false, internalType: 'uint256' },
+      { name: 'trackedAddress', type: 'address', indexed: false, internalType: 'address' },
+      { name: 'tokensIn', type: 'address[]', indexed: false, internalType: 'address[]' },
+      { name: 'amountsInDiff', type: 'int256[]', indexed: false, internalType: 'int256[]' },
+    ],
+    anonymous: false,
+  },
+  {
+    type: 'event',
     name: 'SimulationReportDust',
     inputs: [
       { name: 'shortcutIndex', type: 'uint256', indexed: false, internalType: 'uint256' },
+      { name: 'trackedAddress', type: 'address', indexed: false, internalType: 'address' },
       { name: 'tokensDust', type: 'address[]', indexed: false, internalType: 'address[]' },
-      { name: 'amountsDust', type: 'int256[]', indexed: false, internalType: 'int256[]' },
+      { name: 'amountsDustDiff', type: 'int256[]', indexed: false, internalType: 'int256[]' },
     ],
     anonymous: false,
   },
@@ -71,8 +83,9 @@ export const CONTRCT_SIMULATION_FORK_TEST_EVENTS_ABI = [
     name: 'SimulationReportQuote',
     inputs: [
       { name: 'shortcutIndex', type: 'uint256', indexed: false, internalType: 'uint256' },
+      { name: 'trackedAddress', type: 'address', indexed: false, internalType: 'address' },
       { name: 'tokensOut', type: 'address[]', indexed: false, internalType: 'address[]' },
-      { name: 'amountsOut', type: 'uint256[]', indexed: false, internalType: 'uint256[]' },
+      { name: 'amountsOutDiff', type: 'int256[]', indexed: false, internalType: 'int256[]' },
     ],
     anonymous: false,
   },
@@ -109,6 +122,7 @@ export const chainIdToSimulationRoles: Map<ChainIds, SimulationRoles> = new Map(
 // Keep it sorted kinda alphabetically but case insensitive :)
 export const chainIdToDeFiAddresses: Record<number, Record<string, AddressArg>> = {
   [ChainIds.Sonic]: {
+    bwOS_22: '0x1d7E3726aFEc5088e11438258193A199F9D5Ba93',
     bwS_20: '0xf55902DE87Bd80c6a35614b48d7f8B612a083C12',
     OS: '0xb1e25689D55734FD3ffFc939c4C3Eb52DFf8A794',
     PT_stS: '0xFCA91fEEe65DB34448A83a74f4f8970b5dddfa7c',
@@ -129,6 +143,7 @@ export const chainIdToDeFiAddresses: Record<number, Record<string, AddressArg>> 
 
 const tokenToHolderSonic: Map<AddressArg, AddressArg> = new Map([
   // NOTE: Native Token (funded via `vm.deal(<address>, 1_000 ether)`)
+  [chainIdToDeFiAddresses[ChainIds.Sonic].bwOS_22, '0x8144fa70EA19FF4E62E3cABCeD0898e87E496014'],
   [chainIdToDeFiAddresses[ChainIds.Sonic].bwS_20, '0x8D4D19405Ba352e4767681C28936fc0a9A8C8dFe'],
   [chainIdToDeFiAddresses[ChainIds.Sonic].OS, '0xa76Beaf111BaD5dD866fa4835D66b9aA2Eb1FdEc'],
   [chainIdToDeFiAddresses[ChainIds.Sonic].PT_stS, '0x36804ABb20cb8c19B860d3C9bF7219a88B8fc57A'],
