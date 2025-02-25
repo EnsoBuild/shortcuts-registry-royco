@@ -1,9 +1,9 @@
 import { Builder } from '@ensofinance/shortcuts-builder';
 import { RoycoClient } from '@ensofinance/shortcuts-builder/client/implementations/roycoClient';
-import { AddressArg, ChainIds, WeirollScript } from '@ensofinance/shortcuts-builder/types';
+import { ChainIds, WeirollScript } from '@ensofinance/shortcuts-builder/types';
 
 import { chainIdToDeFiAddresses } from '../../constants';
-import type { AddressData, Input, Output, Shortcut } from '../../types';
+import type { Input, Output, Shortcut } from '../../types';
 import { getBalance, mintErc4626, mint_OS, unwrap_wrappedNativeToken } from '../../utils';
 
 export class Origin_Wos_Deposit_Shortcut implements Shortcut {
@@ -52,17 +52,5 @@ export class Origin_Wos_Deposit_Shortcut implements Shortcut {
       script: payload.shortcut as WeirollScript,
       metadata: builder.metadata,
     };
-  }
-
-  getAddressData(chainId: number): Map<AddressArg, AddressData> {
-    switch (chainId) {
-      case ChainIds.Sonic:
-        return new Map([
-          [this.inputs[ChainIds.Sonic].wS, { label: 'wS' }],
-          [this.inputs[ChainIds.Sonic].vault, { label: 'bwOS-22' }],
-        ]);
-      default:
-        throw new Error(`Unsupported chainId: ${chainId}`);
-    }
   }
 }

@@ -56,6 +56,7 @@ export async function simulateShortcutsWithForgeAndGenerateReport(
   forgePath: string,
   roles: SimulationRoles,
   tokenToHolder: Map<AddressArg, AddressArg>,
+  addressToLabel: Map<AddressArg, string>,
   simulationLogConfig: SimulationLogConfig,
 ): Promise<SimulationReport> {
   const forgeData = {
@@ -77,7 +78,6 @@ export async function simulateShortcutsWithForgeAndGenerateReport(
   roles.callee = roles.recipeMarketHub;
 
   // For ALL the transactions to simulate
-  const addressToLabel: Map<AddressArg, string> = new Map();
   for (const txToSim of txsToSim) {
     // 1. Get labels for known addresses (applies to all transactions to simulate)
     if (txToSim.shortcut.getAddressData) {
@@ -143,18 +143,6 @@ export async function simulateShortcutsWithForgeAndGenerateReport(
     trackedAddresses.push(txForgeData.trackedAddresses);
   }
 
-  // TODO: remove tenderly simulation
-  // const tenderlySim = await simulateTransactionOnTenderly(
-  //   {
-  //     data: txData[0],
-  //     to: roles.callee.address!,
-  //     from: roles.caller.address!,
-  //     value: txValues[0],
-  //     operationType: 1,
-  //   },
-  //   chainId,
-  // );
-  // process.stdout.write(JSON.stringify(tenderlySim.simulationUrl, null, 2));
   const forgeTestLog = simulateShortcutsOnForge(
     chainId,
     provider,
@@ -222,7 +210,7 @@ export async function simulateShortcutsWithForgeAndGenerateReport(
   if (!dustLogs) throw new Error('missing "SimulationReportDust" used log');
   const decodedDustLogs = dustLogs.map((log) => contractInterface.parseLog(log));
 
-  const simulationReport: SimulationReport = []; // TODO: fix this
+  const simulationReport: SimulationReport = [];
   for (const [index, txToSim] of txsToSim.entries()) {
     const txGasUsed = decodedGasUsed[index].args.gasUsed.toString() as string;
 

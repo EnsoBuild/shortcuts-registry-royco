@@ -47,10 +47,7 @@ export class StableJack_YtWos_Redeem_Shortcut implements Shortcut {
   getAddressData(chainId: number): Map<AddressArg, AddressData> {
     switch (chainId) {
       case ChainIds.Sonic:
-        return new Map([
-          [this.inputs[ChainIds.Sonic].protocol, { label: 'Protocol' }],
-          [this.inputs[ChainIds.Sonic].YT_wOS, { label: 'YT_wOS' }],
-        ]);
+        return new Map([[this.inputs[ChainIds.Sonic].protocol, { label: 'Protocol' }]]);
       default:
         throw new Error(`Unsupported chainId: ${chainId}`);
     }

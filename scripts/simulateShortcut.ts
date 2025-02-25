@@ -6,6 +6,7 @@ import path from 'path';
 import { ForgeTestLogFormat, ForgeTestLogVerbosity } from '../src/constants';
 import {
   buildShortcut,
+  getAddressLabelsByChainId,
   getAllMarkets,
   getForgePath,
   getRpcUrlByChainId,
@@ -41,6 +42,7 @@ export async function main_(
   const provider = new StaticJsonRpcProvider({
     url: rpcUrl,
   });
+  const addressToLabel = getAddressLabelsByChainId(chainId);
   const roles = getSimulationRolesByChainId(chainId);
 
   // NOTE: this could use `Promise.all`
@@ -61,6 +63,7 @@ export async function main_(
       forgePath,
       roles,
       tokenToHolder,
+      addressToLabel,
       simulationLogConfig,
     );
 
@@ -131,7 +134,7 @@ async function main() {
     forgeTestLogVerbosity: ForgeTestLogVerbosity.X3V,
     isForgeTxDataLogged: false,
     isCalldataLogged: false,
-    isForgeLogsLogged: false,
+    isForgeLogsLogged: true,
     isReportLogged: true,
   };
   try {

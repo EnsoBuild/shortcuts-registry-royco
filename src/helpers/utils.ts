@@ -3,7 +3,7 @@ import { defaultAbiCoder } from '@ethersproject/abi';
 import { keccak256 } from '@ethersproject/keccak256';
 import crypto from 'crypto';
 
-import { chainIdToSimulationRoles, chainIdToTokenHolder } from '../constants';
+import { chainIdToDeFiAddresses, chainIdToSimulationRoles, chainIdToTokenHolder } from '../constants';
 import { SimulationRoles } from '../types';
 
 export function getChainId(chainName: string) {
@@ -25,6 +25,11 @@ export function getSimulationRolesByChainId(chainId: number): SimulationRoles {
   if (!roles.nativeToken?.address) throw new Error("missing 'nativeToken' address in 'roles'");
 
   return roles;
+}
+
+export function getAddressLabelsByChainId(chainId: number) {
+  const labelToAddress = new Map(Object.entries(chainIdToDeFiAddresses[chainId] ?? {}));
+  return new Map([...labelToAddress.entries()].map(([key, value]) => [value, key]));
 }
 
 export function getTokenToHolderByChainId(chainId: number): Map<AddressArg, AddressArg> {
