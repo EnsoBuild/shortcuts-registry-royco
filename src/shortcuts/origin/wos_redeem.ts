@@ -8,12 +8,11 @@ import { getBalance, redeemErc4626, sendTokensToOwner } from '../../utils';
 
 export class Origin_Wos_Redeem_Shortcut implements Shortcut {
   name = 'origin-wos-redeem';
-  description = 'Market 1 Redeem: bwOS-22 -> wS';
+  description = 'Market 1 Redeem: bwOS-22 -> wOS';
   supportedChains = [ChainIds.Sonic];
   inputs: Record<number, Input> = {
     [ChainIds.Sonic]: {
       vault: chainIdToDeFiAddresses[ChainIds.Sonic].bwOS_22,
-      wS: chainIdToDeFiAddresses[ChainIds.Sonic].wS,
       wOS: chainIdToDeFiAddresses[ChainIds.Sonic].wOS,
     },
   };
@@ -49,7 +48,7 @@ export class Origin_Wos_Redeem_Shortcut implements Shortcut {
     switch (chainId) {
       case ChainIds.Sonic:
         return new Map([
-          [this.inputs[ChainIds.Sonic].wS, { label: 'ERC20:wS' }],
+          [this.inputs[ChainIds.Sonic].wOS, { label: 'ERC20:wOS' }],
           [this.inputs[ChainIds.Sonic].vault, { label: 'ERC20:Origin Vault' }],
         ]);
       default:
