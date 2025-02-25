@@ -2,7 +2,7 @@ import { ChainIds } from '@ensofinance/shortcuts-builder/types';
 import { parseUnits } from '@ethersproject/units';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { main } from '../../scripts/simulateShortcut';
+import { main_ } from '../../scripts/simulateShortcut';
 import { ForgeTestLogFormat } from '../../src/constants';
 import { Origin_Wos_Deposit_Shortcut } from '../../src/shortcuts/origin/wos_deposit';
 import { Origin_Wos_Redeem_Shortcut } from '../../src/shortcuts/origin/wos_redeem';
@@ -30,7 +30,7 @@ describe('origin', () => {
       ];
 
       // Act
-      const report = await main(ChainIds.Sonic, txsToSim);
+      const report = await main_(ChainIds.Sonic, txsToSim);
 
       // Assert
       expect(report.length).toBe(1);
@@ -77,7 +77,7 @@ describe('origin', () => {
       ];
 
       // Act
-      const report = await main(ChainIds.Sonic, txsToSim, { forgeTestLogFormat: ForgeTestLogFormat.DEFAULT });
+      const report = await main_(ChainIds.Sonic, txsToSim, { forgeTestLogFormat: ForgeTestLogFormat.DEFAULT });
       console.log('Report: ', report);
 
       // Assert

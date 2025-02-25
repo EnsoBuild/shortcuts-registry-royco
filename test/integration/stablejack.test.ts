@@ -2,7 +2,7 @@ import { ChainIds } from '@ensofinance/shortcuts-builder/types';
 import { parseUnits } from '@ethersproject/units';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { main } from '../../scripts/simulateShortcut';
+import { main_ } from '../../scripts/simulateShortcut';
 import { StableJack_PtSts_Deposit_Shortcut } from '../../src/shortcuts/stablejack/PT-stS_deposit';
 import { StableJack_PtSts_Redeem_Shortcut } from '../../src/shortcuts/stablejack/PT-stS_redeem';
 import { StableJack_PtWos_Deposit_Shortcut } from '../../src/shortcuts/stablejack/PT-wOS_deposit';
@@ -34,7 +34,7 @@ describe('stablejack', () => {
       ];
 
       // Act
-      const report = await main(ChainIds.Sonic, txsToSim);
+      const report = await main_(ChainIds.Sonic, txsToSim);
 
       // Assert
       expect(report.length).toBe(1);
@@ -62,7 +62,7 @@ describe('stablejack', () => {
       ];
 
       // Act
-      const report = await main(ChainIds.Sonic, txsToSim);
+      const report = await main_(ChainIds.Sonic, txsToSim);
 
       // Assert
       expect(report.length).toBe(1);
@@ -89,7 +89,7 @@ describe('stablejack', () => {
       ];
 
       // Act
-      const report = await main(ChainIds.Sonic, txsToSim);
+      const report = await main_(ChainIds.Sonic, txsToSim);
 
       // Assert
       expect(report.length).toBe(1);
@@ -117,7 +117,7 @@ describe('stablejack', () => {
       ];
 
       // Act
-      const report = await main(ChainIds.Sonic, txsToSim);
+      const report = await main_(ChainIds.Sonic, txsToSim);
 
       // Assert
       expect(report.length).toBe(1);
@@ -146,7 +146,7 @@ describe('stablejack', () => {
       ];
 
       // Act
-      const report = await main(ChainIds.Sonic, txsToSim);
+      const report = await main_(ChainIds.Sonic, txsToSim);
 
       // Assert
       expect(report.length).toBe(1);
@@ -177,7 +177,7 @@ describe('stablejack', () => {
       ];
 
       // Act
-      const report = await main(ChainIds.Sonic, txsToSim);
+      const report = await main_(ChainIds.Sonic, txsToSim);
 
       // Assert
       expect(report.length).toBe(2);
@@ -208,7 +208,7 @@ describe('stablejack', () => {
       ];
 
       // Act
-      const report = await main(ChainIds.Sonic, txsToSim);
+      const report = await main_(ChainIds.Sonic, txsToSim);
 
       // Assert
       expect(report.length).toBe(2);
@@ -244,7 +244,7 @@ describe('stablejack', () => {
       ];
 
       // Act
-      const report = await main(ChainIds.Sonic, txsToSim);
+      const report = await main_(ChainIds.Sonic, txsToSim);
 
       // Assert
       expect(report.length).toBe(2);
@@ -280,7 +280,7 @@ describe('stablejack', () => {
       ];
 
       // Act
-      const report = await main(ChainIds.Sonic, txsToSim);
+      const report = await main_(ChainIds.Sonic, txsToSim);
 
       // Assert
       expect(report.length).toBe(2);

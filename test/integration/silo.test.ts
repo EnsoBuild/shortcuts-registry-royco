@@ -2,7 +2,7 @@ import { ChainIds } from '@ensofinance/shortcuts-builder/types';
 import { parseUnits } from '@ethersproject/units';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { main } from '../../scripts/simulateShortcut';
+import { main_ } from '../../scripts/simulateShortcut';
 import { Silo_Ws_Deposit_Shortcut } from '../../src/shortcuts/silo/ws_deposit';
 import { Silo_Ws_Redeem_Shortcut } from '../../src/shortcuts/silo/ws_redeem';
 import { expectBigIntToBeCloseTo } from '../helpers/expects';
@@ -28,7 +28,7 @@ describe('silo', () => {
       ];
 
       // Act
-      const report = await main(ChainIds.Sonic, txsToSim);
+      const report = await main_(ChainIds.Sonic, txsToSim);
 
       // Assert
       expect(report.length).toBe(1);
@@ -61,7 +61,7 @@ describe('silo', () => {
       ];
 
       // Act
-      const report = await main(ChainIds.Sonic, txsToSim);
+      const report = await main_(ChainIds.Sonic, txsToSim);
 
       // Assert
       expect(report.length).toBe(2);
