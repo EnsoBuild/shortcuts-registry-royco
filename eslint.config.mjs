@@ -26,6 +26,7 @@ export default [
       'foundry-cache/',
       'foundry-out/',
       'node_modules/',
+      'outputs/',
       'types/',
 
       // Files

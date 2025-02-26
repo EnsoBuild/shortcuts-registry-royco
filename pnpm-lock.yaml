@@ -9,11 +9,11 @@ importers:
   .:
     dependencies:
       '@ensofinance/shortcuts-builder':
-        specifier: 0.0.12
-        version: 0.0.12
+        specifier: 0.0.13
+        version: 0.0.13
       '@ensofinance/shortcuts-standards':
-        specifier: 1.0.120
-        version: 1.0.120(@ethersproject/abi@5.7.0)(@ethersproject/providers@5.7.2)(ethers@5.7.2)(lodash@4.17.21)
+        specifier: 1.0.123
+        version: 1.0.123(@ethersproject/abi@5.7.0)(@ethersproject/providers@5.7.2)(ethers@5.7.2)(lodash@4.17.21)
       '@ethersproject/abi':
         specifier: ^5.7.0
         version: 5.7.0
@@ -136,8 +136,11 @@ packages:
   '@ensofinance/shortcuts-builder@0.0.12':
     resolution: {integrity: sha512-JL8gCSioCF6woTkR1htPg1WtSd/tbNvc5r4rjSFjF1cxw2rP7GYI7DbEWI3rseJxnEprhQ3xImOmUPXOluL98A==}
 
-  '@ensofinance/shortcuts-standards@1.0.120':
-    resolution: {integrity: sha512-oLZHJxMG/xRpodfigpFZ+z2JF+gN47OpiakH8XBPied8ushjJh8oa7LtdKo2cTUCjfPZnCcJWOdovlCy3Wb6Sw==}
+  '@ensofinance/shortcuts-builder@0.0.13':
+    resolution: {integrity: sha512-3mSJp/o7kWuFceQfSaEt8fdkDqPOLGTIacRXJ7rou5CHTUQvzfJBpdWJ/Qic5EPZdAqs1EmRw+hCCVwnyJwEzQ==}
+
+  '@ensofinance/shortcuts-standards@1.0.123':
+    resolution: {integrity: sha512-ORb2mIg96bCdA41boHhR35AKXdLDE7VL3TMPZU9u8yPamDervwk62uY4NPfseMzqfrWv6hDl8EW4pe3/qiLtXw==}
     engines: {node: '>=18.0.0'}
 
   '@ensofinance/weiroll.js@0.4.1':
@@ -1671,7 +1674,23 @@ snapshots:
       - debug
       - utf-8-validate
 
-  '@ensofinance/shortcuts-standards@1.0.120(@ethersproject/abi@5.7.0)(@ethersproject/providers@5.7.2)(ethers@5.7.2)(lodash@4.17.21)':
+  '@ensofinance/shortcuts-builder@0.0.13':
+    dependencies:
+      '@ensofinance/weiroll.js': 0.4.1
+      '@ethersproject/abi': 5.7.0
+      '@ethersproject/address': 5.7.0
+      '@ethersproject/bignumber': 5.7.0
+      '@ethersproject/bytes': 5.7.0
+      '@ethersproject/keccak256': 5.7.0
+      '@ethersproject/solidity': 5.7.0
+      '@ethersproject/strings': 5.7.0
+      axios: 1.7.9
+    transitivePeerDependencies:
+      - bufferutil
+      - debug
+      - utf-8-validate
+
+  '@ensofinance/shortcuts-standards@1.0.123(@ethersproject/abi@5.7.0)(@ethersproject/providers@5.7.2)(ethers@5.7.2)(lodash@4.17.21)':
     dependencies:
       '@ensofinance/shortcuts-builder': 0.0.12
       '@ethersproject/address': 5.7.0

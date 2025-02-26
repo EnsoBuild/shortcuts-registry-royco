@@ -47,7 +47,7 @@ describe('silo', () => {
         '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38': '0',
       });
       expect(quote[CALLER]).toEqual({ '0xf55902DE87Bd80c6a35614b48d7f8B612a083C12': '0' });
-      expect(quote[WEIROLL_WALLET]).toEqual({ '0xf55902DE87Bd80c6a35614b48d7f8B612a083C12': '998112846574021811952' });
+      expect(quote[WEIROLL_WALLET]).toEqual({ '0xf55902DE87Bd80c6a35614b48d7f8B612a083C12': '998149443699976369530' });
       expect(weirollWallet).toBe(WEIROLL_WALLET);
       expectBigIntToBeCloseTo(BigInt(gas), BigInt('446834'), BigInt('100'));
     });
