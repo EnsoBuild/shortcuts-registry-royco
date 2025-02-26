@@ -106,3 +106,139 @@ pnpm generate sonic dolomite dhoney --output=full
 ```sh
 pnpm simulate silo-ws-deposit
 ```
+
+Output:
+
+```sh
+Simulation Forge Decoded Logs:
+╔══════════════════════════════════════════╗
+║             SIMULATION REPORT            ║
+╚══════════════════════════════════════════╝
+| - NETWORK -------------
+| Chain ID    :  146
+| Block Number (Latest):  10262612
+| Block Timestamp (Latest):  1740561883
+|
+| - ROLES -------------
+| Test Contract :
+|   Addr        :  0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496
+|   Name        : Simulation_Fork_Test
+| Caller        :
+|   Addr        :  0x93621DCA56fE26Cdee86e4F6B18E116e9758Ff11
+|   Name        :  Caller
+| Callee        :
+|   Addr        :  0x0e8f5978e3645cAe8647b2e2A08fFD9e603D8C07
+|   Name        :  RecipeMarketHub
+| RecipeMarketHub :
+|   Addr        :  0x0e8f5978e3645cAe8647b2e2A08fFD9e603D8C07
+| WeirollWallet :
+|   Addr        :  0xf338BceB2BE2560548d3600F48Ba4e2b4BE387C7
+|
+| - SHORTCUTS -------------
+| Number of Shortcuts:  1
+|  0   silo-ws-deposit
+|
+|──────────────────────────────────────────────|
+|────────────────── SHORTCUT 0 ────────────────|
+|──────────────────────────────────────────────|
+| Index    :  0
+| Name    :  silo-ws-deposit
+| Block Number:  10262612
+| Block Timestamp:  1740561883
+| Tx Value:  0
+| Requires Funding:  true
+|
+| - TOKENS IN -------------
+| Addr       :  0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38
+| Name       :  wS
+| Is funded  :  true
+| Balances   :
+|   Addr     :  0x93621DCA56fE26Cdee86e4F6B18E116e9758Ff11
+|   Name     :  Caller
+|     Pre    :  495384615384615377
+|     Funded :  1000000000000000000
+|     Post   :  495384615384615377
+|     Diff   :  0
+|
+|   Addr     :  0xf338BceB2BE2560548d3600F48Ba4e2b4BE387C7
+|   Name     :  WeirollWallet
+|     Pre    :  0
+|     Post   :  0
+|     Diff   :  0
+|
+|
+| - TOKENS OUT -------------
+| Addr       :  0xf55902DE87Bd80c6a35614b48d7f8B612a083C12
+| Name       :  siloBws
+| Balances   :
+|   Addr     :  0x93621DCA56fE26Cdee86e4F6B18E116e9758Ff11
+|   Name     :  Caller
+|     Pre    :  0
+|     Post   :  0
+|     Diff   :  0
+|
+|   Addr     :  0xf338BceB2BE2560548d3600F48Ba4e2b4BE387C7
+|   Name     :  WeirollWallet
+|     Pre    :  0
+|     Post   :  998113378375166498339
+|     Diff   :  998113378375166498339
+|
+|
+|- DUST TOKENS -------------
+| Addr      :  0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38
+| Name      :  wS
+| Balances  :
+|   Addr    :  0x93621DCA56fE26Cdee86e4F6B18E116e9758Ff11
+|   Name    :  Caller
+|     Pre   :  495384615384615377
+|     Post  :  495384615384615377
+|     Diff  :  0
+|
+|   Addr    :  0xf338BceB2BE2560548d3600F48Ba4e2b4BE387C7
+|   Name    :  WeirollWallet
+|     Pre   :  0
+|     Post  :  0
+|     Diff  :  0
+|
+|
+|- GAS --------------------
+| Used    :  446810
+╚══════════════════════════════════════════╝
+
+Simulation Report:
+[
+  {
+    "shortcutName": "silo-ws-deposit",
+    "caller": "0x93621DCA56fE26Cdee86e4F6B18E116e9758Ff11",
+    "weirollWallet": "0xf338BceB2BE2560548d3600F48Ba4e2b4BE387C7",
+    "amountsIn": [
+      "1000000000000000000"
+    ],
+    "base": {
+      "0x93621DCA56fE26Cdee86e4F6B18E116e9758Ff11": {
+        "0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38": "0"
+      },
+      "0xf338BceB2BE2560548d3600F48Ba4e2b4BE387C7": {
+        "0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38": "0"
+      }
+    },
+    "quote": {
+      "0x93621DCA56fE26Cdee86e4F6B18E116e9758Ff11": {
+        "0xf55902DE87Bd80c6a35614b48d7f8B612a083C12": "0"
+      },
+      "0xf338BceB2BE2560548d3600F48Ba4e2b4BE387C7": {
+        "0xf55902DE87Bd80c6a35614b48d7f8B612a083C12": "998113378375166498339"
+      }
+    },
+    "dust": {
+      "0x93621DCA56fE26Cdee86e4F6B18E116e9758Ff11": {
+        "0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38": "0"
+      },
+      "0xf338BceB2BE2560548d3600F48Ba4e2b4BE387C7": {
+        "0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38": "0"
+      }
+    },
+    "gas": "446810"
+  }
+]
+```

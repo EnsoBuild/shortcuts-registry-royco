@@ -115,6 +115,10 @@ export const chainIdToSimulationRoles: Map<ChainIds, SimulationRoles> = new Map(
         address: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
         label: 'S (NativeToken)',
       },
+      testWeirollWallet: {
+        address: '0xf338BceB2BE2560548d3600F48Ba4e2b4BE387C7',
+        label: 'TestWeirollWallet',
+      },
     },
   ],
 ]);

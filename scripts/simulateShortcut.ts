@@ -145,4 +145,7 @@ async function main() {
   }
 }
 
-main();
+// NOTE: prevent running `main()` during tests
+if (require.main === module) {
+  main();
+}

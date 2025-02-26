@@ -107,6 +107,7 @@ export interface SimulationRoles {
   readonly nativeToken: AddressData;
   weirollWallet?: AddressData;
   callee?: AddressData;
+  testWeirollWallet?: AddressData;
 }
 
 export interface SimulationForgeData {
