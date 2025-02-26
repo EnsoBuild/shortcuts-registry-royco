@@ -1,90 +1,151 @@
+import { ChainIds } from '@ensofinance/shortcuts-builder/types';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
+import fs from 'fs';
+import path from 'path';
 
-import { SimulationMode } from '../src/constants';
+import { ForgeTestLogFormat, ForgeTestLogVerbosity } from '../src/constants';
 import {
-  getAmountsInFromArgs,
-  getBlockNumberFromArgs,
+  buildShortcut,
+  getAddressLabelsByChainId,
+  getAllMarkets,
   getForgePath,
-  getIsCalldataLoggedFromArgs,
   getRpcUrlByChainId,
-  getShortcut,
-  getSimulationModeFromArgs,
   getSimulationRolesByChainId,
+  getTokenToHolderByChainId,
+  shortcuts,
+  simulateShortcutsWithForgeAndGenerateReport,
+  validateAndGetShortcutsToSimulate,
+  validateAndGetSimulationConfig,
 } from '../src/helpers';
-import { simulateShortcutOnForge, simulateShortcutOnQuoter } from '../src/helpers/simulate';
-import type { Report } from '../src/types';
+import type {
+  BuiltShortcut,
+  ScenarioToSimulate,
+  Shortcut,
+  ShortcutToSimulate,
+  SimulationLogConfig,
+  SimulationReport,
+} from '../src/types';
 
-export async function main_(args: string[]): Promise<Report> {
-  const { shortcut, chainId } = await getShortcut(args);
+const failedSimulationReport = { status: 'Simulation failed', error: '' };
 
-  const simulatonMode = getSimulationModeFromArgs(args);
-  const blockNumber = getBlockNumberFromArgs(args);
-  const amountsIn = getAmountsInFromArgs(args);
+export async function main_(
+  chainId: ChainIds,
+  txsToSimInput: ShortcutToSimulate[],
+  simulationLogConfigInput?: SimulationLogConfig,
+): Promise<SimulationReport> {
+  const simulationLogConfig = validateAndGetSimulationConfig(simulationLogConfigInput);
+  const txsToSim = validateAndGetShortcutsToSimulate(txsToSimInput);
+
+  const tokenToHolder = getTokenToHolderByChainId(chainId);
 
   const rpcUrl = getRpcUrlByChainId(chainId);
   const provider = new StaticJsonRpcProvider({
     url: rpcUrl,
   });
+  const addressToLabel = getAddressLabelsByChainId(chainId);
   const roles = getSimulationRolesByChainId(chainId);
-  const simulationLogConfig = {
-    isReportLogged: true,
-    isCalldataLogged: getIsCalldataLoggedFromArgs(args),
-  };
 
-  const { script, metadata } = await shortcut.build(chainId, provider);
-
-  // Validate tokens
-  const { tokensIn, tokensOut } = metadata;
-  if (!tokensIn || !tokensOut) throw 'Error: Invalid builder metadata. Missing eiter "tokensIn" or "tokensOut"';
-  if (amountsIn.length != tokensIn.length) {
-    throw `Error: Incorrect number of amounts for shortcut. Expected ${tokensIn.length} CSVs`;
+  // NOTE: this could use `Promise.all`
+  const builtShortcuts: BuiltShortcut[] = [];
+  for (const tx of txsToSim) {
+    const builtShortcut = await buildShortcut(chainId, provider, tx.shortcut, tx.amountsIn);
+    builtShortcuts.push(builtShortcut);
   }
 
-  let report: Report;
-  switch (simulatonMode) {
-    case SimulationMode.FORGE: {
-      const forgePath = getForgePath();
-      report = await simulateShortcutOnForge(
-        provider,
-        shortcut,
-        chainId,
-        script,
-        amountsIn,
-        tokensIn,
-        tokensOut,
-        forgePath,
-        blockNumber,
-        roles,
-        simulationLogConfig,
-      );
-      break;
-    }
-    case SimulationMode.QUOTER: {
-      report = await simulateShortcutOnQuoter(
-        provider,
-        chainId,
-        script,
-        amountsIn,
-        tokensIn,
-        tokensOut,
-        roles,
-        simulationLogConfig,
-      );
-      break;
-    }
-    default:
-      throw new Error(`Unsupported simulaton 'mode': ${simulatonMode}. `);
-  }
+  let report: SimulationReport;
+  try {
+    const forgePath = getForgePath();
+    report = await simulateShortcutsWithForgeAndGenerateReport(
+      chainId,
+      provider,
+      txsToSim,
+      builtShortcuts,
+      forgePath,
+      roles,
+      tokenToHolder,
+      addressToLabel,
+      simulationLogConfig,
+    );
 
-  return report;
+    return report;
+  } catch (error) {
+    failedSimulationReport.error = (error as Error).message;
+    return failedSimulationReport as unknown as SimulationReport;
+  }
 }
 
 async function main() {
+  const args = process.argv.slice(2);
+  if (args.length === 0) {
+    console.error('Error: Missing JSON filename argument of the scenario to simulate');
+    process.exit(1);
+  }
+
+  let jsonFilename = args[0];
+  if (!jsonFilename.endsWith('.json')) {
+    jsonFilename += '.json';
+  }
+  const filePath = path.join(__dirname, '../simulation-scenarios', jsonFilename);
+
+  if (!fs.existsSync(filePath)) {
+    console.error(`Error: File "${jsonFilename}" not found in folder: ${filePath}`);
+    process.exit(1);
+  }
+
+  let scenariosToSimulate: ScenarioToSimulate[];
   try {
-    await main_(process.argv.slice(2));
+    const fileContent = fs.readFileSync(filePath, 'utf8');
+    scenariosToSimulate = JSON.parse(fileContent);
+  } catch (error) {
+    console.error(`Error parsing JSON file: ${(error as Error).message}`);
+    process.exit(1);
+  }
+
+  const txsToSimulate: ShortcutToSimulate[] = [];
+  for (const [index, scenario] of scenariosToSimulate.entries()) {
+    const [protocol, ...marketItems] = scenario.shortcut.split('-');
+    let shortcut: Shortcut;
+    try {
+      shortcut = shortcuts[protocol][marketItems.join('-')];
+    } catch {
+      console.error(
+        `Error: Shortcut "${scenario.shortcut}" not found in 'shortcuts' object. ` +
+          `Available shortcuts are: ${JSON.stringify(getAllMarkets(), null, 2)}`,
+      );
+      process.exit(1);
+    }
+    if (!shortcut) {
+      console.error(
+        `Error: Shortcut "${scenario.shortcut}" not found in 'shortcuts' object. ` +
+          `Available shortcuts are: ${JSON.stringify(getAllMarkets(), null, 2)}`,
+      );
+      process.exit(1);
+    }
+
+    txsToSimulate.push({
+      ...scenario,
+      requiresFunding: index === 0 && !('requiresFunding' in scenario) ? true : (scenario.requiresFunding ?? false), // NB: force funding caller on the 1st shortcut
+      shortcut,
+    });
+  }
+
+  const simulationLogConfigInput = {
+    forgeTestLogFormat: ForgeTestLogFormat.JSON,
+    forgeTestLogVerbosity: ForgeTestLogVerbosity.X3V,
+    isForgeTxDataLogged: false,
+    isCalldataLogged: false,
+    isForgeLogsLogged: true,
+    isReportLogged: true,
+  };
+  try {
+    await main_(ChainIds.Sonic, txsToSimulate, simulationLogConfigInput);
   } catch (error) {
     console.error(error);
+    process.exit(1);
   }
 }
 
-main();
+// NOTE: prevent running `main()` during tests
+if (require.main === module) {
+  main();
+}

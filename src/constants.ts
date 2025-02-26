@@ -23,6 +23,14 @@ export enum ForgeTestLogFormat {
   JSON = '--json',
 }
 
+export enum ForgeTestLogVerbosity {
+  X1V = '-v',
+  X2V = '-vv',
+  X3V = '-vvv',
+  X4V = '-vvvv',
+  X5V = '-vvvvv',
+}
+
 export enum TraceItemPhase {
   DEPLOYMENT = 'Deployment',
   EXECUTION = 'Execution',
@@ -41,25 +49,43 @@ export const DEFAULT_MIN_AMOUNT_BPS = BigNumber.from('9900');
 export const CONTRCT_SIMULATION_FORK_TEST_EVENTS_ABI = [
   {
     type: 'event',
+    name: 'SimulationReportBase',
+    inputs: [
+      { name: 'shortcutIndex', type: 'uint256', indexed: false, internalType: 'uint256' },
+      { name: 'trackedAddress', type: 'address', indexed: false, internalType: 'address' },
+      { name: 'tokens', type: 'address[]', indexed: false, internalType: 'address[]' },
+      { name: 'amountsDiff', type: 'int256[]', indexed: false, internalType: 'int256[]' },
+    ],
+    anonymous: false,
+  },
+  {
+    type: 'event',
     name: 'SimulationReportDust',
     inputs: [
-      { name: 'tokensDust', type: 'address[]', indexed: false, internalType: 'address[]' },
-      { name: 'amountsDust', type: 'uint256[]', indexed: false, internalType: 'uint256[]' },
+      { name: 'shortcutIndex', type: 'uint256', indexed: false, internalType: 'uint256' },
+      { name: 'trackedAddress', type: 'address', indexed: false, internalType: 'address' },
+      { name: 'tokens', type: 'address[]', indexed: false, internalType: 'address[]' },
+      { name: 'amountsDiff', type: 'int256[]', indexed: false, internalType: 'int256[]' },
     ],
     anonymous: false,
   },
   {
     type: 'event',
     name: 'SimulationReportGasUsed',
-    inputs: [{ name: 'gasUsed', type: 'uint256', indexed: false, internalType: 'uint256' }],
+    inputs: [
+      { name: 'shortcutIndex', type: 'uint256', indexed: false, internalType: 'uint256' },
+      { name: 'gasUsed', type: 'uint256', indexed: false, internalType: 'uint256' },
+    ],
     anonymous: false,
   },
   {
     type: 'event',
     name: 'SimulationReportQuote',
     inputs: [
-      { name: 'tokensOut', type: 'address[]', indexed: false, internalType: 'address[]' },
-      { name: 'amountsOut', type: 'uint256[]', indexed: false, internalType: 'uint256[]' },
+      { name: 'shortcutIndex', type: 'uint256', indexed: false, internalType: 'uint256' },
+      { name: 'trackedAddress', type: 'address', indexed: false, internalType: 'address' },
+      { name: 'tokens', type: 'address[]', indexed: false, internalType: 'address[]' },
+      { name: 'amountsDiff', type: 'int256[]', indexed: false, internalType: 'int256[]' },
     ],
     anonymous: false,
   },
@@ -74,7 +100,7 @@ export const chainIdToSimulationRoles: Map<ChainIds, SimulationRoles> = new Map(
         label: 'Caller',
       },
       recipeMarketHub: {
-        address: '0x7A1C91392462c55FB7F2eA98905eA8CeEEA04579',
+        address: '0x0e8f5978e3645cAe8647b2e2A08fFD9e603D8C07',
         label: 'RecipeMarketHub',
       },
       multiCall: {
@@ -89,6 +115,10 @@ export const chainIdToSimulationRoles: Map<ChainIds, SimulationRoles> = new Map(
         address: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
         label: 'S (NativeToken)',
       },
+      testWeirollWallet: {
+        address: '0xf338BceB2BE2560548d3600F48Ba4e2b4BE387C7',
+        label: 'TestWeirollWallet',
+      },
     },
   ],
 ]);
@@ -96,6 +126,8 @@ export const chainIdToSimulationRoles: Map<ChainIds, SimulationRoles> = new Map(
 // Keep it sorted kinda alphabetically but case insensitive :)
 export const chainIdToDeFiAddresses: Record<number, Record<string, AddressArg>> = {
   [ChainIds.Sonic]: {
+    bwOS_22: '0x1d7E3726aFEc5088e11438258193A199F9D5Ba93',
+    bwS_20: '0xf55902DE87Bd80c6a35614b48d7f8B612a083C12',
     OS: '0xb1e25689D55734FD3ffFc939c4C3Eb52DFf8A794',
     PT_stS: '0xFCA91fEEe65DB34448A83a74f4f8970b5dddfa7c',
     PT_wOS: '0xbe1B1dd422d94f9c1784FB9356ef83A29E1A8cFa',
@@ -107,7 +139,7 @@ export const chainIdToDeFiAddresses: Record<number, Record<string, AddressArg>> 
     wOS: '0x9F0dF7799f6FDAd409300080cfF680f5A23df4b1',
     wS: '0x039e2fb66102314ce7b64ce5ce3e5183bc94ad38',
     YT_stS: '0x0fa31f0d5a574F083E0be272a6CF807270352b3f',
-    YT_wos: '0xe16Bb6061B3567ee86285ab7780187cB39aCC55E',
+    YT_wOS: '0xe16Bb6061B3567ee86285ab7780187cB39aCC55E',
     siloBws: '0xf55902DE87Bd80c6a35614b48d7f8B612a083C12',
     roycoWalletHelpers: '0x07899ac8BE7462151d6515FCd4773DD9267c9911',
   },
@@ -115,6 +147,8 @@ export const chainIdToDeFiAddresses: Record<number, Record<string, AddressArg>> 
 
 const tokenToHolderSonic: Map<AddressArg, AddressArg> = new Map([
   // NOTE: Native Token (funded via `vm.deal(<address>, 1_000 ether)`)
+  [chainIdToDeFiAddresses[ChainIds.Sonic].bwOS_22, '0x8144fa70EA19FF4E62E3cABCeD0898e87E496014'],
+  [chainIdToDeFiAddresses[ChainIds.Sonic].bwS_20, '0x8D4D19405Ba352e4767681C28936fc0a9A8C8dFe'],
   [chainIdToDeFiAddresses[ChainIds.Sonic].OS, '0xa76Beaf111BaD5dD866fa4835D66b9aA2Eb1FdEc'],
   [chainIdToDeFiAddresses[ChainIds.Sonic].PT_stS, '0x36804ABb20cb8c19B860d3C9bF7219a88B8fc57A'],
   [chainIdToDeFiAddresses[ChainIds.Sonic].PT_wOS, '0xb8022c515174F41C4EF9211FE5dcFff27B01DE87'],
@@ -124,8 +158,8 @@ const tokenToHolderSonic: Map<AddressArg, AddressArg> = new Map([
   [chainIdToDeFiAddresses[ChainIds.Sonic].WETH, '0x427514a905fa6bEaed9A36E308Fcfa06cE54e95b'],
   [chainIdToDeFiAddresses[ChainIds.Sonic].wOS, '0xF3c631B979EB59d8333374baA7c58B5Aff5e24D2'],
   [chainIdToDeFiAddresses[ChainIds.Sonic].wS, '0xE223C8e92AA91e966CA31d5C6590fF7167E25801'],
-  [chainIdToDeFiAddresses[ChainIds.Sonic].YT_stS, '0xaC207c599e4A07F9A8cc5E9cf49B02E20AB7ba69'],
-  [chainIdToDeFiAddresses[ChainIds.Sonic].YT_wos, '0xaC207c599e4A07F9A8cc5E9cf49B02E20AB7ba69'],
+  [chainIdToDeFiAddresses[ChainIds.Sonic].YT_stS, '0x15800782F6DC1F46871F90E282cB64643Bd67fd6'],
+  [chainIdToDeFiAddresses[ChainIds.Sonic].YT_wOS, '0x5882aa5d97391Af0889dd4d16C3194e96A7Abe00'],
   [chainIdToDeFiAddresses[ChainIds.Sonic].siloBws, '0x8D4D19405Ba352e4767681C28936fc0a9A8C8dFe'],
 ]);
 

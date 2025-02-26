@@ -14,7 +14,7 @@
     "simulate": "pnpm ts-node scripts/simulateShortcut.ts",
     "execute": "pnpm ts-node scripts/executeShortcut.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "test:simulations": "pnpm vitest run test/integration/simulateShortcut.test.ts",
+    "test:simulations": "FORCE_COLOR=1 pnpm vitest run test/integration/ --silent=false",
     "prepare": "husky"
   },
   "keywords": [],

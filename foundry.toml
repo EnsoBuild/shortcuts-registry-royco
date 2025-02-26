@@ -3,12 +3,13 @@ cache_path = "foundry-cache"
 evm_version = "cancun"
 fs_permissions = [{ access = "read", path = "./test/foundry/"}]
 libs = ["node_modules", "lib", "dependencies"]
+no_cache = false
 out = "foundry-out"
 solc = "0.8.27"
 scripts = "foundry-scripts"
 src = "foundry-src"
 test = "test/foundry"
-# via_ir = true
+via_ir = true
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
 
 [fmt]

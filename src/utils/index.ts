@@ -10,9 +10,10 @@ import {
 } from '@ensofinance/shortcuts-builder/types';
 import { Standards, getStandardByProtocol } from '@ensofinance/shortcuts-standards';
 import { GeneralAddresses, helperAddresses } from '@ensofinance/shortcuts-standards/addresses';
+import { getForks } from '@ensofinance/shortcuts-standards/helpers';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 
-import { chainIdToDeFiAddresses } from '../constants';
+import { chainIdToSimulationRoles } from '../constants';
 import { getNativeToken } from '../helpers/utils';
 import type { RoycoOutput, Shortcut, SimulationResult } from '../types';
 
@@ -70,9 +71,18 @@ export async function burnTokens(token: AddressArg, amount: NumberArg, builder: 
   });
 }
 
+export function getWalletOwner(builder: Builder) {
+  return builder.add({
+    address: chainIdToSimulationRoles.get(builder.chainId)?.roycoWalletHelpers.address as AddressArg,
+    abi: ['function owner() external view returns (address)'],
+    functionName: 'owner',
+    args: [],
+  });
+}
+
 export async function sendTokensToOwner(token: AddressArg, amount: NumberArg, builder: Builder) {
-  const owner = await getWalletOwner(builder);
-  builder.add({
+  const owner = getWalletOwner(builder);
+  return builder.add({
     address: token,
     functionName: 'transfer',
     abi: ['function transfer(address,uint256)'],
@@ -90,15 +100,6 @@ export function getBalance(token: AddressArg, builder: Builder, account = wallet
     abi: ['function getBalance(address) external view returns (uint256)'],
     functionName: 'getBalance',
     args: [account],
-  });
-}
-
-export function getWalletOwner(builder: Builder) {
-  return builder.add({
-    address: chainIdToDeFiAddresses[builder.chainId].roycoWalletHelpers,
-    abi: ['function owner() external view returns (address)'],
-    functionName: 'owner',
-    args: [],
   });
 }
 
@@ -156,6 +157,21 @@ export async function mint_stS(tokenIn: AddressArg, tokenOut: AddressArg, amount
     tokenOut,
     amountIn,
     primaryAddress: Standards.Beets_Sts.protocol.addresses![getChainName(builder.chainId)]!.primary as AddressArg,
+  });
+
+  return amountOut as FromContractCallArg;
+}
+
+export async function mint_OS(tokenIn: AddressArg, tokenOut: AddressArg, amountIn: NumberArg, builder: Builder) {
+  const forksRocketPool = getForks(Standards.Rocketpool);
+  const originOs = forksRocketPool['origin-os'];
+
+  const standard = getStandardByProtocol('origin-os', builder.chainId);
+  const { amountOut } = await standard.deposit.addToBuilder(builder, {
+    tokenIn,
+    tokenOut,
+    amountIn,
+    primaryAddress: originOs![getChainName(builder.chainId)]!.primary as AddressArg,
   });
 
   return amountOut as FromContractCallArg;

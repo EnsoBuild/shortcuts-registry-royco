@@ -4,58 +4,89 @@ import { spawnSync } from 'node:child_process';
 import os from 'node:os';
 
 import { ForgeTestLogFormat } from '../constants';
-import type { ForgeTestLogJSON, SimulationForgeData, SimulationRoles, SimulationTokensData } from '../types';
+import type { ForgeTestLogJSON, SimulationForgeData, SimulationLogConfig, SimulationRoles } from '../types';
 
-export function simulateTransactionOnForge(
+export function simulateShortcutsOnForge(
+  chainId: number,
   provider: StaticJsonRpcProvider,
+  shortcutNames: string[],
+  blockNumbers: number[],
+  blockTimestamps: number[],
+  txData: string[],
+  txValues: string[],
+  tokensIn: AddressArg[][],
+  tokensInHolders: AddressArg[][],
+  amountsIn: string[][],
+  requiresFunding: boolean[],
+  tokensOut: AddressArg[][],
+  tokensDust: AddressArg[][],
+  trackedAddresses: AddressArg[][],
   roles: SimulationRoles,
-  txData: string,
-  txValue: string,
-  tokensData: SimulationTokensData,
   addressToLabel: Map<AddressArg, string>,
   forgeData: SimulationForgeData,
-  chainId: number,
-  blockNumber: number,
+  simulationLogConfig: SimulationLogConfig,
 ): ForgeTestLogJSON {
   const rpcUrl = provider.connection.url;
   if (!roles.callee?.address) {
-    throw new Error("missing 'callee' address in 'roles'");
+    throw new Error("simulateShortcutsOnForge: missing 'callee' address in 'roles'");
   }
   if (!roles.weirollWallet?.address) {
-    throw new Error("missing 'weirollWallet' address in 'roles'");
+    throw new Error("simulateShortcutsOnForge: missing 'weirollWallet' address in 'roles'");
   }
 
-  const simulationJsonData = {
+  const simulationJsonDataRaw = {
     chainId,
     rpcUrl,
-    blockNumber: blockNumber.toString(),
+    shortcutNames,
+    blockNumbers,
+    blockTimestamps,
     caller: roles.caller.address,
     recipeMarketHub: roles.recipeMarketHub.address,
     callee: roles.callee.address,
     weirollWallet: roles.weirollWallet.address,
     txData,
-    txValue,
-    tokensIn: tokensData.tokensIn,
-    tokensInHolders: tokensData.tokensInHolders,
-    amountsIn: tokensData.amountsIn,
-    tokensOut: tokensData.tokensOut,
-    tokensDust: tokensData.tokensDust,
+    txValues,
+    tokensIn,
+    tokensInHolders,
+    amountsIn,
+    requiresFunding,
+    tokensOut,
+    tokensDust,
+    trackedAddresses,
     labelKeys: [...addressToLabel.keys()],
     labelValues: [...addressToLabel.values()],
   };
 
-  // NOTE: validate and throw here errors to log better the whole 'simulationJsonData'
-  if ((simulationJsonData.labelKeys as (undefined | string)[]).includes(undefined)) {
-    console.warn('Simulation (JSON Data):\n', simulationJsonData, '\n');
-    // @ts-expect-error key is AddressArg
-    const missingAddressLabel = addressToLabel.get(undefined);
-    throw new Error(
-      `simulateTransactionOnForge: missing address on shorcut 'getAddressData()', check key spelling. ` +
-        `Key: undefined (missing), Value: ${missingAddressLabel}`,
-    );
+  if (simulationLogConfig.isForgeTxDataLogged) {
+    process.stdout.write('Simulation JSON Data Sent to Forge:\n');
+    process.stdout.write(JSON.stringify(simulationJsonDataRaw, null, 2));
+    process.stdout.write('\n');
+    // console.warn('Simulation (JSON Data):\n', JSON.stringify(simulationJsonDataRaw), '\n');
   }
 
-  const logFormat = ForgeTestLogFormat.JSON;
+  // NOTE: foundry JSON parsing cheatcodes don't support multidimensional arrays, therefore we stringify them
+  const simulationJsonData = {
+    chainId,
+    rpcUrl,
+    shortcutNames,
+    blockNumbers,
+    blockTimestamps,
+    caller: roles.caller.address,
+    recipeMarketHub: roles.recipeMarketHub.address,
+    callee: roles.callee.address,
+    weirollWallet: roles.weirollWallet.address,
+    txData,
+    txValues,
+    tokensIn: tokensIn.map((tokens) => JSON.stringify(tokens)),
+    tokensInHolders: tokensInHolders.map((addresses) => JSON.stringify(addresses)),
+    requiresFunding,
+    amountsIn: amountsIn.map((amounts) => JSON.stringify(amounts)),
+    tokensOut: tokensOut.map((tokens) => JSON.stringify(tokens)),
+    tokensDust: tokensDust.map((tokens) => JSON.stringify(tokens)),
+    trackedAddresses: trackedAddresses.map((addresses) => JSON.stringify(addresses)),
+    labelKeys: [...addressToLabel.keys()],
+    labelValues: [...addressToLabel.values()],
+  };
   const forgeCmd = os.platform() === 'win32' ? 'forge.cmd' : 'forge'; // ! untested on Windows
   // NOTE: `spawnSync` forge call return can optionally be read from both `return.stdout` and `return.stderr`, and processed.
   // NOTE: calling forge with `--json` will print the deployment information as JSON.
@@ -64,7 +95,15 @@ export function simulateTransactionOnForge(
   // tests. To make visible successful test traces, use `-vvvv`.
   const result = spawnSync(
     forgeCmd,
-    ['test', '--match-contract', forgeData.contract, '--match-test', forgeData.test, '-vvv', logFormat],
+    [
+      'test',
+      '--match-contract',
+      forgeData.contract,
+      '--match-test',
+      forgeData.test,
+      forgeData.forgeTestLogVerbosity,
+      forgeData.forgeTestLogFormat,
+    ],
     {
       encoding: 'utf-8',
       env: {
@@ -77,26 +116,26 @@ export function simulateTransactionOnForge(
   );
 
   if (result.error) {
-    throw new Error(`simulateTransactionOnForge: unexpected error calling 'forge'. Reason: ${result.stderr}`);
+    throw new Error(`simulateShortcutsOnForge: unexpected error calling 'forge'. Reason: ${result.stderr}`);
   }
 
   if (!result.stdout) {
     throw new Error(
-      `simulateTransactionOnForge: unexpected error calling 'forge'. ` +
+      `simulateShortcutsOnForge: unexpected error calling 'forge'. ` +
         `Reason: it didn't error but 'stdout' is falsey: ${result.stdout}. 'stderr' is: ${result.stderr}`,
     );
   }
 
-  if ([ForgeTestLogFormat.DEFAULT].includes(logFormat)) {
-    console.log(result.stdout);
-    throw new Error('Forced termination to inspect forge test log');
+  if ([ForgeTestLogFormat.DEFAULT].includes(forgeData.forgeTestLogFormat)) {
+    process.stdout.write(result.stdout);
+    throw new Error('simulateShortcutsOnForge: Forced termination to inspect forge test log');
   }
 
   let forgeTestLog: ForgeTestLogJSON;
   try {
     forgeTestLog = JSON.parse(result.stdout) as ForgeTestLogJSON;
   } catch (error) {
-    throw new Error(`simulateTransactionOnForge: unexpected error parsing 'forge' JSON output. Reason: ${error}`);
+    throw new Error(`simulateShortcutsOnForge: unexpected error parsing 'forge' JSON output. Reason: ${error}`);
   }
 
   return forgeTestLog;
