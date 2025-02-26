@@ -52,6 +52,12 @@ export const shortcuts: Record<string, Record<string, Shortcut>> = {
   },
 };
 
+export function getAllMarkets(): string[] {
+  return Object.entries(shortcuts).flatMap(([protocol, markets]) =>
+    Object.keys(markets).map((market) => `${protocol}-${market}`),
+  );
+}
+
 export const supportedShortcuts = [
   Silo_Ws_Deposit_Shortcut,
   Silo_Ws_Redeem_Shortcut,
