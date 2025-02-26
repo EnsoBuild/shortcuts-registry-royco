@@ -31,6 +31,3 @@ foundry-out/
 .DS_Store
 
 transaction-builder.json
-
-!simulation-scenarios/.gitkeep
-simulation-scenarios/*
