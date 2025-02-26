@@ -33,4 +33,5 @@ foundry-out/
 transaction-builder.json
 
 !simulation-scenarios/.gitkeep
+!simulation-scenarios/example.json
 simulation-scenarios/*
