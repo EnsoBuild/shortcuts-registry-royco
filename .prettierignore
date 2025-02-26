@@ -13,6 +13,7 @@ dist/
 foundry-cache/
 foundry-out/
 node_modules/
+outputs/
 types/
 
 # files
