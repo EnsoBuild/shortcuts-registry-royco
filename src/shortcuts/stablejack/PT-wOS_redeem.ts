@@ -9,16 +9,12 @@ import { getBalance, sendTokensToOwner } from '../../utils';
 
 export class StableJack_PtWos_Redeem_Shortcut implements Shortcut {
   name = 'stablejack-pt-wos-redeem';
-  description = 'Market 3 Redeem: PT-wOS -> wOS -> OS'; // TODO: missing OS -> S -> wS
+  description = 'Market 3 Redeem: PT-wOS';
   supportedChains = [ChainIds.Sonic];
   inputs: Record<number, Input> = {
     [ChainIds.Sonic]: {
       protocol: Standards.Stable_Jack.protocol.addresses!.sonic!.primary,
-      OS: chainIdToDeFiAddresses[ChainIds.Sonic].OS,
       PT_wOS: chainIdToDeFiAddresses[ChainIds.Sonic].PT_wOS,
-      S: chainIdToDeFiAddresses[ChainIds.Sonic].S,
-      wOS: chainIdToDeFiAddresses[ChainIds.Sonic].wOS,
-      wS: chainIdToDeFiAddresses[ChainIds.Sonic].wS,
     },
   };
 
@@ -26,11 +22,11 @@ export class StableJack_PtWos_Redeem_Shortcut implements Shortcut {
     const client = new RoycoClient();
 
     const inputs = this.inputs[chainId];
-    const { OS, PT_wOS } = inputs;
+    const { PT_wOS } = inputs;
 
     const builder = new Builder(chainId, client, {
       tokensIn: [PT_wOS],
-      tokensOut: [OS],
+      tokensOut: [PT_wOS],
     });
 
     const amountPtWos = getBalance(PT_wOS, builder);
@@ -51,14 +47,7 @@ export class StableJack_PtWos_Redeem_Shortcut implements Shortcut {
   getAddressData(chainId: number): Map<AddressArg, AddressData> {
     switch (chainId) {
       case ChainIds.Sonic:
-        return new Map([
-          [this.inputs[ChainIds.Sonic].protocol, { label: 'Protocol' }],
-          [this.inputs[ChainIds.Sonic].PT_wOS, { label: 'PT_wOS' }],
-          [this.inputs[ChainIds.Sonic].OS, { label: 'OS' }],
-          [this.inputs[ChainIds.Sonic].S, { label: 'S (Native Token)' }],
-          [this.inputs[ChainIds.Sonic].wOS, { label: 'wOS' }],
-          [this.inputs[ChainIds.Sonic].wS, { label: 'wS' }],
-        ]);
+        return new Map([[this.inputs[ChainIds.Sonic].protocol, { label: 'Protocol' }]]);
       default:
         throw new Error(`Unsupported chainId: ${chainId}`);
     }

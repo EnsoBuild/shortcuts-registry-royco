@@ -1,5 +1,5 @@
 import { AddressArg, ChainIds } from '@ensofinance/shortcuts-builder/types';
-import { getAddress } from '@ensofinance/shortcuts-standards/helpers';
+import { BetterSet, getAddress } from '@ensofinance/shortcuts-standards/helpers';
 import { Interface } from '@ethersproject/abi';
 import { BigNumberish } from '@ethersproject/bignumber';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
@@ -56,6 +56,7 @@ export async function simulateShortcutsWithForgeAndGenerateReport(
   forgePath: string,
   roles: SimulationRoles,
   tokenToHolder: Map<AddressArg, AddressArg>,
+  addressToLabel: Map<AddressArg, string>,
   simulationLogConfig: SimulationLogConfig,
 ): Promise<SimulationReport> {
   const forgeData = {
@@ -77,7 +78,6 @@ export async function simulateShortcutsWithForgeAndGenerateReport(
   roles.callee = roles.recipeMarketHub;
 
   // For ALL the transactions to simulate
-  const addressToLabel: Map<AddressArg, string> = new Map();
   for (const txToSim of txsToSim) {
     // 1. Get labels for known addresses (applies to all transactions to simulate)
     if (txToSim.shortcut.getAddressData) {
@@ -113,6 +113,7 @@ export async function simulateShortcutsWithForgeAndGenerateReport(
   const requiresFunding: boolean[] = [];
   const tokensOut: AddressArg[][] = [];
   const tokensDust: AddressArg[][] = [];
+  const trackedAddresses: AddressArg[][] = [];
   for (const [index, txToSim] of txsToSim.entries()) {
     let txForgeData: ShortcutToSimulateForgeData;
     try {
@@ -122,6 +123,7 @@ export async function simulateShortcutsWithForgeAndGenerateReport(
         nativeToken,
         tokenToHolder,
         addressToLabel,
+        roles,
       );
     } catch (error) {
       throw new Error(`Unexpected error getting forge tx data for tx at index: ${index}. Reason: ${error}`);
@@ -138,20 +140,9 @@ export async function simulateShortcutsWithForgeAndGenerateReport(
     requiresFunding.push(txForgeData.requiresFunding);
     tokensOut.push(txForgeData.tokensOut);
     tokensDust.push(txForgeData.tokensDust);
+    trackedAddresses.push(txForgeData.trackedAddresses);
   }
 
-  // TODO: remove tenderly simulation
-  // const tenderlySim = await simulateTransactionOnTenderly(
-  //   {
-  //     data: txData[0],
-  //     to: roles.callee.address!,
-  //     from: roles.caller.address!,
-  //     value: txValues[0],
-  //     operationType: 1,
-  //   },
-  //   chainId,
-  // );
-  // process.stdout.write(JSON.stringify(tenderlySim.simulationUrl, null, 2));
   const forgeTestLog = simulateShortcutsOnForge(
     chainId,
     provider,
@@ -166,6 +157,7 @@ export async function simulateShortcutsWithForgeAndGenerateReport(
     requiresFunding,
     tokensOut,
     tokensDust,
+    trackedAddresses,
     roles,
     addressToLabel,
     forgeData,
@@ -198,37 +190,73 @@ export async function simulateShortcutsWithForgeAndGenerateReport(
   const gasUsedTopic = contractInterface.getEventTopic('SimulationReportGasUsed');
   const gasUsedLogs = testResult.logs.filter((log) => log.topics[0] === gasUsedTopic);
   if (!gasUsedLogs) throw new Error('missing "SimulationReportGasUsed" used log');
+  const decodedGasUsed = gasUsedLogs.map((log) => contractInterface.parseLog(log));
+
+  // Decode Base
+  const baseTopic = contractInterface.getEventTopic('SimulationReportBase');
+  const baseLogs = testResult.logs.filter((log) => log.topics[0] === baseTopic);
+  if (!baseLogs) throw new Error('missing "SimulationReportBase" used log');
+  const decodedBaseLogs = baseLogs.map((log) => contractInterface.parseLog(log));
 
   // Decode Quote
   const quoteTopic = contractInterface.getEventTopic('SimulationReportQuote');
   const quoteLogs = testResult.logs.filter((log) => log.topics[0] === quoteTopic);
   if (!quoteLogs) throw new Error('missing "SimulationReportQuote" used log');
+  const decodedQuoteLogs = quoteLogs.map((log) => contractInterface.parseLog(log));
 
   // Decode Dust
   const dustTopic = contractInterface.getEventTopic('SimulationReportDust');
   const dustLogs = testResult.logs.filter((log) => log.topics[0] === dustTopic);
   if (!dustLogs) throw new Error('missing "SimulationReportDust" used log');
+  const decodedDustLogs = dustLogs.map((log) => contractInterface.parseLog(log));
 
   const simulationReport: SimulationReport = [];
   for (const [index, txToSim] of txsToSim.entries()) {
-    const gasUsed = contractInterface.parseLog(gasUsedLogs[index]).args.gasUsed;
-    const quoteTokensOut = contractInterface.parseLog(quoteLogs[index]).args.tokensOut;
-    const quoteAmountsOut = contractInterface.parseLog(quoteLogs[index]).args.amountsOut;
-    const dustTokensDust = contractInterface.parseLog(dustLogs[index]).args.tokensDust;
-    const dustAmountsDust = contractInterface.parseLog(dustLogs[index]).args.amountsDust;
+    const txGasUsed = decodedGasUsed[index].args.gasUsed.toString() as string;
+
+    const txBaseLogs = decodedBaseLogs.filter((log) => log.args.shortcutIndex.toString() === index.toString());
+    const baseReport: Record<string, Record<AddressArg, string>> = {};
+    for (const txBaseLog of txBaseLogs) {
+      const trackedAddress = txBaseLog.args.trackedAddress as AddressArg;
+      const tokens = txBaseLog.args.tokens as AddressArg[];
+      const amountsDiff = txBaseLog.args.amountsDiff as AddressArg[];
+      baseReport[trackedAddress] = Object.fromEntries(
+        tokens.map((key: AddressArg, idx: number) => [key, amountsDiff[idx].toString()]),
+      );
+    }
+
+    const txQuoteLogs = decodedQuoteLogs.filter((log) => log.args.shortcutIndex.toString() === index.toString());
+    const quoteReport: Record<string, Record<AddressArg, string>> = {};
+    for (const txQuoteLog of txQuoteLogs) {
+      const trackedAddress = txQuoteLog.args.trackedAddress as AddressArg;
+      const tokens = txQuoteLog.args.tokens as AddressArg[];
+      const amountsDiff = txQuoteLog.args.amountsDiff as AddressArg[];
+      quoteReport[trackedAddress] = Object.fromEntries(
+        tokens.map((key: AddressArg, idx: number) => [key, amountsDiff[idx].toString()]),
+      );
+    }
+
+    const txDustLogs = decodedDustLogs.filter((log) => log.args.shortcutIndex.toString() === index.toString());
+    const dustReport: Record<string, Record<AddressArg, string>> = {};
+    for (const txDustLog of txDustLogs) {
+      const trackedAddress = txDustLog.args.trackedAddress as AddressArg;
+      const tokens = txDustLog.args.tokens as AddressArg[];
+      const amountsDiff = txDustLog.args.amountsDiff as AddressArg[];
+      dustReport[trackedAddress] = Object.fromEntries(
+        tokens.map((key: AddressArg, idx: number) => [key, amountsDiff[idx].toString()]),
+      );
+    }
 
     // Instantiate SimulationReport
     const simulatedShortcutReport: SimulatedShortcutReport = {
       shortcutName: txToSim.shortcut.name,
+      caller: getAddress(roles.caller.address!),
       weirollWallet: getAddress(roles.weirollWallet!.address!),
       amountsIn: amountsIn[index],
-      quote: Object.fromEntries(
-        quoteTokensOut.map((key: AddressArg, idx: number) => [key, quoteAmountsOut[idx].toString()]),
-      ),
-      dust: Object.fromEntries(
-        dustTokensDust.map((key: AddressArg, idx: number) => [key, dustAmountsDust[idx].toString()]),
-      ),
-      gas: gasUsed.toString(),
+      base: baseReport,
+      quote: quoteReport,
+      dust: dustReport,
+      gas: txGasUsed,
     };
     simulationReport.push(simulatedShortcutReport);
   }
@@ -261,6 +289,7 @@ function getTxToSimulateForgeData(
   nativeToken: AddressArg,
   tokenToHolder: Map<AddressArg, AddressArg>,
   addressToLabel: Map<AddressArg, string>,
+  roles: SimulationRoles,
 ): ShortcutToSimulateForgeData {
   const { commands, state } = builtShortcut.script;
   const txData = getEncodedData(commands, state);
@@ -286,18 +315,24 @@ function getTxToSimulateForgeData(
     }
   }
 
-  const tokensDustRaw: Set<AddressArg> = new Set();
+  const tokensDustRaw: Set<AddressArg> = new Set([]);
   for (const command of commands) {
     if (command.startsWith(FUNCTION_ID_ERC20_APPROVE)) {
       // NOTE: spender address is the last 20 bytes of the data (not checksum)
-      tokensDustRaw.add(getAddress(`0x${command.slice(-40)}`));
+      tokensDustRaw.add(`0x${command.slice(-40)}`.toLowerCase() as AddressArg);
     }
   }
+
   // NOTE: tokensOut shouldn't be flagged as dust
-  const tokensDust = Array.from(tokensDustRaw.difference(new Set(tokensOut) as Set<AddressArg>));
+  const tokensDust = Array.from(
+    tokensDustRaw.difference(new Set(tokensOut.map((address) => address.toLowerCase())) as Set<AddressArg>),
+  );
 
   const blockNumber = Number(txToSim.blockNumber ?? DEFAULT_BLOCK_NUMBER);
   const blockTimestamp = txToSim.blockTimestamp ?? DEFAULT_BLOCK_TIMESTAMP;
+  const addressedToTrackAlwaysSet = new BetterSet([roles.caller.address!, roles.weirollWallet!.address!]);
+  const addressedToTrackSet = new Set(txToSim.trackedAddresses ?? []);
+  const trackedAddresses = Array.from(addressedToTrackAlwaysSet.union(addressedToTrackSet));
 
   return {
     shortcutName: txToSim.shortcut.name,
@@ -311,5 +346,6 @@ function getTxToSimulateForgeData(
     requiresFunding,
     tokensOut,
     tokensDust,
+    trackedAddresses,
   };
 }

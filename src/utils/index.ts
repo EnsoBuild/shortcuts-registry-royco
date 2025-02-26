@@ -10,7 +10,7 @@ import {
 } from '@ensofinance/shortcuts-builder/types';
 import { Standards, getStandardByProtocol } from '@ensofinance/shortcuts-standards';
 import { GeneralAddresses, helperAddresses } from '@ensofinance/shortcuts-standards/addresses';
-import { getForks } from '@ensofinance/shortcuts-standards/helpers/shortcuts';
+import { getForks } from '@ensofinance/shortcuts-standards/helpers';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 
 import { chainIdToSimulationRoles } from '../constants';
@@ -82,7 +82,7 @@ export function getWalletOwner(builder: Builder) {
 
 export async function sendTokensToOwner(token: AddressArg, amount: NumberArg, builder: Builder) {
   const owner = getWalletOwner(builder);
-  builder.add({
+  return builder.add({
     address: token,
     functionName: 'transfer',
     abi: ['function transfer(address,uint256)'],

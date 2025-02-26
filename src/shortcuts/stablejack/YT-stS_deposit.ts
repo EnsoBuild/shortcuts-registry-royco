@@ -60,13 +60,7 @@ export class StableJack_YtSts_Deposit_Shortcut implements Shortcut {
   getAddressData(chainId: number): Map<AddressArg, AddressData> {
     switch (chainId) {
       case ChainIds.Sonic:
-        return new Map([
-          [this.inputs[ChainIds.Sonic].protocol, { label: 'Protocol' }],
-          [this.inputs[ChainIds.Sonic].YT_stS, { label: 'YT_stS' }],
-          [this.inputs[ChainIds.Sonic].S, { label: 'S (Native Token)' }],
-          [this.inputs[ChainIds.Sonic].stS, { label: 'stS' }],
-          [this.inputs[ChainIds.Sonic].wS, { label: 'wS' }],
-        ]);
+        return new Map([[this.inputs[ChainIds.Sonic].protocol, { label: 'Protocol' }]]);
       default:
         throw new Error(`Unsupported chainId: ${chainId}`);
     }

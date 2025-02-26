@@ -20,6 +20,7 @@ export function simulateShortcutsOnForge(
   requiresFunding: boolean[],
   tokensOut: AddressArg[][],
   tokensDust: AddressArg[][],
+  trackedAddresses: AddressArg[][],
   roles: SimulationRoles,
   addressToLabel: Map<AddressArg, string>,
   forgeData: SimulationForgeData,
@@ -51,6 +52,7 @@ export function simulateShortcutsOnForge(
     requiresFunding,
     tokensOut,
     tokensDust,
+    trackedAddresses,
     labelKeys: [...addressToLabel.keys()],
     labelValues: [...addressToLabel.values()],
   };
@@ -81,6 +83,7 @@ export function simulateShortcutsOnForge(
     amountsIn: amountsIn.map((amounts) => JSON.stringify(amounts)),
     tokensOut: tokensOut.map((tokens) => JSON.stringify(tokens)),
     tokensDust: tokensDust.map((tokens) => JSON.stringify(tokens)),
+    trackedAddresses: trackedAddresses.map((addresses) => JSON.stringify(addresses)),
     labelKeys: [...addressToLabel.keys()],
     labelValues: [...addressToLabel.values()],
   };

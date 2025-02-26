@@ -8,7 +8,7 @@ import type { AddressData, Input, Output, Shortcut } from '../../types';
 import { getBalance, mintErc4626, mint_OS, unwrap_wrappedNativeToken } from '../../utils';
 
 export class StableJack_YtWos_Deposit_Shortcut implements Shortcut {
-  name = 'stablejack-pt-wos-deposit';
+  name = 'stablejack-yt-wos-deposit';
   description = 'Market 1 Deposit: wS -> S -> OS -> wOS -> YT-wOS';
   supportedChains = [ChainIds.Sonic];
   inputs: Record<number, Input> = {
@@ -64,14 +64,7 @@ export class StableJack_YtWos_Deposit_Shortcut implements Shortcut {
   getAddressData(chainId: number): Map<AddressArg, AddressData> {
     switch (chainId) {
       case ChainIds.Sonic:
-        return new Map([
-          [this.inputs[ChainIds.Sonic].protocol, { label: 'Protocol' }],
-          [this.inputs[ChainIds.Sonic].YT_wOS, { label: 'YT_wOS' }],
-          [this.inputs[ChainIds.Sonic].OS, { label: 'OS' }],
-          [this.inputs[ChainIds.Sonic].S, { label: 'S (Native Token)' }],
-          [this.inputs[ChainIds.Sonic].wOS, { label: 'wOS' }],
-          [this.inputs[ChainIds.Sonic].wS, { label: 'wS' }],
-        ]);
+        return new Map([[this.inputs[ChainIds.Sonic].protocol, { label: 'Protocol' }]]);
       default:
         throw new Error(`Unsupported chainId: ${chainId}`);
     }
