@@ -10,10 +10,14 @@ import { Rings_Wstkscusd_Deposit_Shortcut } from '../shortcuts/rings/wstkscusd_d
 import { Rings_Wstkscusd_Redeem_Shortcut } from '../shortcuts/rings/wstkscusd_redeem';
 import { Silo_Ws_Deposit_Shortcut } from '../shortcuts/silo/ws_deposit';
 import { Silo_Ws_Redeem_Shortcut } from '../shortcuts/silo/ws_redeem';
+import { StableJack_PtScUsd_Deposit_Shortcut } from '../shortcuts/stablejack/PT-scUSD_deposit';
+import { StableJack_PtScUsd_Redeem_Shortcut } from '../shortcuts/stablejack/PT-scUSD_redeem';
 import { StableJack_PtSts_Deposit_Shortcut } from '../shortcuts/stablejack/PT-stS_deposit';
 import { StableJack_PtSts_Redeem_Shortcut } from '../shortcuts/stablejack/PT-stS_redeem';
 import { StableJack_PtWos_Deposit_Shortcut } from '../shortcuts/stablejack/PT-wOS_deposit';
 import { StableJack_PtWos_Redeem_Shortcut } from '../shortcuts/stablejack/PT-wOS_redeem';
+import { StableJack_YtScUsd_Deposit_Shortcut } from '../shortcuts/stablejack/YT-scUSD_deposit';
+import { StableJack_YtScUsd_Redeem_Shortcut } from '../shortcuts/stablejack/YT-scUSD_redeem';
 import { StableJack_YtSts_Deposit_Shortcut } from '../shortcuts/stablejack/YT-stS_deposit';
 import { StableJack_YtSts_Redeem_Shortcut } from '../shortcuts/stablejack/YT-stS_redeem';
 import { StableJack_YtWos_Deposit_Shortcut } from '../shortcuts/stablejack/YT-wOS_deposit';
@@ -37,10 +41,14 @@ export const shortcuts: Record<string, Record<string, Shortcut>> = {
     'ws-redeem': new Silo_Ws_Redeem_Shortcut(),
   },
   stablejack: {
+    'pt-scusd-deposit': new StableJack_PtScUsd_Deposit_Shortcut(),
+    'pt-scusd-redeem': new StableJack_PtScUsd_Redeem_Shortcut(),
     'pt-sts-deposit': new StableJack_PtSts_Deposit_Shortcut(),
     'pt-sts-redeem': new StableJack_PtSts_Redeem_Shortcut(),
     'pt-wos-deposit': new StableJack_PtWos_Deposit_Shortcut(),
     'pt-wos-redeem': new StableJack_PtWos_Redeem_Shortcut(),
+    'yt-scusd-deposit': new StableJack_YtScUsd_Deposit_Shortcut(),
+    'yt-scusd-redeem': new StableJack_YtScUsd_Redeem_Shortcut(),
     'yt-sts-deposit': new StableJack_YtSts_Deposit_Shortcut(),
     'yt-sts-redeem': new StableJack_YtSts_Redeem_Shortcut(),
     'yt-wos-deposit': new StableJack_YtWos_Deposit_Shortcut(),
@@ -61,10 +69,14 @@ export function getAllMarkets(): string[] {
 export const supportedShortcuts = [
   Silo_Ws_Deposit_Shortcut,
   Silo_Ws_Redeem_Shortcut,
+  StableJack_PtScUsd_Deposit_Shortcut,
+  StableJack_PtScUsd_Redeem_Shortcut,
   StableJack_PtSts_Deposit_Shortcut,
   StableJack_PtSts_Redeem_Shortcut,
   StableJack_PtWos_Deposit_Shortcut,
   StableJack_PtWos_Redeem_Shortcut,
+  StableJack_YtScUsd_Deposit_Shortcut,
+  StableJack_YtScUsd_Redeem_Shortcut,
   StableJack_YtSts_Deposit_Shortcut,
   StableJack_YtSts_Redeem_Shortcut,
   StableJack_YtWos_Deposit_Shortcut,
