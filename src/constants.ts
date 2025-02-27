@@ -131,6 +131,7 @@ export const chainIdToDeFiAddresses: Record<number, Record<string, AddressArg>> 
     OS: '0xb1e25689D55734FD3ffFc939c4C3Eb52DFf8A794',
     PT_stS: '0xFCA91fEEe65DB34448A83a74f4f8970b5dddfa7c',
     PT_wOS: '0xbe1B1dd422d94f9c1784FB9356ef83A29E1A8cFa',
+    PT_scUSD: '0x11d686EF994648Ead6180c722F122169058389ee',
     S: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', // Native token
     scUsd: '0xd3DCe716f3eF535C5Ff8d041c1A41C3bd89b97aE',
     scUsdTeller: '0x358CFACf00d0B4634849821BB3d1965b472c776a',
@@ -144,6 +145,7 @@ export const chainIdToDeFiAddresses: Record<number, Record<string, AddressArg>> 
     wS: '0x039e2fb66102314ce7b64ce5ce3e5183bc94ad38',
     YT_stS: '0x0fa31f0d5a574F083E0be272a6CF807270352b3f',
     YT_wOS: '0xe16Bb6061B3567ee86285ab7780187cB39aCC55E',
+    YT_scUSD: '0xd2901D474b351bC6eE7b119f9c920863B0F781b2',
     siloBws: '0xf55902DE87Bd80c6a35614b48d7f8B612a083C12',
     roycoWalletHelpers: '0x07899ac8BE7462151d6515FCd4773DD9267c9911',
   },
@@ -156,6 +158,7 @@ const tokenToHolderSonic: Map<AddressArg, AddressArg> = new Map([
   [chainIdToDeFiAddresses[ChainIds.Sonic].OS, '0xa76Beaf111BaD5dD866fa4835D66b9aA2Eb1FdEc'],
   [chainIdToDeFiAddresses[ChainIds.Sonic].PT_stS, '0x36804ABb20cb8c19B860d3C9bF7219a88B8fc57A'],
   [chainIdToDeFiAddresses[ChainIds.Sonic].PT_wOS, '0xb8022c515174F41C4EF9211FE5dcFff27B01DE87'],
+  [chainIdToDeFiAddresses[ChainIds.Sonic].PT_scUSD, '0xADD78875B8c993bD138aD2578381887e475361bc'],
   [chainIdToDeFiAddresses[ChainIds.Sonic].scUsd, '0x4D85bA8c3918359c78Ed09581E5bc7578ba932ba'],
   [chainIdToDeFiAddresses[ChainIds.Sonic].stS, '0x396922EF30Cf012973343f7174db850c7D265278'],
   [chainIdToDeFiAddresses[ChainIds.Sonic].USDC_e, '0x322e1d5384aa4ED66AeCa770B95686271de61dc3'],
@@ -164,6 +167,7 @@ const tokenToHolderSonic: Map<AddressArg, AddressArg> = new Map([
   [chainIdToDeFiAddresses[ChainIds.Sonic].wS, '0xE223C8e92AA91e966CA31d5C6590fF7167E25801'],
   [chainIdToDeFiAddresses[ChainIds.Sonic].YT_stS, '0x15800782F6DC1F46871F90E282cB64643Bd67fd6'],
   [chainIdToDeFiAddresses[ChainIds.Sonic].YT_wOS, '0x5882aa5d97391Af0889dd4d16C3194e96A7Abe00'],
+  [chainIdToDeFiAddresses[ChainIds.Sonic].YT_scUSD, '0xADD78875B8c993bD138aD2578381887e475361bc'],
   [chainIdToDeFiAddresses[ChainIds.Sonic].siloBws, '0x8D4D19405Ba352e4767681C28936fc0a9A8C8dFe'],
 ]);
 

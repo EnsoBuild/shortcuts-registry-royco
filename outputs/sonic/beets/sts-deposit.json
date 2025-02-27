@@ -9,5 +9,9 @@
     "0xf8b2cb4f0101ffffffffff017e7d64d987cab6eed08a191c4c2459daf2f8ed0b",
     "0xd0e30db00301ffffffffffffe5da20f15420ad15de0fa650600afc998bbe3955"
   ],
-  "state": ["0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "0x", "0x"]
+  "state": [
+    "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "0x",
+    "0x"
+  ]
 }
