@@ -53,7 +53,7 @@ export async function main_(args: string[]) {
       }
     }
     fs.mkdirSync(outputDir, { recursive: true });
-    fs.writeFileSync(outputFile, outputJson, 'utf-8');
+    fs.writeFileSync(outputFile, outputJson + '\n', 'utf-8');
     console.log(`Output saved to '${outputFile}'`);
   } catch (e) {
     console.error(e);
