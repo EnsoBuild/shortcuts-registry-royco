@@ -130,7 +130,7 @@ async function main() {
   }
 
   const simulationLogConfigInput = {
-    forgeTestLogFormat: ForgeTestLogFormat.DEFAULT,
+    forgeTestLogFormat: ForgeTestLogFormat.JSON,
     forgeTestLogVerbosity: ForgeTestLogVerbosity.X3V,
     isForgeTxDataLogged: false,
     isCalldataLogged: false,
