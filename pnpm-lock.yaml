@@ -12,8 +12,8 @@ importers:
         specifier: 0.0.13
         version: 0.0.13
       '@ensofinance/shortcuts-standards':
-        specifier: 1.0.123
-        version: 1.0.123(@ethersproject/abi@5.7.0)(@ethersproject/providers@5.7.2)(ethers@5.7.2)(lodash@4.17.21)
+        specifier: 1.0.125
+        version: 1.0.125(@ethersproject/abi@5.7.0)(@ethersproject/providers@5.7.2)(ethers@5.7.2)(lodash@4.17.21)
       '@ethersproject/abi':
         specifier: ^5.7.0
         version: 5.7.0
@@ -133,14 +133,11 @@ packages:
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
     engines: {node: '>=12'}
 
-  '@ensofinance/shortcuts-builder@0.0.12':
-    resolution: {integrity: sha512-JL8gCSioCF6woTkR1htPg1WtSd/tbNvc5r4rjSFjF1cxw2rP7GYI7DbEWI3rseJxnEprhQ3xImOmUPXOluL98A==}
-
   '@ensofinance/shortcuts-builder@0.0.13':
     resolution: {integrity: sha512-3mSJp/o7kWuFceQfSaEt8fdkDqPOLGTIacRXJ7rou5CHTUQvzfJBpdWJ/Qic5EPZdAqs1EmRw+hCCVwnyJwEzQ==}
 
-  '@ensofinance/shortcuts-standards@1.0.123':
-    resolution: {integrity: sha512-ORb2mIg96bCdA41boHhR35AKXdLDE7VL3TMPZU9u8yPamDervwk62uY4NPfseMzqfrWv6hDl8EW4pe3/qiLtXw==}
+  '@ensofinance/shortcuts-standards@1.0.125':
+    resolution: {integrity: sha512-p5LTxIyYQ3NPBjQzYRNLbJpmzEEjwuW4Q5GjtWUlh1oAEoEpBEFNLbgmSr5EHmzt5vEC28oFBTSHsYoYlj9ELA==}
     engines: {node: '>=18.0.0'}
 
   '@ensofinance/weiroll.js@0.4.1':
@@ -1658,22 +1655,6 @@ snapshots:
     dependencies:
       '@jridgewell/trace-mapping': 0.3.9
 
-  '@ensofinance/shortcuts-builder@0.0.12':
-    dependencies:
-      '@ensofinance/weiroll.js': 0.4.1
-      '@ethersproject/abi': 5.7.0
-      '@ethersproject/address': 5.7.0
-      '@ethersproject/bignumber': 5.7.0
-      '@ethersproject/bytes': 5.7.0
-      '@ethersproject/keccak256': 5.7.0
-      '@ethersproject/solidity': 5.7.0
-      '@ethersproject/strings': 5.7.0
-      axios: 1.7.9
-    transitivePeerDependencies:
-      - bufferutil
-      - debug
-      - utf-8-validate
-
   '@ensofinance/shortcuts-builder@0.0.13':
     dependencies:
       '@ensofinance/weiroll.js': 0.4.1
@@ -1690,9 +1671,9 @@ snapshots:
       - debug
       - utf-8-validate
 
-  '@ensofinance/shortcuts-standards@1.0.123(@ethersproject/abi@5.7.0)(@ethersproject/providers@5.7.2)(ethers@5.7.2)(lodash@4.17.21)':
+  '@ensofinance/shortcuts-standards@1.0.125(@ethersproject/abi@5.7.0)(@ethersproject/providers@5.7.2)(ethers@5.7.2)(lodash@4.17.21)':
     dependencies:
-      '@ensofinance/shortcuts-builder': 0.0.12
+      '@ensofinance/shortcuts-builder': 0.0.13
       '@ethersproject/address': 5.7.0
       '@ethersproject/bignumber': 5.7.0
       '@ethersproject/bytes': 5.7.0
