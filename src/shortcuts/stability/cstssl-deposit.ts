@@ -25,8 +25,6 @@ export class Stability_CstSSL_Deposit_Shortcut implements Shortcut {
     const inputs = this.inputs[chainId];
     const { CstSSL, stS, wS, S } = inputs;
 
-    console.log(inputs);
-
     const builder = new Builder(chainId, client, {
       tokensIn: [wS],
       tokensOut: [CstSSL],

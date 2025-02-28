@@ -46,9 +46,8 @@ export class Stability_CstSSL_Redeem_Shortcut implements Shortcut {
     switch (chainId) {
       case ChainIds.Sonic:
         return new Map([
-          [this.inputs[ChainIds.Sonic].S, { label: 'S (Native Token)' }],
           [this.inputs[ChainIds.Sonic].stS, { label: 'stS' }],
-          [this.inputs[ChainIds.Sonic].wS, { label: 'wS' }],
+          [this.inputs[ChainIds.Sonic].CstSSL, { label: 'C-stS-SL' }],
         ]);
       default:
         throw new Error(`Unsupported chainId: ${chainId}`);
