@@ -10,13 +10,7 @@ import {
 } from '@ensofinance/shortcuts-builder/types';
 import { Standards, getStandardByProtocol } from '@ensofinance/shortcuts-standards';
 import { GeneralAddresses, helperAddresses } from '@ensofinance/shortcuts-standards/addresses';
-import {
-  addAction,
-  getAmountOutFromBytes,
-  getForks,
-  percentMul,
-  receiverOrWallet,
-} from '@ensofinance/shortcuts-standards/helpers';
+import { addAction, getAmountOutFromBytes, getForks, percentMul } from '@ensofinance/shortcuts-standards/helpers';
 import { BigNumber } from '@ethersproject/bignumber';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 
@@ -203,7 +197,7 @@ export async function mint_CstSSL(tokenIn: AddressArg, tokenOut: AddressArg, amo
     address: tokenOut,
     functionName: 'depositAssets',
     abi: ['function depositAssets(address[] assets, uint256[] amountsMax, uint256 minAmountOut, address receiver)'],
-    args: [[tokenIn], [amountIn], minAmountOut, receiverOrWallet(undefined)],
+    args: [[tokenIn], [amountIn], minAmountOut, walletAddress()],
     noArgumentsCheck: true,
   });
 
@@ -217,7 +211,6 @@ export async function mint_CstSSL(tokenIn: AddressArg, tokenOut: AddressArg, amo
     builder,
     action,
     approvals,
-    receiver: receiverOrWallet(undefined),
   });
 
   return amountOut as unknown as FromContractCallArg;
