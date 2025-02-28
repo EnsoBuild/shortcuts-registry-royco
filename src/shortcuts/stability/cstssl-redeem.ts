@@ -1,9 +1,9 @@
 import { Builder } from '@ensofinance/shortcuts-builder';
 import { RoycoClient } from '@ensofinance/shortcuts-builder/client/implementations/roycoClient';
-import { AddressArg, ChainIds, WeirollScript } from '@ensofinance/shortcuts-builder/types';
+import { ChainIds, WeirollScript } from '@ensofinance/shortcuts-builder/types';
 
 import { chainIdToDeFiAddresses } from '../../constants';
-import type { AddressData, Input, Output, Shortcut } from '../../types';
+import type { Input, Output, Shortcut } from '../../types';
 import { getBalance, sendTokensToOwner } from '../../utils';
 
 export class Stability_CstSSL_Redeem_Shortcut implements Shortcut {
@@ -12,7 +12,6 @@ export class Stability_CstSSL_Redeem_Shortcut implements Shortcut {
   supportedChains = [ChainIds.Sonic];
   inputs: Record<number, Input> = {
     [ChainIds.Sonic]: {
-      stS: chainIdToDeFiAddresses[ChainIds.Sonic].stS,
       CstSSL: chainIdToDeFiAddresses[ChainIds.Sonic].CstSSL,
     },
   };
@@ -40,17 +39,5 @@ export class Stability_CstSSL_Redeem_Shortcut implements Shortcut {
       script: payload.shortcut as WeirollScript,
       metadata: builder.metadata,
     };
-  }
-
-  getAddressData(chainId: number): Map<AddressArg, AddressData> {
-    switch (chainId) {
-      case ChainIds.Sonic:
-        return new Map([
-          [this.inputs[ChainIds.Sonic].stS, { label: 'stS' }],
-          [this.inputs[ChainIds.Sonic].CstSSL, { label: 'C-stS-SL' }],
-        ]);
-      default:
-        throw new Error(`Unsupported chainId: ${chainId}`);
-    }
   }
 }
