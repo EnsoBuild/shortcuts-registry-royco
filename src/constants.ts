@@ -170,7 +170,7 @@ const tokenToHolderSonic: Map<AddressArg, AddressArg> = new Map([
   [chainIdToDeFiAddresses[ChainIds.Sonic].YT_stS, '0x15800782F6DC1F46871F90E282cB64643Bd67fd6'],
   [chainIdToDeFiAddresses[ChainIds.Sonic].YT_wOS, '0x5882aa5d97391Af0889dd4d16C3194e96A7Abe00'],
   [chainIdToDeFiAddresses[ChainIds.Sonic].siloBws, '0x8D4D19405Ba352e4767681C28936fc0a9A8C8dFe'],
-  [chainIdToDeFiAddresses[ChainIds.Sonic].CstSSL, '0x709833e5B4B98aAb812d175510F94Bc91CFABD89'],
+  [chainIdToDeFiAddresses[ChainIds.Sonic].CstSSL, '0xe33e0F2D0e9553c9a45264676E29e115EF18f9B8'],
 ]);
 
 export const chainIdToTokenHolder: Map<ChainIds, Map<AddressArg, AddressArg>> = new Map([
