@@ -176,3 +176,15 @@ export async function mint_OS(tokenIn: AddressArg, tokenOut: AddressArg, amountI
 
   return amountOut as FromContractCallArg;
 }
+
+export async function mint_CstSSL(tokenIn: AddressArg, tokenOut: AddressArg, amountIn: NumberArg, builder: Builder) {
+  const standard = getStandardByProtocol('stability', builder.chainId);
+  const { amountOut } = await standard.deposit.addToBuilder(builder, {
+    tokenIn: [tokenIn],
+    tokenOut,
+    amountIn: [amountIn],
+    primaryAddress: tokenOut,
+  });
+
+  return amountOut as FromContractCallArg;
+}
