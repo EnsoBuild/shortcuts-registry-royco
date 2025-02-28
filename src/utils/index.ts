@@ -10,7 +10,14 @@ import {
 } from '@ensofinance/shortcuts-builder/types';
 import { Standards, getStandardByProtocol } from '@ensofinance/shortcuts-standards';
 import { GeneralAddresses, helperAddresses } from '@ensofinance/shortcuts-standards/addresses';
-import { getForks } from '@ensofinance/shortcuts-standards/helpers';
+import {
+  addAction,
+  getAmountOutFromBytes,
+  getForks,
+  percentMul,
+  receiverOrWallet,
+} from '@ensofinance/shortcuts-standards/helpers';
+import { BigNumber } from '@ethersproject/bignumber';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 
 import { chainIdToSimulationRoles } from '../constants';
@@ -178,13 +185,40 @@ export async function mint_OS(tokenIn: AddressArg, tokenOut: AddressArg, amountI
 }
 
 export async function mint_CstSSL(tokenIn: AddressArg, tokenOut: AddressArg, amountIn: NumberArg, builder: Builder) {
-  const standard = getStandardByProtocol('stability', builder.chainId);
-  const { amountOut } = await standard.deposit.addToBuilder(builder, {
-    tokenIn: [tokenIn],
-    tokenOut,
-    amountIn: [amountIn],
-    primaryAddress: tokenOut,
+  const previewDepositAssetsRes = builder.add({
+    address: tokenOut,
+    functionName: 'previewDepositAssets',
+    abi: [
+      'function previewDepositAssets(address[] assets, uint256[] amountsMax) external view returns (uint256[] amountsConsumed, uint256 sharesOut, uint256 valueOut)',
+    ],
+    args: [[tokenIn], [amountIn]],
+    noArgumentsCheck: true,
   });
 
-  return amountOut as FromContractCallArg;
+  const previewSharesOut = getAmountOutFromBytes(builder, previewDepositAssetsRes, 1);
+  const minOutPercentFactor = BigNumber.from(10000).sub(500);
+  const minAmountOut = percentMul(previewSharesOut, minOutPercentFactor, builder);
+
+  const action = contractCall({
+    address: tokenOut,
+    functionName: 'depositAssets',
+    abi: ['function depositAssets(address[] assets, uint256[] amountsMax, uint256 minAmountOut, address receiver)'],
+    args: [[tokenIn], [amountIn], minAmountOut, receiverOrWallet(undefined)],
+    noArgumentsCheck: true,
+  });
+
+  const approvals = {
+    tokens: [tokenIn],
+    amounts: [amountIn],
+    spender: tokenOut,
+  };
+
+  const amountOut = addAction({
+    builder,
+    action,
+    approvals,
+    receiver: receiverOrWallet(undefined),
+  });
+
+  return amountOut as unknown as FromContractCallArg;
 }
