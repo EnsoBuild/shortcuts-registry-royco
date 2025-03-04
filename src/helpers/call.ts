@@ -4,7 +4,7 @@ import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 
 import { chainIdToDeFiAddresses } from '../constants';
-import { APITransaction, QuoteRequest, simulateTransactionOnQuoter } from '../simulations/simulateOnQuoter';
+import { APITransaction, QuoteRequest, simulateTransactionOnQuoter } from '../simulations/quoter';
 
 async function call(
   provider: StaticJsonRpcProvider,
@@ -56,6 +56,11 @@ export function getEncodedData(commands: string[], state: string[]): string {
     'function executeWeiroll(bytes32[] calldata commands, bytes[] calldata state) external payable returns (bytes[] memory)',
   ]);
   return weirollWalletInterface.encodeFunctionData('executeWeiroll', [commands, state]);
+}
+
+export function getEncodedDataErc20Transfer(recipient: AddressArg, value: string): string {
+  const erc20Interface = new Interface(['function transfer(address to, uint256 value)']);
+  return erc20Interface.encodeFunctionData('transfer', [recipient, value]);
 }
 
 export async function getUniswapLiquidity(

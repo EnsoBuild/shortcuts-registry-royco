@@ -37,6 +37,7 @@ export enum TraceItemPhase {
   SETUP = 'Setup',
 }
 
+export const DEFAULT_TX_AMOUNT_IN_VALUE = '0';
 export const FUNCTION_ID_ERC20_APPROVE = '0x095ea7b3';
 
 export const DEFAULT_SETTER_MIN_AMOUNT_OUT = BigNumber.from('1');

@@ -1,51 +1,99 @@
-import { AddressArg, ChainIds } from '@ensofinance/shortcuts-builder/types';
+import type { AddressArg, ChainIds } from '@ensofinance/shortcuts-builder/types';
 import { BetterSet, getAddress } from '@ensofinance/shortcuts-standards/helpers';
 import { Interface } from '@ethersproject/abi';
-import { BigNumberish } from '@ethersproject/bignumber';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
+import { spawnSync } from 'node:child_process';
+import os from 'node:os';
 
 import {
   CONTRCT_SIMULATION_FORK_TEST_EVENTS_ABI,
+  DEFAULT_TX_AMOUNT_IN_VALUE,
   FUNCTION_ID_ERC20_APPROVE,
   ForgeTestLogFormat,
   ForgeTestLogVerbosity,
 } from '../constants';
-import { simulateShortcutsOnForge } from '../simulations/simulateOnForge';
+import { getEncodedData } from '../helpers';
+import { getAmountInForNativeToken } from '../helpers/simulations';
 import type {
   BuiltShortcut,
+  ForgeTestLogJSON,
   ShortcutToSimulate,
   ShortcutToSimulateForgeData,
   SimulatedShortcutReport,
+  SimulationForgeData,
   SimulationLogConfig,
   SimulationReport,
   SimulationRoles,
 } from '../types';
-import { getEncodedData } from './call';
 
-const recipeMarketHubInterface = new Interface([
-  'function createCampaign(address, uint256) external view returns (address)',
-  'function executeWeiroll(bytes32[] calldata commands, bytes[] calldata state) external payable returns (bytes[] memory)',
-]);
-
-const DEFAULT_TX_VALUE = '0';
 const DEFAULT_BLOCK_NUMBER = -1;
 const DEFAULT_BLOCK_TIMESTAMP = -1;
 
-function getAmountInForNativeToken(
+function getTxToSimulateForgeData(
+  txToSim: ShortcutToSimulate,
+  builtShortcut: BuiltShortcut,
   nativeToken: AddressArg,
-  tokenIn: AddressArg[],
-  amountIn: BigNumberish[],
-): string | undefined {
-  const index = tokenIn.findIndex((token) => token.toLowerCase() === nativeToken.toLowerCase());
+  tokenToHolder: Map<AddressArg, AddressArg>,
+  addressToLabel: Map<AddressArg, string>,
+  roles: SimulationRoles,
+): ShortcutToSimulateForgeData {
+  const { commands, state } = builtShortcut.script;
+  const txData = getEncodedData(commands, state);
 
-  if (index === -1) return DEFAULT_TX_VALUE;
+  const { tokensIn, tokensOut } = builtShortcut.metadata as { tokensIn: AddressArg[]; tokensOut: AddressArg[] };
+  const txValue = getAmountInForNativeToken(nativeToken, tokensIn, txToSim.amountsIn) || DEFAULT_TX_AMOUNT_IN_VALUE;
+  const amountsIn = txToSim.amountsIn.map((amountIn) => amountIn.toString());
+  const requiresFunding = txToSim.requiresFunding ?? false;
+  const tokensInHolders: AddressArg[] = [];
+  if (tokenToHolder) {
+    for (let i = 0; i < (tokensIn as AddressArg[]).length; i++) {
+      const holder = tokenToHolder.get(tokensIn[i]);
+      const token = tokensIn[i];
+      if (token.toLowerCase() === nativeToken.toLowerCase()) continue;
 
-  const amountInNativeToken = amountIn[index].toString();
-
-  if (!amountInNativeToken || amountInNativeToken === DEFAULT_TX_VALUE || Number(amountInNativeToken) === 0) {
-    throw new Error(`simulateShortcutOnQuoter: missing 'amountIn' for native token at index: ${index}`);
+      if (!holder) {
+        console.warn(
+          `simulateOnForge: no holder found for token: ${tokensIn[i]} (${addressToLabel.get(tokensIn[i])}). ` +
+            `If it is missing by mistake, please add it into 'chainIdToTokenHolder' map`,
+        );
+      }
+      tokensInHolders.push(tokenToHolder.get(tokensIn[i]) as AddressArg);
+    }
   }
-  return amountInNativeToken;
+
+  const tokensDustRaw: Set<AddressArg> = new Set([]);
+  for (const command of commands) {
+    if (command.startsWith(FUNCTION_ID_ERC20_APPROVE)) {
+      // NOTE: spender address is the last 20 bytes of the data (not checksum)
+      tokensDustRaw.add(`0x${command.slice(-40)}`.toLowerCase() as AddressArg);
+    }
+  }
+
+  // NOTE: tokensOut shouldn't be flagged as dust
+  const tokensDust = Array.from(
+    tokensDustRaw.difference(new Set(tokensOut.map((address) => address.toLowerCase())) as Set<AddressArg>),
+  );
+
+  const blockNumber = Number(txToSim.blockNumber ?? DEFAULT_BLOCK_NUMBER);
+  const blockTimestamp = txToSim.blockTimestamp ?? DEFAULT_BLOCK_TIMESTAMP;
+  const addressedToTrackAlwaysSet = new BetterSet([roles.caller.address!, roles.weirollWallet!.address!]);
+  const addressedToTrackSet = new Set(txToSim.trackedAddresses ?? []);
+  const trackedAddresses = Array.from(addressedToTrackAlwaysSet.union(addressedToTrackSet));
+
+  return {
+    shortcutName: txToSim.shortcut.name,
+    blockNumber,
+    blockTimestamp,
+    txData,
+    txValue,
+    tokensIn,
+    tokensInHolders,
+    amountsIn,
+    requiresFunding,
+    tokensOut,
+    tokensDust,
+    trackedAddresses,
+  };
 }
 
 export async function simulateShortcutsWithForgeAndGenerateReport(
@@ -68,38 +116,6 @@ export async function simulateShortcutsWithForgeAndGenerateReport(
     test: 'test_simulateShortcuts_1',
     testRelativePath: 'test/foundry/fork/SimulateShortcuts_Fork_Test.t.sol',
   };
-
-  const wallet = await getNextWeirollWalletFromMockRecipeMarketHub(
-    provider,
-    roles.caller.address!,
-    roles.recipeMarketHub.address!,
-  );
-  roles.weirollWallet = { address: wallet, label: 'WeirollWallet' };
-  roles.callee = roles.recipeMarketHub;
-
-  // For ALL the transactions to simulate
-  for (const txToSim of txsToSim) {
-    // 1. Get labels for known addresses (applies to all transactions to simulate)
-    if (txToSim.shortcut.getAddressData) {
-      const addressToData = txToSim.shortcut.getAddressData(chainId);
-
-      if (([...addressToData.keys()] as (undefined | string)[]).includes(undefined)) {
-        // @ts-expect-error key is AddressArg
-        const missingAddressLabel = addressToLabel.get(undefined);
-        throw new Error(
-          `Missing address in '${txToSim.shortcut.name}' shortcut inside 'getAddressData()', check key spelling. ` +
-            `Key: undefined (missing), Value: ${missingAddressLabel}`,
-        );
-      }
-      // Map address to labels
-      for (const [address, data] of addressToData) {
-        addressToLabel.set(address, data.label);
-      }
-    }
-    for (const { address, label } of Object.values(roles)) {
-      addressToLabel.set(address, label);
-    }
-  }
 
   const nativeToken = roles.nativeToken.address as AddressArg;
   const shortcutNames: string[] = [];
@@ -270,76 +286,46 @@ export async function simulateShortcutsWithForgeAndGenerateReport(
   return simulationReport;
 }
 
-async function getNextWeirollWalletFromMockRecipeMarketHub(
+function simulateShortcutsOnForge(
+  chainId: number,
   provider: StaticJsonRpcProvider,
-  caller: AddressArg,
-  mockRecipeMarketHub: AddressArg,
-): Promise<AddressArg> {
-  const weirollWalletBytes = await provider.call({
-    to: mockRecipeMarketHub,
-    data: recipeMarketHubInterface.encodeFunctionData('createCampaign', [caller, 0]),
-  });
-
-  return `0x${weirollWalletBytes.slice(26)}`;
-}
-
-function getTxToSimulateForgeData(
-  txToSim: ShortcutToSimulate,
-  builtShortcut: BuiltShortcut,
-  nativeToken: AddressArg,
-  tokenToHolder: Map<AddressArg, AddressArg>,
-  addressToLabel: Map<AddressArg, string>,
+  shortcutNames: string[],
+  blockNumbers: number[],
+  blockTimestamps: number[],
+  txData: string[],
+  txValues: string[],
+  tokensIn: AddressArg[][],
+  tokensInHolders: AddressArg[][],
+  amountsIn: string[][],
+  requiresFunding: boolean[],
+  tokensOut: AddressArg[][],
+  tokensDust: AddressArg[][],
+  trackedAddresses: AddressArg[][],
   roles: SimulationRoles,
-): ShortcutToSimulateForgeData {
-  const { commands, state } = builtShortcut.script;
-  const txData = getEncodedData(commands, state);
-
-  const { tokensIn, tokensOut } = builtShortcut.metadata as { tokensIn: AddressArg[]; tokensOut: AddressArg[] };
-  const txValue = getAmountInForNativeToken(nativeToken, tokensIn, txToSim.amountsIn) || DEFAULT_TX_VALUE;
-  const amountsIn = txToSim.amountsIn.map((amountIn) => amountIn.toString());
-  const requiresFunding = txToSim.requiresFunding ?? false;
-  const tokensInHolders: AddressArg[] = [];
-  if (tokenToHolder) {
-    for (let i = 0; i < (tokensIn as AddressArg[]).length; i++) {
-      const holder = tokenToHolder.get(tokensIn[i]);
-      const token = tokensIn[i];
-      if (token.toLowerCase() === nativeToken.toLowerCase()) continue;
-
-      if (!holder) {
-        console.warn(
-          `simulateOnForge: no holder found for token: ${tokensIn[i]} (${addressToLabel.get(tokensIn[i])}). ` +
-            `If it is missing by mistake, please add it into 'chainIdToTokenHolder' map`,
-        );
-      }
-      tokensInHolders.push(tokenToHolder.get(tokensIn[i]) as AddressArg);
-    }
+  addressToLabel: Map<AddressArg, string>,
+  forgeData: SimulationForgeData,
+  simulationLogConfig: SimulationLogConfig,
+): ForgeTestLogJSON {
+  const rpcUrl = provider.connection.url;
+  if (!roles.callee?.address) {
+    throw new Error("simulateShortcutsOnForge: missing 'callee' address in 'roles'");
+  }
+  if (!roles.weirollWallet?.address) {
+    throw new Error("simulateShortcutsOnForge: missing 'weirollWallet' address in 'roles'");
   }
 
-  const tokensDustRaw: Set<AddressArg> = new Set([]);
-  for (const command of commands) {
-    if (command.startsWith(FUNCTION_ID_ERC20_APPROVE)) {
-      // NOTE: spender address is the last 20 bytes of the data (not checksum)
-      tokensDustRaw.add(`0x${command.slice(-40)}`.toLowerCase() as AddressArg);
-    }
-  }
-
-  // NOTE: tokensOut shouldn't be flagged as dust
-  const tokensDust = Array.from(
-    tokensDustRaw.difference(new Set(tokensOut.map((address) => address.toLowerCase())) as Set<AddressArg>),
-  );
-
-  const blockNumber = Number(txToSim.blockNumber ?? DEFAULT_BLOCK_NUMBER);
-  const blockTimestamp = txToSim.blockTimestamp ?? DEFAULT_BLOCK_TIMESTAMP;
-  const addressedToTrackAlwaysSet = new BetterSet([roles.caller.address!, roles.weirollWallet!.address!]);
-  const addressedToTrackSet = new Set(txToSim.trackedAddresses ?? []);
-  const trackedAddresses = Array.from(addressedToTrackAlwaysSet.union(addressedToTrackSet));
-
-  return {
-    shortcutName: txToSim.shortcut.name,
-    blockNumber,
-    blockTimestamp,
+  const simulationJsonDataRaw = {
+    chainId,
+    rpcUrl,
+    shortcutNames,
+    blockNumbers,
+    blockTimestamps,
+    caller: roles.caller.address,
+    recipeMarketHub: roles.recipeMarketHub.address,
+    callee: roles.callee.address,
+    weirollWallet: roles.weirollWallet.address,
     txData,
-    txValue,
+    txValues,
     tokensIn,
     tokensInHolders,
     amountsIn,
@@ -347,5 +333,90 @@ function getTxToSimulateForgeData(
     tokensOut,
     tokensDust,
     trackedAddresses,
+    labelKeys: [...addressToLabel.keys()],
+    labelValues: [...addressToLabel.values()],
   };
+
+  if (simulationLogConfig.isForgeTxDataLogged) {
+    process.stdout.write('Simulation JSON Data Sent to Forge:\n');
+    process.stdout.write(JSON.stringify(simulationJsonDataRaw, null, 2));
+    process.stdout.write('\n');
+    // console.warn('Simulation (JSON Data):\n', JSON.stringify(simulationJsonDataRaw), '\n');
+  }
+
+  // NOTE: foundry JSON parsing cheatcodes don't support multidimensional arrays, therefore we stringify them
+  const simulationJsonData = {
+    chainId,
+    rpcUrl,
+    shortcutNames,
+    blockNumbers,
+    blockTimestamps,
+    caller: roles.caller.address,
+    recipeMarketHub: roles.recipeMarketHub.address,
+    callee: roles.callee.address,
+    weirollWallet: roles.weirollWallet.address,
+    txData,
+    txValues,
+    tokensIn: tokensIn.map((tokens) => JSON.stringify(tokens)),
+    tokensInHolders: tokensInHolders.map((addresses) => JSON.stringify(addresses)),
+    requiresFunding,
+    amountsIn: amountsIn.map((amounts) => JSON.stringify(amounts)),
+    tokensOut: tokensOut.map((tokens) => JSON.stringify(tokens)),
+    tokensDust: tokensDust.map((tokens) => JSON.stringify(tokens)),
+    trackedAddresses: trackedAddresses.map((addresses) => JSON.stringify(addresses)),
+    labelKeys: [...addressToLabel.keys()],
+    labelValues: [...addressToLabel.values()],
+  };
+  const forgeCmd = os.platform() === 'win32' ? 'forge.cmd' : 'forge'; // ! untested on Windows
+  // NOTE: `spawnSync` forge call return can optionally be read from both `return.stdout` and `return.stderr`, and processed.
+  // NOTE: calling forge with `--json` will print the deployment information as JSON.
+  // NOTE: calling forge with `--gas-report` will print the gas report.
+  // NOTE: calling forge with `-vvv` prevents too much verbosity (i.e. `setUp` steps), but hides traces from successful
+  // tests. To make visible successful test traces, use `-vvvv`.
+  const result = spawnSync(
+    forgeCmd,
+    [
+      'test',
+      '--match-contract',
+      forgeData.contract,
+      '--match-test',
+      forgeData.test,
+      forgeData.forgeTestLogVerbosity,
+      forgeData.forgeTestLogFormat,
+    ],
+    {
+      encoding: 'utf-8',
+      env: {
+        PATH: `${process.env.PATH}:${forgeData.path}"`,
+        SIMULATION_JSON_DATA: JSON.stringify(simulationJsonData),
+        TERM: process.env.TER || 'xterm-256color',
+        FORCE_COLOR: '1',
+      },
+    },
+  );
+
+  if (result.error) {
+    throw new Error(`simulateShortcutsOnForge: unexpected error calling 'forge'. Reason: ${result.stderr}`);
+  }
+
+  if (!result.stdout) {
+    throw new Error(
+      `simulateShortcutsOnForge: unexpected error calling 'forge'. ` +
+        `Reason: it didn't error but 'stdout' is falsey: ${result.stdout}. 'stderr' is: ${result.stderr}`,
+    );
+  }
+
+  if ([ForgeTestLogFormat.DEFAULT].includes(forgeData.forgeTestLogFormat)) {
+    process.stdout.write(result.stdout);
+    throw new Error('simulateShortcutsOnForge: Forced termination to inspect forge test log');
+  }
+
+  let forgeTestLog: ForgeTestLogJSON;
+  try {
+    forgeTestLog = JSON.parse(result.stdout) as ForgeTestLogJSON;
+  } catch (error) {
+    throw new Error(`simulateShortcutsOnForge: unexpected error parsing 'forge' JSON output. Reason: ${error}`);
+  }
+
+  return forgeTestLog;
 }

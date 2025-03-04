@@ -96,7 +96,12 @@ export function validateAndGetSimulationConfig(config?: SimulationLogConfig): Si
   return config;
 }
 
-export function validateAndGetShortcutsToSimulate(txs: ShortcutToSimulate[]): ShortcutToSimulate[] {
+// TODO: find out what tenderly bundles can do
+export function validateAndGetShortcutsToSimulate(
+  txs: ShortcutToSimulate[],
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  simulationMode: SimulationMode,
+): ShortcutToSimulate[] {
   if (!txs.length) throw new Error('Invalid txs array. Must contain at least one tx');
 
   let prevBlockNumber: BigNumber | undefined;
@@ -234,7 +239,7 @@ export function getSimulationModeFromArgs(args: string[]): SimulationMode {
   const simulationModeIdx = args.findIndex((arg) => arg.startsWith('--mode='));
   let simulationMode: SimulationMode;
   if (simulationModeIdx === -1) {
-    simulationMode = SimulationMode.QUOTER;
+    simulationMode = SimulationMode.TENDERLY;
   } else {
     simulationMode = args[simulationModeIdx].split('=')[1] as SimulationMode;
     args.splice(simulationModeIdx, 1);
