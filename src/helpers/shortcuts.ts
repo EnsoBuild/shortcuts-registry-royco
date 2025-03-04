@@ -12,6 +12,8 @@ import { Silo_Ws_Deposit_Shortcut } from '../shortcuts/silo/ws_deposit';
 import { Silo_Ws_Redeem_Shortcut } from '../shortcuts/silo/ws_redeem';
 import { Stability_CstSSL_Deposit_Shortcut } from '../shortcuts/stability/cstssl-deposit';
 import { Stability_CstSSL_Redeem_Shortcut } from '../shortcuts/stability/cstssl-redeem';
+import { Stability_Cwossal_Deposit_Shortcut } from '../shortcuts/stability/cwossal-deposit';
+import { Stability_Cwossal_Redeem_Shortcut } from '../shortcuts/stability/cwossal-redeem';
 import { StableJack_PtScUsd_Deposit_Shortcut } from '../shortcuts/stablejack/PT-scUSD_deposit';
 import { StableJack_PtScUsd_Redeem_Shortcut } from '../shortcuts/stablejack/PT-scUSD_redeem';
 import { StableJack_PtSts_Deposit_Shortcut } from '../shortcuts/stablejack/PT-stS_deposit';
@@ -63,6 +65,8 @@ export const shortcuts: Record<string, Record<string, Shortcut>> = {
   stability: {
     'cstssl-deposit': new Stability_CstSSL_Deposit_Shortcut(),
     'cstssl-redeem': new Stability_CstSSL_Redeem_Shortcut(),
+    'cwossal-deposit': new Stability_Cwossal_Deposit_Shortcut(),
+    'cwossal-redeem': new Stability_Cwossal_Redeem_Shortcut(),
   },
 };
 
@@ -95,6 +99,8 @@ export const supportedShortcuts = [
   Beets_Sts_Redeem_Shortcut,
   Stability_CstSSL_Deposit_Shortcut,
   Stability_CstSSL_Redeem_Shortcut,
+  Stability_Cwossal_Deposit_Shortcut,
+  Stability_Cwossal_Redeem_Shortcut,
 ];
 
 export async function buildShortcutsHashMap(

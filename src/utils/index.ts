@@ -178,7 +178,7 @@ export async function mint_OS(tokenIn: AddressArg, tokenOut: AddressArg, amountI
   return amountOut as FromContractCallArg;
 }
 
-export async function mint_CstSSL(tokenIn: AddressArg, tokenOut: AddressArg, amountIn: NumberArg, builder: Builder) {
+export async function mint_stability(tokenIn: AddressArg, tokenOut: AddressArg, amountIn: NumberArg, builder: Builder) {
   const previewDepositAssetsRes = builder.add({
     address: tokenOut,
     functionName: 'previewDepositAssets',

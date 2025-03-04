@@ -148,6 +148,7 @@ export const chainIdToDeFiAddresses: Record<number, Record<string, AddressArg>> 
     YT_wOS: '0xe16Bb6061B3567ee86285ab7780187cB39aCC55E',
     siloBws: '0xf55902DE87Bd80c6a35614b48d7f8B612a083C12',
     CstSSL: '0x709833e5B4B98aAb812d175510F94Bc91CFABD89',
+    cwossal: '0xd13369F16E11ae3881F22C1dD37957c241bD0662',
     roycoWalletHelpers: '0x07899ac8BE7462151d6515FCd4773DD9267c9911',
   },
 };
