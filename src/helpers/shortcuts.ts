@@ -6,6 +6,10 @@ import { Beets_Sts_Deposit_Shortcut } from '../shortcuts/beets/sts_deposit';
 import { Beets_Sts_Redeem_Shortcut } from '../shortcuts/beets/sts_redeem';
 import { Origin_Wos_Deposit_Shortcut } from '../shortcuts/origin/wos_deposit';
 import { Origin_Wos_Redeem_Shortcut } from '../shortcuts/origin/wos_redeem';
+import { Pendle_LptWstkscETH_Deposit_Shortcut } from '../shortcuts/pendle/lpt_wstkscETH_deposit';
+import { Pendle_LptWstkscETH_Redeem_Shortcut } from '../shortcuts/pendle/lpt_wstkscETH_redeem';
+import { Pendle_LptWstkscUSD_Deposit_Shortcut } from '../shortcuts/pendle/lpt_wstkscUSD_deposit';
+import { Pendle_LptWstkscUSD_Redeem_Shortcut } from '../shortcuts/pendle/lpt_wstkscUSD_redeem';
 import { Rings_Wstkscusd_Deposit_Shortcut } from '../shortcuts/rings/wstkscusd_deposit';
 import { Rings_Wstkscusd_Redeem_Shortcut } from '../shortcuts/rings/wstkscusd_redeem';
 import { Silo_Ws_Deposit_Shortcut } from '../shortcuts/silo/ws_deposit';
@@ -68,6 +72,12 @@ export const shortcuts: Record<string, Record<string, Shortcut>> = {
     'cwossal-deposit': new Stability_Cwossal_Deposit_Shortcut(),
     'cwossal-redeem': new Stability_Cwossal_Redeem_Shortcut(),
   },
+  pendle: {
+    'lpt-wstksceth-deposit': new Pendle_LptWstkscETH_Deposit_Shortcut(),
+    'lpt-wstksceth-redeem': new Pendle_LptWstkscETH_Redeem_Shortcut(),
+    'lpt-wstkscusd-deposit': new Pendle_LptWstkscUSD_Deposit_Shortcut(),
+    'lpt-wstkscusd-redeem': new Pendle_LptWstkscUSD_Redeem_Shortcut(),
+  },
 };
 
 export function getAllMarkets(): string[] {
@@ -101,6 +111,10 @@ export const supportedShortcuts = [
   Stability_CstSSL_Redeem_Shortcut,
   Stability_Cwossal_Deposit_Shortcut,
   Stability_Cwossal_Redeem_Shortcut,
+  Pendle_LptWstkscETH_Deposit_Shortcut,
+  Pendle_LptWstkscETH_Redeem_Shortcut,
+  Pendle_LptWstkscUSD_Deposit_Shortcut,
+  Pendle_LptWstkscUSD_Redeem_Shortcut,
 ];
 
 export async function buildShortcutsHashMap(
