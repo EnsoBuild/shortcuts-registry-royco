@@ -150,6 +150,8 @@ export const chainIdToDeFiAddresses: Record<number, Record<string, AddressArg>> 
     CstSSL: '0x709833e5B4B98aAb812d175510F94Bc91CFABD89',
     cwossal: '0xd13369F16E11ae3881F22C1dD37957c241bD0662',
     roycoWalletHelpers: '0x07899ac8BE7462151d6515FCd4773DD9267c9911',
+    lptWstkscETH: '0xd14117baf6ec5d12be68cd06e763a4b82c9b6d1d',
+    lptWstkscUSD: '0x6e4e95fab7db1f0524b4b0a05f0b9c96380b7dfa',
   },
 };
 
