@@ -1,30 +1,43 @@
 import { getChainName } from '@ensofinance/shortcuts-builder/helpers';
 import { AddressArg } from '@ensofinance/shortcuts-builder/types';
 import { getAddress } from '@ethersproject/address';
-import { BigNumber } from '@ethersproject/bignumber';
+import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
+import { StaticJsonRpcProvider } from '@ethersproject/providers';
 import dotenv from 'dotenv';
-import { execSync } from 'node:child_process';
-import os from 'node:os';
 
-import { ForgeTestLogFormat, ForgeTestLogVerbosity, MAX_BPS, ShortcutOutputFormat, SimulationMode } from '../constants';
-import type { ShortcutToSimulate, SimulationLogConfig } from '../types';
+import { MAX_BPS, ShortcutOutputFormat, SimulationMode, supportedSimulationModes } from '../constants';
+import { ForgeTestLogFormat, ForgeTestLogVerbosity } from '../simulations/forge';
+import type { ShortcutToSimulate, SimulationConfig } from '../types';
 import { shortcuts, supportedShortcuts } from './shortcuts';
 import { getChainId } from './utils';
 
 dotenv.config();
 
-export function validateAndGetSimulationConfig(config?: SimulationLogConfig): SimulationLogConfig {
-  const defaultConfig: SimulationLogConfig = {
+export function validateAndGetSimulationConfig(config?: SimulationConfig): SimulationConfig {
+  const defaultConfig: SimulationConfig = {
+    simulationMode: SimulationMode.FORGE,
+    // Forge simulator options
     forgeTestLogFormat: ForgeTestLogFormat.JSON,
     forgeTestLogVerbosity: ForgeTestLogVerbosity.X4V,
     isForgeTxDataLogged: false,
-    isCalldataLogged: false,
     isForgeLogsLogged: false,
+    // Tenderly simulator options
+    isTenderlySimulationsLogged: false,
+    // Common options
+    isCalldataLogged: false,
     isReportLogged: false,
+    isRawResultInReport: true,
   };
 
   if (!config) {
     return defaultConfig;
+  }
+
+  // Validate `simulationMode`
+  if (!supportedSimulationModes.includes(config.simulationMode)) {
+    throw new Error(
+      `Invalid 'simulationMode': ${config.simulationMode}. Supported modes are: ${supportedSimulationModes.join(', ')}`,
+    );
   }
 
   // Validate `forgeTestLogFormat`
@@ -66,15 +79,6 @@ export function validateAndGetSimulationConfig(config?: SimulationLogConfig): Si
     config.isForgeTxDataLogged = defaultConfig.isForgeTxDataLogged;
   }
 
-  // Validate `isCalldataLogged`
-  if ('isCalldataLogged' in config) {
-    if (typeof config.isCalldataLogged !== 'boolean') {
-      throw new Error(`Invalid 'isCalldataLogged': ${JSON.stringify(config.isCalldataLogged)}. Must be a boolean`);
-    }
-  } else {
-    config.isCalldataLogged = defaultConfig.isCalldataLogged;
-  }
-
   // Validate `isForgeLogsLogged`
   if ('isForgeLogsLogged' in config) {
     if (typeof config.isForgeLogsLogged !== 'boolean') {
@@ -82,6 +86,26 @@ export function validateAndGetSimulationConfig(config?: SimulationLogConfig): Si
     }
   } else {
     config.isForgeLogsLogged = defaultConfig.isForgeLogsLogged;
+  }
+
+  // Validate `isTenderlySimulationsLogged`
+  if ('isTenderlySimulationsLogged' in config) {
+    if (typeof config.isTenderlySimulationsLogged !== 'boolean') {
+      throw new Error(
+        `Invalid 'isTenderlySimulationsLogged': ${JSON.stringify(config.isTenderlySimulationsLogged)}. Must be a boolean`,
+      );
+    }
+  } else {
+    config.isTenderlySimulationsLogged = defaultConfig.isTenderlySimulationsLogged;
+  }
+
+  // Validate `isCalldataLogged`
+  if ('isCalldataLogged' in config) {
+    if (typeof config.isCalldataLogged !== 'boolean') {
+      throw new Error(`Invalid 'isCalldataLogged': ${JSON.stringify(config.isCalldataLogged)}. Must be a boolean`);
+    }
+  } else {
+    config.isCalldataLogged = defaultConfig.isCalldataLogged;
   }
 
   // Validate `isReportLogged`
@@ -93,11 +117,27 @@ export function validateAndGetSimulationConfig(config?: SimulationLogConfig): Si
     config.isReportLogged = defaultConfig.isReportLogged;
   }
 
+  // Validate `isRawResultInReport`
+  if ('isRawResultInReport' in config) {
+    if (typeof config.isRawResultInReport !== 'boolean') {
+      throw new Error(
+        `Invalid 'isRawResultInReport': ${JSON.stringify(config.isRawResultInReport)}. Must be a boolean`,
+      );
+    }
+  } else {
+    config.isRawResultInReport = defaultConfig.isRawResultInReport;
+  }
+
   return config;
 }
 
-export function validateAndGetShortcutsToSimulate(txs: ShortcutToSimulate[]): ShortcutToSimulate[] {
+export async function validateAndGetShortcutsToSimulate(
+  provider: StaticJsonRpcProvider,
+  txs: ShortcutToSimulate[],
+): Promise<ShortcutToSimulate[]> {
   if (!txs.length) throw new Error('Invalid txs array. Must contain at least one tx');
+
+  const { number: latestBlockNumber } = await provider.getBlock('latest');
 
   let prevBlockNumber: BigNumber | undefined;
   let prevBlockTimestamp: number | undefined;
@@ -136,30 +176,41 @@ export function validateAndGetShortcutsToSimulate(txs: ShortcutToSimulate[]): Sh
           `Invalid tx at index ${index}: ${JSON.stringify(tx)}. 'blockNumber' contains an invalid stringified big number: ${JSON.stringify(tx.blockNumber)}`,
         );
       }
-      tx.blockNumber = currentBlockNumber.toString();
 
       // NOTE: `blockNumber` must be greater or equal to the last defined one
       if (prevBlockNumber && currentBlockNumber.lt(prevBlockNumber)) {
         throw new Error(
-          `Invalid tx at index ${index}: 'blockNumber' (${tx.blockNumber}) is less than previous (${prevBlockNumber.toString()})`,
+          `Invalid tx at index ${index}: 'blockNumber' (${currentBlockNumber}) is less than previous (${prevBlockNumber.toString()})`,
         );
       }
       prevBlockNumber = currentBlockNumber;
+      tx.blockNumber = prevBlockNumber.toString();
+    } else {
+      // NOTE: the first tx will have an accurate `blockNumber` if it has not been overridden
+      if (index === 0) {
+        prevBlockNumber = BigNumber.from(latestBlockNumber.toString());
+        tx.blockNumber = prevBlockNumber.toString();
+      }
+    }
 
-      if ('blockTimestamp' in tx) {
-        if (typeof tx.blockTimestamp !== 'number' || tx.blockTimestamp < 0) {
-          throw new Error(
-            `Invalid tx at index ${index}: ${JSON.stringify(tx)}. 'blockTimestamp' must be a number >= 0`,
-          );
-        }
+    if ('blockTimestamp' in tx) {
+      if (typeof tx.blockTimestamp !== 'number' || tx.blockTimestamp < 0) {
+        throw new Error(`Invalid tx at index ${index}: ${JSON.stringify(tx)}. 'blockTimestamp' must be a number >= 0`);
+      }
 
-        // NOTE: `blockTimestamp` must be greater or equal to the last defined one
-        if (prevBlockTimestamp !== undefined && tx.blockTimestamp < prevBlockTimestamp) {
-          throw new Error(
-            `Invalid tx at index ${index}: 'blockTimestamp' (${tx.blockTimestamp}) is less than previous (${prevBlockTimestamp})`,
-          );
-        }
-        prevBlockTimestamp = tx.blockTimestamp;
+      // NOTE: `blockTimestamp` must be greater or equal to the last defined one
+      if (prevBlockTimestamp !== undefined && tx.blockTimestamp < prevBlockTimestamp) {
+        throw new Error(
+          `Invalid tx at index ${index}: 'blockTimestamp' (${tx.blockTimestamp}) is less than previous (${prevBlockTimestamp})`,
+        );
+      }
+      prevBlockTimestamp = tx.blockTimestamp;
+    } else {
+      // NOTE: any `blockNumber` without an overridden `blockTimestamp` will fetch the genuine block timestamp.
+      if ('blockNumber' in tx) {
+        const { timestamp: blockTimestamp } = await provider.getBlock(BigNumber.from(tx.blockNumber!).toNumber());
+        prevBlockTimestamp = blockTimestamp;
+        tx.blockTimestamp = prevBlockTimestamp;
       }
     }
 
@@ -194,6 +245,29 @@ export function validateAndGetShortcutsToSimulate(txs: ShortcutToSimulate[]): Sh
   return txs;
 }
 
+// NOTE: any `simulations` item on the POST Tenderly Bundle API payload that lacks a `blockNumber`
+// will be executed on the latest chain block. Therefore it is important to populate missing `blockNumber`
+// for each shortcut to simulate. `blockTimestamp` is also populated for convenience.
+export function populateMissingBlockData(txsToSim: ShortcutToSimulate[]): ShortcutToSimulate[] {
+  let lastBlockNumber: BigNumberish | undefined = txsToSim[0].blockNumber;
+  let lastBlockTimestamp: number | undefined = txsToSim[0].blockTimestamp;
+
+  return txsToSim.map((txToSim, index) => {
+    if (index > 0) {
+      if (txToSim.blockNumber === undefined) {
+        txToSim = { ...txToSim, blockNumber: lastBlockNumber };
+      }
+      if (txToSim.blockTimestamp === undefined) {
+        txToSim = { ...txToSim, blockTimestamp: lastBlockTimestamp };
+      }
+    }
+
+    lastBlockNumber = txToSim.blockNumber;
+    lastBlockTimestamp = txToSim.blockTimestamp;
+    return txToSim;
+  });
+}
+
 export async function getShortcut(args: string[]) {
   if (args.length < 3) throw 'Error: Please pass chain, protocol, and market';
   const chain = args[0];
@@ -218,23 +292,11 @@ export function getRpcUrlByChainId(chainId: number): string {
   return rpcUrl;
 }
 
-export function getForgePath(): string {
-  try {
-    const forgePath = execSync(os.platform() === 'win32' ? 'where forge' : 'which forge', { encoding: 'utf-8' }).trim();
-    if (!forgePath) {
-      throw new Error(`missing 'forge' binary on the system. Make sure 'foundry' is properly installed`);
-    }
-    return forgePath;
-  } catch (error) {
-    throw new Error(`Error finding 'forge' binary: ${error}`);
-  }
-}
-
 export function getSimulationModeFromArgs(args: string[]): SimulationMode {
   const simulationModeIdx = args.findIndex((arg) => arg.startsWith('--mode='));
   let simulationMode: SimulationMode;
   if (simulationModeIdx === -1) {
-    simulationMode = SimulationMode.QUOTER;
+    simulationMode = SimulationMode.TENDERLY;
   } else {
     simulationMode = args[simulationModeIdx].split('=')[1] as SimulationMode;
     args.splice(simulationModeIdx, 1);

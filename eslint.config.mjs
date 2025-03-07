@@ -27,7 +27,6 @@ export default [
       'foundry-out/',
       'node_modules/',
       'outputs/',
-      'types/',
 
       // Files
       '*.env',
