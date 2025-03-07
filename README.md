@@ -84,13 +84,16 @@ pnpm generate sonic dolomite dhoney --output=full
 
 ## Simulate
 
-1. Create a JSON file in the [simulation-scenarios](./simulation-scenarios/) folder (e.g., `silo-ws-deposit.json`). You
-   can copy and edit [example.json](./simulation-scenarios/example.json).
+1. Create a new JSON file in the [simulation-scenarios](./simulation-scenarios/) directory (e.g.,
+   `silo-ws-deposit.json`). You can copy and modify the contents of [example.json](./simulation-scenarios/example.json).
 
-2. Paste in the JSON file the array of shortcuts to simulate. Each item is composed by:
+2. In the JSON file, define an array of shortcuts to simulate. Each item should include the following:
 
-- `shortcut`: the `protocol-market-action` name. See [available shortcuts](./src/helpers/shortcuts.ts).
-- `amountsIn`: an array of stringified unsigned big numbers, requiring as many items as the market's `tokensIn`.
+- `shortcut`: The name of the `protocol-market-action`. Refer to the [available shortcuts](./src/helpers/shortcuts.ts)
+  for a list of options.
+- `amountsIn`: An array of stringified unsigned big numbers, with one entry per `tokensIn` defined for the market.
+
+Example:
 
 ```json
 [
@@ -101,10 +104,16 @@ pnpm generate sonic dolomite dhoney --output=full
 ]
 ```
 
-3. Simulate the scenario via CLI:
+Run the simulation via CLI. This repository supports two simulators: Forge and Tenderly (default). Use the `--mode` flag
+to choose between them:
+
+- `--mode=tenderly`: Default mode (recommended during development). Slower than Forge but provides a sharable Tenderly
+  Simulation URL for each call and transaction simulated.
+- `--mode=forge`: Faster mode (recommended in tests). Execution traces are hidden by default, but can be shown for
+  failing tests (see [Test Shortcuts to Simulate](./test/integration/README.md))
 
 ```sh
-pnpm simulate silo-ws-deposit
+pnpm simulate silo-ws-deposit --mode=forge
 ```
 
 Output:

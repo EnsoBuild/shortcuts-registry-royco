@@ -4,7 +4,7 @@ import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 
 import { chainIdToDeFiAddresses } from '../constants';
-import { APITransaction, QuoteRequest, simulateTransactionOnQuoter } from '../simulations/simulateOnQuoter';
+import { APITransaction, QuoteRequest, simulateTransactionOnQuoter } from '../simulations/quoter';
 
 async function call(
   provider: StaticJsonRpcProvider,
@@ -56,6 +56,21 @@ export function getEncodedData(commands: string[], state: string[]): string {
     'function executeWeiroll(bytes32[] calldata commands, bytes[] calldata state) external payable returns (bytes[] memory)',
   ]);
   return weirollWalletInterface.encodeFunctionData('executeWeiroll', [commands, state]);
+}
+
+export function getEncodedDataErc20Transfer(recipient: AddressArg, value: string): string {
+  const erc20Interface = new Interface(['function transfer(address to, uint256 value)']);
+  return erc20Interface.encodeFunctionData('transfer', [recipient, value]);
+}
+
+export function getEncodedDataErc20BalanceOf(account: AddressArg): string {
+  const erc20Interface = new Interface(['function balanceOf(address account) view returns (uint256)']);
+  return erc20Interface.encodeFunctionData('balanceOf', [account]);
+}
+
+export function getEncodeDataNativeBalance(): string {
+  const weirollWalletHelperInterface = new Interface(['function nativeBalance() view returns (uint256)']);
+  return weirollWalletHelperInterface.encodeFunctionData('nativeBalance');
 }
 
 export async function getUniswapLiquidity(

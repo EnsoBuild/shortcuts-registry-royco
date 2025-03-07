@@ -1,5 +1,5 @@
 export * from './args';
 export * from './call';
 export * from './shortcuts';
-export * from './simulate';
+export * from './simulations';
 export * from './utils';

@@ -31,7 +31,8 @@ export interface ShortcutToSimulate {
 ### Logging Options
 
 ```typescript
-export interface SimulationLogConfig {
+export interface SimulationConfig {
+  simulatonMode: SimulationMode;
   forgeTestLogFormat?: ForgeTestLogFormat; // Set to `ForgeTestLogFormat.JSON` by default. Switch to `ForgeTestLogFormat.DEFAULT` to log the forge test traces
   forgeTestLogVerbosity? boolean; // Set to `ForgeTestLogVerbosity.X4V` (i.e., '-vvvv') by default.
   isForgeTxDataLogged?: boolean; // Helpful to debug which data is sent to the forge test
