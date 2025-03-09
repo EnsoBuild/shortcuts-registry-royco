@@ -327,8 +327,7 @@ export async function simulateShortcutsWithForgeAndGenerateReport(
   );
 
   const testLog = forgeTestLog[`${forgeData.testRelativePath}:${forgeData.contract}`];
-  const setUpResult = testLog.test_results['setUp()'];
-  const testResult = testLog.test_results[`${forgeData.test}()`];
+  const setUpResult = testLog.test_results['setUp()']; // NOTE: present only if `-vvvvv` or if `setUp()` failed
 
   if (setUpResult?.status === 'Failure') {
     process.stdout.write('Result: ');
@@ -338,7 +337,9 @@ export async function simulateShortcutsWithForgeAndGenerateReport(
       `Forge simulation failed in 'setUp()'. Uncomment '--json' and re-run this script to inspect the forge logs`,
     );
   }
-  if (testResult?.status === 'Failure') {
+
+  const testResult = testLog.test_results[`${forgeData.test}()`];
+  if (testResult.status === 'Failure') {
     process.stdout.write('Result: ');
     process.stdout.write(JSON.stringify(testResult, null, 2));
     process.stdout.write('\n');
@@ -433,7 +434,10 @@ export async function simulateShortcutsWithForgeAndGenerateReport(
       quote: quoteReport,
       dust: dustReport,
       gas: txGasUsed,
-      // TODO: rawShortcut
+      // NOTE: this is the full forge test log, and it is the same for all shortcuts.
+      // It could be possible to make it contain only the logs emitted during the event, for now
+      // it is kept as is for debugging purposes.
+      rawShortcut: testLog,
     };
     simulationReport.push(simulatedShortcutReport);
   }

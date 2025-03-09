@@ -3,7 +3,7 @@ import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 
 import type { SimulationMode } from '../constants';
-import type { ForgeTestLogFormat, ForgeTestLogVerbosity } from '../simulations/forge';
+import type { ForgeTestLogFormat, ForgeTestLogJSONTest, ForgeTestLogVerbosity } from '../simulations/forge';
 import type { TenderlySimulationResult } from '../simulations/tenderly';
 
 export type HexString = `0x${string}`;
@@ -82,7 +82,7 @@ export interface SimulatedShortcutReport {
   dust: Record<AddressArg, Record<AddressArg, string>>;
   gas: string;
   simulationUrls?: SimulationUrls;
-  rawShortcut?: TenderlySimulationResult;
+  rawShortcut?: TenderlySimulationResult | ForgeTestLogJSONTest;
 }
 
 export type SimulationReport = SimulatedShortcutReport[];
