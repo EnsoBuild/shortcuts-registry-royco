@@ -13,122 +13,52 @@ import { getChainId } from './utils';
 
 dotenv.config();
 
+function validateEnum<T>(value: T, validValues: T[], fieldName: string): void {
+  if (!validValues.includes(value)) {
+    throw new Error(`Invalid '${fieldName}': ${value}. Valid values are: ${validValues.join(', ')}`);
+  }
+}
+
+function validateBoolean(value: unknown, fieldName: string): void {
+  if (typeof value !== 'boolean') {
+    throw new Error(`Invalid '${fieldName}'. Must be a boolean`);
+  }
+}
+
 export function validateAndGetSimulationConfig(config?: SimulationConfig): SimulationConfig {
   const defaultConfig: SimulationConfig = {
     simulationMode: SimulationMode.FORGE,
-    // Forge simulator options
     forgeTestLogFormat: ForgeTestLogFormat.JSON,
     forgeTestLogVerbosity: ForgeTestLogVerbosity.X4V,
     isForgeTxDataLogged: false,
     isForgeLogsLogged: false,
-    // Tenderly simulator options
     isTenderlySimulationsLogged: false,
-    // Common options
     isCalldataLogged: false,
     isReportLogged: false,
     isRawResultInReport: true,
   };
 
-  if (!config) {
-    return defaultConfig;
-  }
+  // Merge provided config with defaults
+  const mergedConfig = { ...defaultConfig, ...config };
 
-  // Validate `simulationMode`
-  if (!supportedSimulationModes.includes(config.simulationMode)) {
-    throw new Error(
-      `Invalid 'simulationMode': ${config.simulationMode}. Supported modes are: ${supportedSimulationModes.join(', ')}`,
-    );
-  }
+  // Validate enum properties
+  validateEnum(mergedConfig.simulationMode, supportedSimulationModes, 'simulationMode');
+  validateEnum(mergedConfig.forgeTestLogFormat, Object.values(ForgeTestLogFormat), 'forgeTestLogFormat');
+  validateEnum(mergedConfig.forgeTestLogVerbosity, Object.values(ForgeTestLogVerbosity), 'forgeTestLogVerbosity');
 
-  // Validate `forgeTestLogFormat`
-  if ('forgeTestLogFormat' in config) {
-    if (
-      typeof config.forgeTestLogFormat !== 'string' ||
-      !Object.values(ForgeTestLogFormat).includes(config.forgeTestLogFormat)
-    ) {
-      throw new Error(
-        `Invalid 'forgeTestLogFormat': ${config.forgeTestLogFormat}. Valid ones are: ${Object.keys(ForgeTestLogFormat).join(', ')}`,
-      );
-    }
-  } else {
-    config.forgeTestLogFormat = defaultConfig.forgeTestLogFormat;
-  }
+  // Validate boolean properties
+  const booleanFields: (keyof SimulationConfig)[] = [
+    'isForgeTxDataLogged',
+    'isForgeLogsLogged',
+    'isTenderlySimulationsLogged',
+    'isCalldataLogged',
+    'isReportLogged',
+    'isRawResultInReport',
+  ];
 
-  // Validate `forgeTestLogVerbosity`
-  if ('forgeTestLogVerbosity' in config) {
-    if (
-      typeof config.forgeTestLogVerbosity !== 'string' ||
-      !Object.values(ForgeTestLogVerbosity).includes(config.forgeTestLogVerbosity)
-    ) {
-      throw new Error(
-        `Invalid 'forgeTestLogVerbosity': ${config.forgeTestLogVerbosity}. Valid ones are: ${Object.values(ForgeTestLogVerbosity).join(', ')}`,
-      );
-    }
-  } else {
-    config.forgeTestLogVerbosity = defaultConfig.forgeTestLogVerbosity;
-  }
+  booleanFields.forEach((field) => validateBoolean(mergedConfig[field], field));
 
-  // Validate `isForgeTxDataLogged`
-  if ('isForgeTxDataLogged' in config) {
-    if (typeof config.isForgeTxDataLogged !== 'boolean') {
-      throw new Error(
-        `Invalid 'isForgeTxDataLogged': ${JSON.stringify(config.isForgeTxDataLogged)}. Must be a boolean`,
-      );
-    }
-  } else {
-    config.isForgeTxDataLogged = defaultConfig.isForgeTxDataLogged;
-  }
-
-  // Validate `isForgeLogsLogged`
-  if ('isForgeLogsLogged' in config) {
-    if (typeof config.isForgeLogsLogged !== 'boolean') {
-      throw new Error(`Invalid 'isForgeLogsLogged': ${JSON.stringify(config.isForgeLogsLogged)}. Must be a boolean`);
-    }
-  } else {
-    config.isForgeLogsLogged = defaultConfig.isForgeLogsLogged;
-  }
-
-  // Validate `isTenderlySimulationsLogged`
-  if ('isTenderlySimulationsLogged' in config) {
-    if (typeof config.isTenderlySimulationsLogged !== 'boolean') {
-      throw new Error(
-        `Invalid 'isTenderlySimulationsLogged': ${JSON.stringify(config.isTenderlySimulationsLogged)}. Must be a boolean`,
-      );
-    }
-  } else {
-    config.isTenderlySimulationsLogged = defaultConfig.isTenderlySimulationsLogged;
-  }
-
-  // Validate `isCalldataLogged`
-  if ('isCalldataLogged' in config) {
-    if (typeof config.isCalldataLogged !== 'boolean') {
-      throw new Error(`Invalid 'isCalldataLogged': ${JSON.stringify(config.isCalldataLogged)}. Must be a boolean`);
-    }
-  } else {
-    config.isCalldataLogged = defaultConfig.isCalldataLogged;
-  }
-
-  // Validate `isReportLogged`
-  if ('isReportLogged' in config) {
-    if (typeof config.isReportLogged !== 'boolean') {
-      throw new Error(`Invalid 'isReportLogged': ${JSON.stringify(config.isReportLogged)}. Must be a boolean`);
-    }
-  } else {
-    config.isReportLogged = defaultConfig.isReportLogged;
-  }
-
-  // Validate `isRawResultInReport`
-  if ('isRawResultInReport' in config) {
-    if (typeof config.isRawResultInReport !== 'boolean') {
-      throw new Error(
-        `Invalid 'isRawResultInReport': ${JSON.stringify(config.isRawResultInReport)}. Must be a boolean`,
-      );
-    }
-  } else {
-    config.isRawResultInReport = defaultConfig.isRawResultInReport;
-  }
-
-  return config;
+  return mergedConfig;
 }
 
 function validateShortcut(index: number, tx: ShortcutToSimulate): void {
