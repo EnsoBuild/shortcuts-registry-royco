@@ -138,9 +138,12 @@ contract SimulateShortcuts_Fork_Test is Test {
             s_amountsIn.push(vm.parseJsonUintArray(amountsInJson[i], ""));
         }
 
-        // Cross-check `tokensIn` items length with `amountsIn` items length
-        for (uint256 i = 0; i < s_tokensIn.length; i++) {
-            if (s_tokensIn[i].length != s_amountsIn[i].length) {
+        // requiresFunding
+        s_requiresFunding = vm.parseJsonBoolArray(jsonStr, JSON_REQUIRES_FUNDING);
+
+        // Cross-check `tokensIn` items length with `amountsIn` items length on each shortcut with `requiresFunding`
+        for (uint256 i = 0; i < s_requiresFunding.length; i++) {
+            if (s_requiresFunding[i] && s_tokensIn[i].length != s_amountsIn[i].length) {
                 revert SimulateShortcuts_Fork_Test__ArrayLengthsAreNotEq(
                     i, // as shortcutIndex
                     "tokensIn",
@@ -156,9 +159,6 @@ contract SimulateShortcuts_Fork_Test is Test {
         for (uint256 i = 0; i < tokensInHoldersJson.length; i++) {
             s_tokensInHolders.push(abi.decode(vm.parseJson(tokensInHoldersJson[i]), (address[])));
         }
-
-        // requiresFunding
-        s_requiresFunding = vm.parseJsonBoolArray(jsonStr, JSON_REQUIRES_FUNDING);
 
         // tokensOut
         string[] memory tokensOutJson = vm.parseJsonStringArray(jsonStr, JSON_TOKENS_OUT);

@@ -24,7 +24,7 @@ export interface BuiltShortcut {
 
 export interface ShortcutToSimulate {
   shortcut: Shortcut;
-  amountsIn: BigNumberish[];
+  amountsIn?: BigNumberish[];
   requiresFunding?: boolean;
   blockNumber?: BigNumberish;
   blockTimestamp?: number;

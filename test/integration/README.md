@@ -83,7 +83,6 @@ const txsToSim = [
   },
   {
     shortcut: new Silo_Ws_Redeem_Shortcut(),
-    amountsIn: [parseUnits('1', 18).toString()],
   },
 ];
 ```
@@ -106,7 +105,6 @@ const txsToSim = [
   {
     blockTimestamp: blockTimestamp + 1, // NOTE: YT-stS cooldown period is 1 second for redeems
     shortcut: new StableJack_YtSts_Redeem_Shortcut(),
-    amountsIn: [parseUnits('1', 18).toString()],
   },
 ];
 ```
@@ -127,7 +125,6 @@ describe('silo', () => {
         },
         {
           shortcut: new Silo_Ws_Redeem_Shortcut(),
-          amountsIn: [parseUnits('1', 18).toString()],
         },
       ];
 

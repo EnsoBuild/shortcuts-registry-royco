@@ -96,7 +96,6 @@ describe('silo', () => {
         },
         {
           shortcut: new Silo_Ws_Redeem_Shortcut(),
-          amountsIn: [parseUnits('1', 18).toString()],
         },
       ];
 

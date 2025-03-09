@@ -143,28 +143,53 @@ export async function validateAndGetShortcutsToSimulate(
   let prevBlockTimestamp: number | undefined;
 
   for (const [index, tx] of txs.entries()) {
+    // NOTE: 'shortcut' is required on every item.
     if (!tx.shortcut || !supportedShortcuts.find((shortcut) => tx.shortcut instanceof shortcut)) {
       throw new Error(`Invalid tx at index ${index}: ${JSON.stringify(tx)}. Unsupported 'shortcut'`);
     }
-    if (!Array.isArray(tx.amountsIn)) {
-      throw new Error(
-        `Invalid tx at index ${index}: ${JSON.stringify(tx)}. 'amountsIn' must be an array of stringified big numbers`,
-      );
-    }
 
-    const amountsIn: string[] = [];
-    for (const amountIn of tx.amountsIn) {
-      try {
-        BigNumber.from(amountIn);
-      } catch (error) {
-        console.error(error);
+    // NOTE: item at index:
+    // - requires: 'amountsIn'
+    // - optional: 'blockNumber', 'blockTimestamp', 'requiresFunding', 'trackedAddresses
+    if (index === 0) {
+      if (!('amountsIn' in tx) || !Array.isArray(tx.amountsIn) || tx.amountsIn.length === 0) {
         throw new Error(
-          `Invalid tx at index ${index}: ${JSON.stringify(tx)}. 'amountsIn' contains an invalid stringified big number: ${JSON.stringify(amountIn)}`,
+          `Invalid tx at index ${index}: ${JSON.stringify(tx)}. 'amountsIn' must be an array of stringified big numbers with at least one element. ` +
+            `It is also required in the first shortcut to simulate`,
         );
       }
-      amountsIn.push(amountIn.toString());
+      tx.requiresFunding = true; // NOTE: makes explicit that the first shortcut requires funding
+
+      if (!('requiresFunding' in tx || typeof tx.requiresFunding !== 'boolean')) {
+        throw new Error(
+          `Invalid tx at index ${index}: ${JSON.stringify(tx)}. 'requiresFunding' must be a boolean. ` +
+            `It is also required in the first shortcut to simulate`,
+        );
+      }
     }
-    tx.amountsIn = amountsIn;
+
+    if ('amountsIn' in tx) {
+      if (!Array.isArray(tx.amountsIn) || tx.amountsIn.length === 0) {
+        throw new Error(
+          `Invalid tx at index ${index}: ${JSON.stringify(tx)}. 'amountsIn' must be an array of stringified big numbers with at least one element`,
+        );
+      }
+      const amountsIn: string[] = [];
+      for (const amountIn of tx.amountsIn) {
+        try {
+          BigNumber.from(amountIn);
+        } catch (error) {
+          console.error(error);
+          throw new Error(
+            `Invalid tx at index ${index}: ${JSON.stringify(tx)}. 'amountsIn' contains an invalid stringified big number: ${JSON.stringify(amountIn)}`,
+          );
+        }
+        amountsIn.push(amountIn.toString());
+      }
+      tx.amountsIn = amountsIn;
+    } else {
+      tx.amountsIn = [];
+    }
 
     if ('blockNumber' in tx) {
       let currentBlockNumber: BigNumber;
@@ -218,6 +243,16 @@ export async function validateAndGetShortcutsToSimulate(
       if (typeof tx.requiresFunding !== 'boolean') {
         throw new Error(`Invalid tx at index ${index}: ${JSON.stringify(tx)}. 'requiresFunding' must be a boolean`);
       }
+
+      if (tx.requiresFunding)
+        if (!('amountsIn' in tx) || !Array.isArray(tx.amountsIn) || tx.amountsIn.length === 0) {
+          throw new Error(
+            `Invalid tx at index ${index}: ${JSON.stringify(tx)}. 'amountsIn' must be an array of stringified big numbers with at least one element. ` +
+              `It is also required when 'requiresFunding' is present and set to true`,
+          );
+        }
+    } else {
+      tx.requiresFunding = false;
     }
 
     if ('trackedAddresses' in tx) {
@@ -239,6 +274,8 @@ export async function validateAndGetShortcutsToSimulate(
         checksumAddresses.push(checksumAddress);
       }
       tx.trackedAddresses = checksumAddresses;
+    } else {
+      tx.trackedAddresses = [];
     }
   }
 

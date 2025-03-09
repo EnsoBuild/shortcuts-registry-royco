@@ -51,8 +51,9 @@ function getTxToSimulateForgeData(
   const txData = getEncodedData(commands, state);
 
   const { tokensIn, tokensOut } = builtShortcut.metadata as { tokensIn: AddressArg[]; tokensOut: AddressArg[] };
-  const txValue = getAmountInForNativeToken(nativeToken, tokensIn, txToSim.amountsIn) || DEFAULT_TX_AMOUNT_IN_VALUE;
-  const amountsIn = txToSim.amountsIn.map((amountIn) => amountIn.toString());
+  const txValue =
+    getAmountInForNativeToken(nativeToken, tokensIn, txToSim.amountsIn ?? []) || DEFAULT_TX_AMOUNT_IN_VALUE;
+  const amountsIn = txToSim.amountsIn?.map((amountIn) => amountIn.toString()) ?? [];
   const requiresFunding = txToSim.requiresFunding ?? false;
   const tokensInHolders: AddressArg[] = [];
   if (tokenToHolder) {
@@ -326,14 +327,23 @@ export async function simulateShortcutsWithForgeAndGenerateReport(
   );
 
   const testLog = forgeTestLog[`${forgeData.testRelativePath}:${forgeData.contract}`];
+  const setUpResult = testLog.test_results['setUp()'];
   const testResult = testLog.test_results[`${forgeData.test}()`];
 
-  if (testResult.status === 'Failure') {
+  if (setUpResult?.status === 'Failure') {
+    process.stdout.write('Result: ');
+    process.stdout.write(JSON.stringify(setUpResult, null, 2));
+    process.stdout.write('\n');
+    throw new Error(
+      `Forge simulation failed in 'setUp()'. Uncomment '--json' and re-run this script to inspect the forge logs`,
+    );
+  }
+  if (testResult?.status === 'Failure') {
     process.stdout.write('Result: ');
     process.stdout.write(JSON.stringify(testResult, null, 2));
     process.stdout.write('\n');
     throw new Error(
-      `Forge simulation test failed. Uncomment '--json' and re-run this script to inspect the forge logs`,
+      `Forge simulation failed in '${forgeData.test}'. Uncomment '--json' and re-run this script to inspect the forge logs`,
     );
   }
 
