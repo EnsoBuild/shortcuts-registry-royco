@@ -14,6 +14,8 @@ import { Rings_Wstkscusd_Deposit_Shortcut } from '../shortcuts/rings/wstkscusd_d
 import { Rings_Wstkscusd_Redeem_Shortcut } from '../shortcuts/rings/wstkscusd_redeem';
 import { Silo_Ws_Deposit_Shortcut } from '../shortcuts/silo/ws_deposit';
 import { Silo_Ws_Redeem_Shortcut } from '../shortcuts/silo/ws_redeem';
+import { Silo_BUSDCe_Deposit_Shortcut } from '../shortcuts/silo/busdce_deposit';
+import { Silo_BUSDCe_Redeem_Shortcut } from '../shortcuts/silo/busdce_redeem';
 import { Stability_CstSSL_Deposit_Shortcut } from '../shortcuts/stability/cstssl-deposit';
 import { Stability_CstSSL_Redeem_Shortcut } from '../shortcuts/stability/cstssl-redeem';
 import { Stability_Cwossal_Deposit_Shortcut } from '../shortcuts/stability/cwossal-deposit';
@@ -47,6 +49,8 @@ export const shortcuts: Record<string, Record<string, Shortcut>> = {
   silo: {
     'ws-deposit': new Silo_Ws_Deposit_Shortcut(),
     'ws-redeem': new Silo_Ws_Redeem_Shortcut(),
+    'busdce-deposit': new Silo_BUSDCe_Deposit_Shortcut(),
+    'busdce-redeem': new Silo_BUSDCe_Redeem_Shortcut(),
   },
   stablejack: {
     'pt-scusd-deposit': new StableJack_PtScUsd_Deposit_Shortcut(),
@@ -89,6 +93,8 @@ export function getAllMarkets(): string[] {
 export const supportedShortcuts = [
   Silo_Ws_Deposit_Shortcut,
   Silo_Ws_Redeem_Shortcut,
+  Silo_BUSDCe_Deposit_Shortcut,
+  Silo_BUSDCe_Redeem_Shortcut,
   StableJack_PtScUsd_Deposit_Shortcut,
   StableJack_PtScUsd_Redeem_Shortcut,
   StableJack_PtSts_Deposit_Shortcut,
