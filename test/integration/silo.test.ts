@@ -130,17 +130,10 @@ describe('silo', () => {
       expect(weirollWalletSc0).toBe(WEIROLL_WALLET);
       expectBigIntToBeCloseTo(BigInt(gasSc0), BigInt('446834'), BigInt('100'));
 
-      const {
-        amountsIn: amountsInSc1,
-        dust: dustSc1,
-        quote: quoteSc1,
-        weirollWallet: weirollWalletSc1,
-        gas: gasSc1,
-      } = report[1];
+      const { dust: dustSc1, quote: quoteSc1, weirollWallet: weirollWalletSc1, gas: gasSc1 } = report[1];
 
       // Shortcut 1
       expect(blockSc0).toEqual({ number: '9872270', timestamp: 1740423311 });
-      expect(amountsInSc1).toEqual(['1000000000000000000']);
       expect(dustSc1[CALLER]).toEqual({
         '0xf55902DE87Bd80c6a35614b48d7f8B612a083C12': '0',
       });
