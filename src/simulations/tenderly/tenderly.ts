@@ -71,6 +71,7 @@ function* getTxToSimulateTenderlyData(
   tokenToHolder: Map<AddressArg, AddressArg>,
   addressToLabel: Map<AddressArg, string>,
   roles: SimulationRoles,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   callerNonce: number,
 ): Generator<TxToSimulateTenderlyData> {
   const caller = roles.caller.address!;
@@ -86,7 +87,7 @@ function* getTxToSimulateTenderlyData(
 
   const { commands, state } = builtShortcut.script;
   const { tokensIn, tokensOut } = builtShortcut.metadata as { tokensIn: AddressArg[]; tokensOut: AddressArg[] };
-  const amountsIn = txToSim.amountsIn.map((amountIn) => amountIn.toString());
+  const amountsIn = txToSim.amountsIn?.map((amountIn) => amountIn.toString()) ?? [];
 
   const addressedToTrackAlwaysSet = new BetterSet([caller, weirollWallet]);
   const addressedToTrackSet = new Set(txToSim.trackedAddresses ?? []);
@@ -184,14 +185,16 @@ function* getTxToSimulateTenderlyData(
 
   // Yield a simulation that executes the shortcut
   const txData = getEncodedData(commands, state) as HexString;
-  const txValue = getAmountInForNativeToken(nativeToken, tokensIn, txToSim.amountsIn) || DEFAULT_TX_AMOUNT_IN_VALUE;
+  const txValue =
+    getAmountInForNativeToken(nativeToken, tokensIn, txToSim.amountsIn ?? []) || DEFAULT_TX_AMOUNT_IN_VALUE;
 
   // NOTE: callerNonce is used to override the caller nonce on the main tx to simulate (shortcut) just in case
   // any "balancePre", funding, and "balancePost" simulations alter the nonce of the caller address.
   const state_objects: TenderlySimulationStateObjects = {
-    [caller]: {
-      nonce: callerNonce,
-    },
+    // [caller]: {
+    //   nonce: callerNonce,
+    // },
+    [caller]: {},
   };
   // NOTE: fund the caller address
   if (txIndex === 0) {

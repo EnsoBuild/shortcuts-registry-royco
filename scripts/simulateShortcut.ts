@@ -88,7 +88,7 @@ export async function main_(
   // NOTE: this could use `Promise.all`
   const builtShortcuts: BuiltShortcut[] = [];
   for (const tx of txsToSim) {
-    const builtShortcut = await buildShortcut(chainId, provider, tx.shortcut, tx.amountsIn);
+    const builtShortcut = await buildShortcut(chainId, provider, tx.shortcut, !!tx.requiresFunding, tx.amountsIn);
     builtShortcuts.push(builtShortcut);
   }
 
@@ -203,7 +203,7 @@ async function main() {
       forgeTestLogVerbosity: ForgeTestLogVerbosity.X3V,
       isForgeTxDataLogged: false,
       isCalldataLogged: false,
-      isForgeLogsLogged: true,
+      isForgeLogsLogged: false,
       isReportLogged: true,
       isRawResultInReport: false,
     };

@@ -151,7 +151,8 @@ export async function buildShortcut(
   chainId: ChainIds,
   provider: StaticJsonRpcProvider,
   shortcut: Shortcut,
-  amountsIn: BigNumberish[],
+  requiresFunding: boolean,
+  amountsIn?: BigNumberish[],
 ): Promise<BuiltShortcut> {
   let builtShortcut: BuiltShortcut;
   try {
@@ -174,7 +175,7 @@ export async function buildShortcut(
       `Invalid 'metadata.tokensIn' in shortcut: ${shortcut.name}. "tokensOut" array must have one item at least`,
     );
   }
-  if (amountsIn.length != tokensIn.length) {
+  if (requiresFunding && (amountsIn as BigNumberish[]).length != tokensIn.length) {
     throw new Error(
       `Invalid 'metadata.amountsIn' and 'metadata.tokensIn' in shortcut: ${shortcut.name}. Length mismatch`,
     );

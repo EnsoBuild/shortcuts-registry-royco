@@ -51,8 +51,9 @@ function getTxToSimulateForgeData(
   const txData = getEncodedData(commands, state);
 
   const { tokensIn, tokensOut } = builtShortcut.metadata as { tokensIn: AddressArg[]; tokensOut: AddressArg[] };
-  const txValue = getAmountInForNativeToken(nativeToken, tokensIn, txToSim.amountsIn) || DEFAULT_TX_AMOUNT_IN_VALUE;
-  const amountsIn = txToSim.amountsIn.map((amountIn) => amountIn.toString());
+  const txValue =
+    getAmountInForNativeToken(nativeToken, tokensIn, txToSim.amountsIn ?? []) || DEFAULT_TX_AMOUNT_IN_VALUE;
+  const amountsIn = txToSim.amountsIn?.map((amountIn) => amountIn.toString()) ?? [];
   const requiresFunding = txToSim.requiresFunding ?? false;
   const tokensInHolders: AddressArg[] = [];
   if (tokenToHolder) {
@@ -326,14 +327,24 @@ export async function simulateShortcutsWithForgeAndGenerateReport(
   );
 
   const testLog = forgeTestLog[`${forgeData.testRelativePath}:${forgeData.contract}`];
-  const testResult = testLog.test_results[`${forgeData.test}()`];
+  const setUpResult = testLog.test_results['setUp()']; // NOTE: present only if `-vvvvv` or if `setUp()` failed
 
+  if (setUpResult?.status === 'Failure') {
+    process.stdout.write('Result: ');
+    process.stdout.write(JSON.stringify(setUpResult, null, 2));
+    process.stdout.write('\n');
+    throw new Error(
+      `Forge simulation failed in 'setUp()'. Uncomment '--json' and re-run this script to inspect the forge logs`,
+    );
+  }
+
+  const testResult = testLog.test_results[`${forgeData.test}()`];
   if (testResult.status === 'Failure') {
     process.stdout.write('Result: ');
     process.stdout.write(JSON.stringify(testResult, null, 2));
     process.stdout.write('\n');
     throw new Error(
-      `Forge simulation test failed. Uncomment '--json' and re-run this script to inspect the forge logs`,
+      `Forge simulation failed in '${forgeData.test}'. Uncomment '--json' and re-run this script to inspect the forge logs`,
     );
   }
 
@@ -423,19 +434,23 @@ export async function simulateShortcutsWithForgeAndGenerateReport(
       quote: quoteReport,
       dust: dustReport,
       gas: txGasUsed,
-      // TODO: rawShortcut
+      // NOTE: this is the full forge test log, and it is the same for all shortcuts.
+      // It could be possible to make it contain only the logs emitted during the event, for now
+      // it is kept as is for debugging purposes.
+      rawShortcut: testLog,
     };
     simulationReport.push(simulatedShortcutReport);
+  }
+
+  // NOTE: make sure `rawShortcut` is removed before logging the report!
+  if (!simulationConfig.isRawResultInReport) {
+    simulationReport.forEach((report) => delete report.rawShortcut);
   }
 
   if (simulationConfig.isReportLogged) {
     process.stdout.write('Simulation Report:\n');
     process.stdout.write(JSON.stringify(simulationReport, null, 2));
     process.stdout.write('\n');
-  }
-
-  if (!simulationConfig.isRawResultInReport) {
-    simulationReport.forEach((report) => delete report.rawShortcut);
   }
 
   return simulationReport;

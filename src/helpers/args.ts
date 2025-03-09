@@ -13,122 +13,167 @@ import { getChainId } from './utils';
 
 dotenv.config();
 
+function validateEnum<T>(value: T, validValues: T[], fieldName: string): void {
+  if (!validValues.includes(value)) {
+    throw new Error(`Invalid '${fieldName}': ${value}. Valid values are: ${validValues.join(', ')}`);
+  }
+}
+
+function validateBoolean(value: unknown, fieldName: string): void {
+  if (typeof value !== 'boolean') {
+    throw new Error(`Invalid '${fieldName}'. Must be a boolean`);
+  }
+}
+
 export function validateAndGetSimulationConfig(config?: SimulationConfig): SimulationConfig {
   const defaultConfig: SimulationConfig = {
     simulationMode: SimulationMode.FORGE,
-    // Forge simulator options
     forgeTestLogFormat: ForgeTestLogFormat.JSON,
     forgeTestLogVerbosity: ForgeTestLogVerbosity.X4V,
     isForgeTxDataLogged: false,
     isForgeLogsLogged: false,
-    // Tenderly simulator options
     isTenderlySimulationsLogged: false,
-    // Common options
     isCalldataLogged: false,
     isReportLogged: false,
     isRawResultInReport: true,
   };
 
-  if (!config) {
-    return defaultConfig;
+  // Merge provided config with defaults
+  const mergedConfig = { ...defaultConfig, ...config };
+
+  // Validate enum properties
+  validateEnum(mergedConfig.simulationMode, supportedSimulationModes, 'simulationMode');
+  validateEnum(mergedConfig.forgeTestLogFormat, Object.values(ForgeTestLogFormat), 'forgeTestLogFormat');
+  validateEnum(mergedConfig.forgeTestLogVerbosity, Object.values(ForgeTestLogVerbosity), 'forgeTestLogVerbosity');
+
+  // Validate boolean properties
+  const booleanFields: (keyof SimulationConfig)[] = [
+    'isForgeTxDataLogged',
+    'isForgeLogsLogged',
+    'isTenderlySimulationsLogged',
+    'isCalldataLogged',
+    'isReportLogged',
+    'isRawResultInReport',
+  ];
+
+  booleanFields.forEach((field) => validateBoolean(mergedConfig[field], field));
+
+  return mergedConfig;
+}
+
+function validateShortcut(index: number, tx: ShortcutToSimulate): void {
+  if (!tx.shortcut || !supportedShortcuts.find((shortcut) => tx.shortcut instanceof shortcut)) {
+    throw new Error(`Invalid tx at index ${index}: Unsupported 'shortcut'`);
+  }
+}
+
+function validateAndSetAmountsIn(index: number, tx: ShortcutToSimulate, isFirstTx: boolean): void {
+  if ('amountsIn' in tx) {
+    if (!Array.isArray(tx.amountsIn) || tx.amountsIn.length === 0) {
+      throw new Error(`Invalid tx at index ${index}: 'amountsIn' must be a non-empty array of stringified big numbers`);
+    }
+
+    tx.amountsIn = tx.amountsIn.map((amountIn) => {
+      try {
+        return BigNumber.from(amountIn).toString();
+      } catch {
+        throw new Error(`Invalid tx at index ${index}: 'amountsIn' contains an invalid big number: ${amountIn}`);
+      }
+    });
+  } else {
+    tx.amountsIn = [];
   }
 
-  // Validate `simulationMode`
-  if (!supportedSimulationModes.includes(config.simulationMode)) {
+  if (isFirstTx && tx.amountsIn.length === 0) {
+    throw new Error(`Invalid tx at index ${index}: First tx must include 'amountsIn'`);
+  }
+}
+
+function validateAndSetRequiresFunding(index: number, tx: ShortcutToSimulate, isFirstTx: boolean): void {
+  if ('requiresFunding' in tx) {
+    if (typeof tx.requiresFunding !== 'boolean') {
+      throw new Error(`Invalid tx at index ${index}: 'requiresFunding' must be a boolean`);
+    }
+
+    if (tx.requiresFunding && (!Array.isArray(tx.amountsIn) || tx.amountsIn.length === 0)) {
+      throw new Error(`Invalid tx at index ${index}: 'amountsIn' is required when 'requiresFunding' is true`);
+    }
+  } else {
+    tx.requiresFunding = false;
+  }
+
+  if (isFirstTx && !tx.requiresFunding) {
+    throw new Error(`Invalid tx at index ${index}: First tx requireas 'requireFunding' to be true`);
+  }
+}
+
+function validateAndSetBlockNumber(
+  index: number,
+  tx: ShortcutToSimulate,
+  isFirstTx: boolean,
+  latestBlockNumber: BigNumberish,
+  prevBlockNumber?: BigNumber,
+): void {
+  if (!('blockNumber' in tx)) {
+    tx.blockNumber = isFirstTx ? BigNumber.from(latestBlockNumber).toString() : prevBlockNumber?.toString();
+  }
+
+  let currentBlockNumber: BigNumber;
+  try {
+    currentBlockNumber = BigNumber.from(tx.blockNumber);
+  } catch {
+    throw new Error(`Invalid tx at index ${index}: 'blockNumber' contains an invalid big number`);
+  }
+
+  if (prevBlockNumber && currentBlockNumber.lt(prevBlockNumber)) {
     throw new Error(
-      `Invalid 'simulationMode': ${config.simulationMode}. Supported modes are: ${supportedSimulationModes.join(', ')}`,
+      `Invalid tx at index ${index}: 'blockNumber' (${currentBlockNumber}) must be greater than or equal to previous (${prevBlockNumber})`,
     );
   }
+}
 
-  // Validate `forgeTestLogFormat`
-  if ('forgeTestLogFormat' in config) {
-    if (
-      typeof config.forgeTestLogFormat !== 'string' ||
-      !Object.values(ForgeTestLogFormat).includes(config.forgeTestLogFormat)
-    ) {
-      throw new Error(
-        `Invalid 'forgeTestLogFormat': ${config.forgeTestLogFormat}. Valid ones are: ${Object.keys(ForgeTestLogFormat).join(', ')}`,
-      );
+async function validateAndSetBlockTimestamp(
+  provider: StaticJsonRpcProvider,
+  index: number,
+  tx: ShortcutToSimulate,
+  prevBlockTimestamp?: number,
+): Promise<void> {
+  if (!('blockTimestamp' in tx)) {
+    if ('blockNumber' in tx) {
+      const { timestamp } = await provider.getBlock(BigNumber.from(tx.blockNumber).toNumber());
+      tx.blockTimestamp = timestamp;
+    } else {
+      tx.blockTimestamp = prevBlockTimestamp;
     }
-  } else {
-    config.forgeTestLogFormat = defaultConfig.forgeTestLogFormat;
   }
 
-  // Validate `forgeTestLogVerbosity`
-  if ('forgeTestLogVerbosity' in config) {
-    if (
-      typeof config.forgeTestLogVerbosity !== 'string' ||
-      !Object.values(ForgeTestLogVerbosity).includes(config.forgeTestLogVerbosity)
-    ) {
-      throw new Error(
-        `Invalid 'forgeTestLogVerbosity': ${config.forgeTestLogVerbosity}. Valid ones are: ${Object.values(ForgeTestLogVerbosity).join(', ')}`,
-      );
-    }
-  } else {
-    config.forgeTestLogVerbosity = defaultConfig.forgeTestLogVerbosity;
+  if (typeof tx.blockTimestamp !== 'number' || tx.blockTimestamp < 0) {
+    throw new Error(`Invalid tx at index ${index}: 'blockTimestamp' must be a positive number`);
   }
 
-  // Validate `isForgeTxDataLogged`
-  if ('isForgeTxDataLogged' in config) {
-    if (typeof config.isForgeTxDataLogged !== 'boolean') {
-      throw new Error(
-        `Invalid 'isForgeTxDataLogged': ${JSON.stringify(config.isForgeTxDataLogged)}. Must be a boolean`,
-      );
-    }
-  } else {
-    config.isForgeTxDataLogged = defaultConfig.isForgeTxDataLogged;
+  if (prevBlockTimestamp !== undefined && tx.blockTimestamp < prevBlockTimestamp) {
+    throw new Error(
+      `Invalid tx at index ${index}: 'blockTimestamp' (${tx.blockTimestamp}) must be >= previous (${prevBlockTimestamp})`,
+    );
+  }
+}
+
+function validateTrackedAddresses(index: number, tx: ShortcutToSimulate): void {
+  if (!('trackedAddresses' in tx)) {
+    tx.trackedAddresses = [];
   }
 
-  // Validate `isForgeLogsLogged`
-  if ('isForgeLogsLogged' in config) {
-    if (typeof config.isForgeLogsLogged !== 'boolean') {
-      throw new Error(`Invalid 'isForgeLogsLogged': ${JSON.stringify(config.isForgeLogsLogged)}. Must be a boolean`);
-    }
-  } else {
-    config.isForgeLogsLogged = defaultConfig.isForgeLogsLogged;
+  if (!Array.isArray(tx.trackedAddresses)) {
+    throw new Error(`Invalid tx at index ${index}: 'trackedAddresses' must be an array`);
   }
 
-  // Validate `isTenderlySimulationsLogged`
-  if ('isTenderlySimulationsLogged' in config) {
-    if (typeof config.isTenderlySimulationsLogged !== 'boolean') {
-      throw new Error(
-        `Invalid 'isTenderlySimulationsLogged': ${JSON.stringify(config.isTenderlySimulationsLogged)}. Must be a boolean`,
-      );
+  tx.trackedAddresses = tx.trackedAddresses.map((address) => {
+    try {
+      return getAddress(address) as AddressArg;
+    } catch {
+      throw new Error(`Invalid tx at index ${index}: 'trackedAddresses' contains an invalid address: ${address}`);
     }
-  } else {
-    config.isTenderlySimulationsLogged = defaultConfig.isTenderlySimulationsLogged;
-  }
-
-  // Validate `isCalldataLogged`
-  if ('isCalldataLogged' in config) {
-    if (typeof config.isCalldataLogged !== 'boolean') {
-      throw new Error(`Invalid 'isCalldataLogged': ${JSON.stringify(config.isCalldataLogged)}. Must be a boolean`);
-    }
-  } else {
-    config.isCalldataLogged = defaultConfig.isCalldataLogged;
-  }
-
-  // Validate `isReportLogged`
-  if ('isReportLogged' in config) {
-    if (typeof config.isReportLogged !== 'boolean') {
-      throw new Error(`Invalid 'isReportLogged': ${JSON.stringify(config.isReportLogged)}. Must be a boolean`);
-    }
-  } else {
-    config.isReportLogged = defaultConfig.isReportLogged;
-  }
-
-  // Validate `isRawResultInReport`
-  if ('isRawResultInReport' in config) {
-    if (typeof config.isRawResultInReport !== 'boolean') {
-      throw new Error(
-        `Invalid 'isRawResultInReport': ${JSON.stringify(config.isRawResultInReport)}. Must be a boolean`,
-      );
-    }
-  } else {
-    config.isRawResultInReport = defaultConfig.isRawResultInReport;
-  }
-
-  return config;
+  });
 }
 
 export async function validateAndGetShortcutsToSimulate(
@@ -143,103 +188,14 @@ export async function validateAndGetShortcutsToSimulate(
   let prevBlockTimestamp: number | undefined;
 
   for (const [index, tx] of txs.entries()) {
-    if (!tx.shortcut || !supportedShortcuts.find((shortcut) => tx.shortcut instanceof shortcut)) {
-      throw new Error(`Invalid tx at index ${index}: ${JSON.stringify(tx)}. Unsupported 'shortcut'`);
-    }
-    if (!Array.isArray(tx.amountsIn)) {
-      throw new Error(
-        `Invalid tx at index ${index}: ${JSON.stringify(tx)}. 'amountsIn' must be an array of stringified big numbers`,
-      );
-    }
-
-    const amountsIn: string[] = [];
-    for (const amountIn of tx.amountsIn) {
-      try {
-        BigNumber.from(amountIn);
-      } catch (error) {
-        console.error(error);
-        throw new Error(
-          `Invalid tx at index ${index}: ${JSON.stringify(tx)}. 'amountsIn' contains an invalid stringified big number: ${JSON.stringify(amountIn)}`,
-        );
-      }
-      amountsIn.push(amountIn.toString());
-    }
-    tx.amountsIn = amountsIn;
-
-    if ('blockNumber' in tx) {
-      let currentBlockNumber: BigNumber;
-      try {
-        currentBlockNumber = BigNumber.from(tx.blockNumber);
-      } catch (error) {
-        console.error(error);
-        throw new Error(
-          `Invalid tx at index ${index}: ${JSON.stringify(tx)}. 'blockNumber' contains an invalid stringified big number: ${JSON.stringify(tx.blockNumber)}`,
-        );
-      }
-
-      // NOTE: `blockNumber` must be greater or equal to the last defined one
-      if (prevBlockNumber && currentBlockNumber.lt(prevBlockNumber)) {
-        throw new Error(
-          `Invalid tx at index ${index}: 'blockNumber' (${currentBlockNumber}) is less than previous (${prevBlockNumber.toString()})`,
-        );
-      }
-      prevBlockNumber = currentBlockNumber;
-      tx.blockNumber = prevBlockNumber.toString();
-    } else {
-      // NOTE: the first tx will have an accurate `blockNumber` if it has not been overridden
-      if (index === 0) {
-        prevBlockNumber = BigNumber.from(latestBlockNumber.toString());
-        tx.blockNumber = prevBlockNumber.toString();
-      }
-    }
-
-    if ('blockTimestamp' in tx) {
-      if (typeof tx.blockTimestamp !== 'number' || tx.blockTimestamp < 0) {
-        throw new Error(`Invalid tx at index ${index}: ${JSON.stringify(tx)}. 'blockTimestamp' must be a number >= 0`);
-      }
-
-      // NOTE: `blockTimestamp` must be greater or equal to the last defined one
-      if (prevBlockTimestamp !== undefined && tx.blockTimestamp < prevBlockTimestamp) {
-        throw new Error(
-          `Invalid tx at index ${index}: 'blockTimestamp' (${tx.blockTimestamp}) is less than previous (${prevBlockTimestamp})`,
-        );
-      }
-      prevBlockTimestamp = tx.blockTimestamp;
-    } else {
-      // NOTE: any `blockNumber` without an overridden `blockTimestamp` will fetch the genuine block timestamp.
-      if ('blockNumber' in tx) {
-        const { timestamp: blockTimestamp } = await provider.getBlock(BigNumber.from(tx.blockNumber!).toNumber());
-        prevBlockTimestamp = blockTimestamp;
-        tx.blockTimestamp = prevBlockTimestamp;
-      }
-    }
-
-    if ('requiresFunding' in tx) {
-      if (typeof tx.requiresFunding !== 'boolean') {
-        throw new Error(`Invalid tx at index ${index}: ${JSON.stringify(tx)}. 'requiresFunding' must be a boolean`);
-      }
-    }
-
-    if ('trackedAddresses' in tx) {
-      if (!Array.isArray(tx.trackedAddresses)) {
-        throw new Error(
-          `Invalid tx at index ${index}: ${JSON.stringify(tx)}. 'trackedAddresses' must be an array of addresses`,
-        );
-      }
-      const checksumAddresses: AddressArg[] = [];
-      for (const address of tx.trackedAddresses) {
-        let checksumAddress: AddressArg;
-        try {
-          checksumAddress = getAddress(address) as AddressArg;
-        } catch {
-          throw new Error(
-            `Invalid tx at index ${index}: ${JSON.stringify(tx)}. 'trackedAddresses' contains an invalid address: ${address}`,
-          );
-        }
-        checksumAddresses.push(checksumAddress);
-      }
-      tx.trackedAddresses = checksumAddresses;
-    }
+    validateShortcut(index, tx);
+    validateAndSetAmountsIn(index, tx, index === 0);
+    validateAndSetRequiresFunding(index, tx, index === 0);
+    validateAndSetBlockNumber(index, tx, index === 0, latestBlockNumber, prevBlockNumber);
+    prevBlockNumber = BigNumber.from(tx.blockNumber);
+    await validateAndSetBlockTimestamp(provider, index, tx, prevBlockTimestamp);
+    prevBlockTimestamp = tx.blockTimestamp;
+    validateTrackedAddresses(index, tx);
   }
 
   return txs;
