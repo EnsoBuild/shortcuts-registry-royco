@@ -442,14 +442,15 @@ export async function simulateShortcutsWithForgeAndGenerateReport(
     simulationReport.push(simulatedShortcutReport);
   }
 
+  // NOTE: make sure `rawShortcut` is removed before logging the report!
+  if (!simulationConfig.isRawResultInReport) {
+    simulationReport.forEach((report) => delete report.rawShortcut);
+  }
+
   if (simulationConfig.isReportLogged) {
     process.stdout.write('Simulation Report:\n');
     process.stdout.write(JSON.stringify(simulationReport, null, 2));
     process.stdout.write('\n');
-  }
-
-  if (!simulationConfig.isRawResultInReport) {
-    simulationReport.forEach((report) => delete report.rawShortcut);
   }
 
   return simulationReport;

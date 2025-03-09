@@ -203,7 +203,7 @@ async function main() {
       forgeTestLogVerbosity: ForgeTestLogVerbosity.X3V,
       isForgeTxDataLogged: false,
       isCalldataLogged: false,
-      isForgeLogsLogged: true,
+      isForgeLogsLogged: false,
       isReportLogged: true,
       isRawResultInReport: false,
     };

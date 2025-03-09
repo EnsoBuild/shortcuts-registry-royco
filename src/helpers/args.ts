@@ -131,6 +131,121 @@ export function validateAndGetSimulationConfig(config?: SimulationConfig): Simul
   return config;
 }
 
+function validateShortcut(index: number, tx: ShortcutToSimulate): void {
+  if (!tx.shortcut || !supportedShortcuts.find((shortcut) => tx.shortcut instanceof shortcut)) {
+    throw new Error(`Invalid tx at index ${index}: Unsupported 'shortcut'`);
+  }
+}
+
+function validateAndSetAmountsIn(index: number, tx: ShortcutToSimulate, isFirstTx: boolean): void {
+  if ('amountsIn' in tx) {
+    if (!Array.isArray(tx.amountsIn) || tx.amountsIn.length === 0) {
+      throw new Error(`Invalid tx at index ${index}: 'amountsIn' must be a non-empty array of stringified big numbers`);
+    }
+
+    tx.amountsIn = tx.amountsIn.map((amountIn) => {
+      try {
+        return BigNumber.from(amountIn).toString();
+      } catch {
+        throw new Error(`Invalid tx at index ${index}: 'amountsIn' contains an invalid big number: ${amountIn}`);
+      }
+    });
+  } else {
+    tx.amountsIn = [];
+  }
+
+  if (isFirstTx && tx.amountsIn.length === 0) {
+    throw new Error(`Invalid tx at index ${index}: First tx must include 'amountsIn'`);
+  }
+}
+
+function validateAndSetRequiresFunding(index: number, tx: ShortcutToSimulate, isFirstTx: boolean): void {
+  if ('requiresFunding' in tx) {
+    if (typeof tx.requiresFunding !== 'boolean') {
+      throw new Error(`Invalid tx at index ${index}: 'requiresFunding' must be a boolean`);
+    }
+
+    if (tx.requiresFunding && (!Array.isArray(tx.amountsIn) || tx.amountsIn.length === 0)) {
+      throw new Error(`Invalid tx at index ${index}: 'amountsIn' is required when 'requiresFunding' is true`);
+    }
+  } else {
+    tx.requiresFunding = false;
+  }
+
+  if (isFirstTx && !tx.requiresFunding) {
+    throw new Error(`Invalid tx at index ${index}: First tx requireas 'requireFunding' to be true`);
+  }
+}
+
+function validateAndSetBlockNumber(
+  index: number,
+  tx: ShortcutToSimulate,
+  isFirstTx: boolean,
+  latestBlockNumber: BigNumberish,
+  prevBlockNumber?: BigNumber,
+): void {
+  if (!('blockNumber' in tx)) {
+    tx.blockNumber = isFirstTx ? BigNumber.from(latestBlockNumber).toString() : prevBlockNumber?.toString();
+  }
+
+  let currentBlockNumber: BigNumber;
+  try {
+    currentBlockNumber = BigNumber.from(tx.blockNumber);
+  } catch {
+    throw new Error(`Invalid tx at index ${index}: 'blockNumber' contains an invalid big number`);
+  }
+
+  if (prevBlockNumber && currentBlockNumber.lt(prevBlockNumber)) {
+    throw new Error(
+      `Invalid tx at index ${index}: 'blockNumber' (${currentBlockNumber}) must be greater than or equal to previous (${prevBlockNumber})`,
+    );
+  }
+}
+
+async function validateAndSetBlockTimestamp(
+  provider: StaticJsonRpcProvider,
+  index: number,
+  tx: ShortcutToSimulate,
+  prevBlockTimestamp?: number,
+): Promise<void> {
+  if (!('blockTimestamp' in tx)) {
+    if ('blockNumber' in tx) {
+      const { timestamp } = await provider.getBlock(BigNumber.from(tx.blockNumber).toNumber());
+      tx.blockTimestamp = timestamp;
+    } else {
+      tx.blockTimestamp = prevBlockTimestamp;
+    }
+  }
+
+  if (typeof tx.blockTimestamp !== 'number' || tx.blockTimestamp < 0) {
+    throw new Error(`Invalid tx at index ${index}: 'blockTimestamp' must be a positive number`);
+  }
+
+  if (prevBlockTimestamp !== undefined && tx.blockTimestamp < prevBlockTimestamp) {
+    throw new Error(
+      `Invalid tx at index ${index}: 'blockTimestamp' (${tx.blockTimestamp}) must be >= previous (${prevBlockTimestamp})`,
+    );
+  }
+}
+
+function validateTrackedAddresses(index: number, tx: ShortcutToSimulate): void {
+  if (!('trackedAddresses' in tx)) {
+    tx.trackedAddresses = [];
+  }
+
+  if (!Array.isArray(tx.trackedAddresses)) {
+    throw new Error(`Invalid tx at index ${index}: 'trackedAddresses' must be an array`);
+  }
+
+  tx.trackedAddresses = tx.trackedAddresses.map((address) => {
+    try {
+      return getAddress(address) as AddressArg;
+    } catch {
+      throw new Error(`Invalid tx at index ${index}: 'trackedAddresses' contains an invalid address: ${address}`);
+    }
+  });
+}
+
 export async function validateAndGetShortcutsToSimulate(
   provider: StaticJsonRpcProvider,
   txs: ShortcutToSimulate[],
@@ -143,140 +258,14 @@ export async function validateAndGetShortcutsToSimulate(
   let prevBlockTimestamp: number | undefined;
 
   for (const [index, tx] of txs.entries()) {
-    // NOTE: 'shortcut' is required on every item.
-    if (!tx.shortcut || !supportedShortcuts.find((shortcut) => tx.shortcut instanceof shortcut)) {
-      throw new Error(`Invalid tx at index ${index}: ${JSON.stringify(tx)}. Unsupported 'shortcut'`);
-    }
-
-    // NOTE: item at index:
-    // - requires: 'amountsIn'
-    // - optional: 'blockNumber', 'blockTimestamp', 'requiresFunding', 'trackedAddresses
-    if (index === 0) {
-      if (!('amountsIn' in tx) || !Array.isArray(tx.amountsIn) || tx.amountsIn.length === 0) {
-        throw new Error(
-          `Invalid tx at index ${index}: ${JSON.stringify(tx)}. 'amountsIn' must be an array of stringified big numbers with at least one element. ` +
-            `It is also required in the first shortcut to simulate`,
-        );
-      }
-      tx.requiresFunding = true; // NOTE: makes explicit that the first shortcut requires funding
-
-      if (!('requiresFunding' in tx || typeof tx.requiresFunding !== 'boolean')) {
-        throw new Error(
-          `Invalid tx at index ${index}: ${JSON.stringify(tx)}. 'requiresFunding' must be a boolean. ` +
-            `It is also required in the first shortcut to simulate`,
-        );
-      }
-    }
-
-    if ('amountsIn' in tx) {
-      if (!Array.isArray(tx.amountsIn) || tx.amountsIn.length === 0) {
-        throw new Error(
-          `Invalid tx at index ${index}: ${JSON.stringify(tx)}. 'amountsIn' must be an array of stringified big numbers with at least one element`,
-        );
-      }
-      const amountsIn: string[] = [];
-      for (const amountIn of tx.amountsIn) {
-        try {
-          BigNumber.from(amountIn);
-        } catch (error) {
-          console.error(error);
-          throw new Error(
-            `Invalid tx at index ${index}: ${JSON.stringify(tx)}. 'amountsIn' contains an invalid stringified big number: ${JSON.stringify(amountIn)}`,
-          );
-        }
-        amountsIn.push(amountIn.toString());
-      }
-      tx.amountsIn = amountsIn;
-    } else {
-      tx.amountsIn = [];
-    }
-
-    if ('blockNumber' in tx) {
-      let currentBlockNumber: BigNumber;
-      try {
-        currentBlockNumber = BigNumber.from(tx.blockNumber);
-      } catch (error) {
-        console.error(error);
-        throw new Error(
-          `Invalid tx at index ${index}: ${JSON.stringify(tx)}. 'blockNumber' contains an invalid stringified big number: ${JSON.stringify(tx.blockNumber)}`,
-        );
-      }
-
-      // NOTE: `blockNumber` must be greater or equal to the last defined one
-      if (prevBlockNumber && currentBlockNumber.lt(prevBlockNumber)) {
-        throw new Error(
-          `Invalid tx at index ${index}: 'blockNumber' (${currentBlockNumber}) is less than previous (${prevBlockNumber.toString()})`,
-        );
-      }
-      prevBlockNumber = currentBlockNumber;
-      tx.blockNumber = prevBlockNumber.toString();
-    } else {
-      // NOTE: the first tx will have an accurate `blockNumber` if it has not been overridden
-      if (index === 0) {
-        prevBlockNumber = BigNumber.from(latestBlockNumber.toString());
-        tx.blockNumber = prevBlockNumber.toString();
-      }
-    }
-
-    if ('blockTimestamp' in tx) {
-      if (typeof tx.blockTimestamp !== 'number' || tx.blockTimestamp < 0) {
-        throw new Error(`Invalid tx at index ${index}: ${JSON.stringify(tx)}. 'blockTimestamp' must be a number >= 0`);
-      }
-
-      // NOTE: `blockTimestamp` must be greater or equal to the last defined one
-      if (prevBlockTimestamp !== undefined && tx.blockTimestamp < prevBlockTimestamp) {
-        throw new Error(
-          `Invalid tx at index ${index}: 'blockTimestamp' (${tx.blockTimestamp}) is less than previous (${prevBlockTimestamp})`,
-        );
-      }
-      prevBlockTimestamp = tx.blockTimestamp;
-    } else {
-      // NOTE: any `blockNumber` without an overridden `blockTimestamp` will fetch the genuine block timestamp.
-      if ('blockNumber' in tx) {
-        const { timestamp: blockTimestamp } = await provider.getBlock(BigNumber.from(tx.blockNumber!).toNumber());
-        prevBlockTimestamp = blockTimestamp;
-        tx.blockTimestamp = prevBlockTimestamp;
-      }
-    }
-
-    if ('requiresFunding' in tx) {
-      if (typeof tx.requiresFunding !== 'boolean') {
-        throw new Error(`Invalid tx at index ${index}: ${JSON.stringify(tx)}. 'requiresFunding' must be a boolean`);
-      }
-
-      if (tx.requiresFunding)
-        if (!('amountsIn' in tx) || !Array.isArray(tx.amountsIn) || tx.amountsIn.length === 0) {
-          throw new Error(
-            `Invalid tx at index ${index}: ${JSON.stringify(tx)}. 'amountsIn' must be an array of stringified big numbers with at least one element. ` +
-              `It is also required when 'requiresFunding' is present and set to true`,
-          );
-        }
-    } else {
-      tx.requiresFunding = false;
-    }
-
-    if ('trackedAddresses' in tx) {
-      if (!Array.isArray(tx.trackedAddresses)) {
-        throw new Error(
-          `Invalid tx at index ${index}: ${JSON.stringify(tx)}. 'trackedAddresses' must be an array of addresses`,
-        );
-      }
-      const checksumAddresses: AddressArg[] = [];
-      for (const address of tx.trackedAddresses) {
-        let checksumAddress: AddressArg;
-        try {
-          checksumAddress = getAddress(address) as AddressArg;
-        } catch {
-          throw new Error(
-            `Invalid tx at index ${index}: ${JSON.stringify(tx)}. 'trackedAddresses' contains an invalid address: ${address}`,
-          );
-        }
-        checksumAddresses.push(checksumAddress);
-      }
-      tx.trackedAddresses = checksumAddresses;
-    } else {
-      tx.trackedAddresses = [];
-    }
+    validateShortcut(index, tx);
+    validateAndSetAmountsIn(index, tx, index === 0);
+    validateAndSetRequiresFunding(index, tx, index === 0);
+    validateAndSetBlockNumber(index, tx, index === 0, latestBlockNumber, prevBlockNumber);
+    prevBlockNumber = BigNumber.from(tx.blockNumber);
+    await validateAndSetBlockTimestamp(provider, index, tx, prevBlockTimestamp);
+    prevBlockTimestamp = tx.blockTimestamp;
+    validateTrackedAddresses(index, tx);
   }
 
   return txs;
