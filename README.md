@@ -99,13 +99,13 @@ Example:
 [
   {
     "shortcut": "silo-ws-deposit",
-    "amountsIn": ["1000000000000000000"]
+    "amountsIn": ["7000000000000000000"]
   }
 ]
 ```
 
-Run the simulation via CLI. This repository supports two simulators: Forge and Tenderly (default). Use the `--mode` flag
-to choose between them:
+3. Run the simulation via CLI. This repository supports two simulators: Forge and Tenderly (default). Use the `--mode`
+   flag to choose between them:
 
 - `--mode=tenderly`: Default mode (recommended during development). Slower than Forge but provides a sharable Tenderly
   Simulation URL for each call and transaction simulated.
@@ -125,8 +125,8 @@ Simulation Forge Decoded Logs:
 ╚══════════════════════════════════════════╝
 | - NETWORK -------------
 | Chain ID    :  146
-| Block Number (Latest):  10262612
-| Block Timestamp (Latest):  1740561883
+| Block Number (Set):  9872270
+| Block Timestamp (Set):  1740423311
 |
 | - ROLES -------------
 | Test Contract :
@@ -152,8 +152,8 @@ Simulation Forge Decoded Logs:
 |──────────────────────────────────────────────|
 | Index    :  0
 | Name    :  silo-ws-deposit
-| Block Number:  10262612
-| Block Timestamp:  1740561883
+| Block Number:  9872270
+| Block Timestamp:  1740423311
 | Tx Value:  0
 | Requires Funding:  true
 |
@@ -164,9 +164,9 @@ Simulation Forge Decoded Logs:
 | Balances   :
 |   Addr     :  0x93621DCA56fE26Cdee86e4F6B18E116e9758Ff11
 |   Name     :  Caller
-|     Pre    :  495384615384615377
-|     Funded :  1000000000000000000
-|     Post   :  495384615384615377
+|     Pre    :  596153846153846152
+|     Funded :  7000000000000000000
+|     Post   :  596153846153846152
 |     Diff   :  0
 |
 |   Addr     :  0xf338BceB2BE2560548d3600F48Ba4e2b4BE387C7
@@ -189,8 +189,8 @@ Simulation Forge Decoded Logs:
 |   Addr     :  0xf338BceB2BE2560548d3600F48Ba4e2b4BE387C7
 |   Name     :  WeirollWallet
 |     Pre    :  0
-|     Post   :  998113378375166498339
-|     Diff   :  998113378375166498339
+|     Post   :  6987046105899834586713
+|     Diff   :  6987046105899834586713
 |
 |
 |- DUST TOKENS -------------
@@ -199,8 +199,8 @@ Simulation Forge Decoded Logs:
 | Balances  :
 |   Addr    :  0x93621DCA56fE26Cdee86e4F6B18E116e9758Ff11
 |   Name    :  Caller
-|     Pre   :  495384615384615377
-|     Post  :  495384615384615377
+|     Pre   :  596153846153846152
+|     Post  :  596153846153846152
 |     Diff  :  0
 |
 |   Addr    :  0xf338BceB2BE2560548d3600F48Ba4e2b4BE387C7
@@ -211,17 +211,23 @@ Simulation Forge Decoded Logs:
 |
 |
 |- GAS --------------------
-| Used    :  446810
+| Used    :  446876
 ╚══════════════════════════════════════════╝
 
 Simulation Report:
 [
   {
+    "isSuccessful": true,
+    "chainId": 146,
+    "block": {
+      "number": "9872270",
+      "timestamp": 1740423311
+    },
     "shortcutName": "silo-ws-deposit",
     "caller": "0x93621DCA56fE26Cdee86e4F6B18E116e9758Ff11",
     "weirollWallet": "0xf338BceB2BE2560548d3600F48Ba4e2b4BE387C7",
     "amountsIn": [
-      "1000000000000000000"
+      "7000000000000000000"
     ],
     "base": {
       "0x93621DCA56fE26Cdee86e4F6B18E116e9758Ff11": {
@@ -236,7 +242,7 @@ Simulation Report:
         "0xf55902DE87Bd80c6a35614b48d7f8B612a083C12": "0"
       },
       "0xf338BceB2BE2560548d3600F48Ba4e2b4BE387C7": {
-        "0xf55902DE87Bd80c6a35614b48d7f8B612a083C12": "998113378375166498339"
+        "0xf55902DE87Bd80c6a35614b48d7f8B612a083C12": "6987046105899834586713"
       }
     },
     "dust": {
@@ -247,7 +253,7 @@ Simulation Report:
         "0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38": "0"
       }
     },
-    "gas": "446810"
+    "gas": "446876"
   }
 ]
 ```

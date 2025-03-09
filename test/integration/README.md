@@ -33,12 +33,17 @@ export interface ShortcutToSimulate {
 ```typescript
 export interface SimulationConfig {
   simulatonMode: SimulationMode;
+  // Forge simulator options
   forgeTestLogFormat?: ForgeTestLogFormat; // Set to `ForgeTestLogFormat.JSON` by default. Switch to `ForgeTestLogFormat.DEFAULT` to log the forge test traces
   forgeTestLogVerbosity? boolean; // Set to `ForgeTestLogVerbosity.X4V` (i.e., '-vvvv') by default.
   isForgeTxDataLogged?: boolean; // Helpful to debug which data is sent to the forge test
-  isCalldataLogged?: boolean;
   isForgeLogsLogged?: boolean; // Log the forge decoded logs for successful tests
+  // Tenderly simulator options
+  isTenderlySimulationsLogged?: boolean; // Log the payload (simulations) sent to the Tenderly Simulator Bundle API
+    // Common options
+  isCalldataLogged?: boolean;
   isReportLogged?: boolean; // Log the simulation report
+  isRawResultInReport?: boolean; // Log the simulator raw response for the simulated shortcut
 }
 ```
 
@@ -58,8 +63,7 @@ describe('<protocol>', () => {
 
       // Assert
       expect(report.length).toBe(1);
-      const expectedReport0 = {}; // TODO
-      expect(report[0]).toMatchObject(expectedReport0);
+      const { amountsIn, dust, quote, weirollWallet, gas } = report[0]; // TODO: assert them
     });
   });
 });
@@ -72,7 +76,7 @@ Both shortcuts (deposit & redeem) happen in the same block.
 ```typescript
 const txsToSim = [
   {
-    blockNumber: '8455854',
+    blockNumber: '9872270',
     requiresFunding: true,
     shortcut: new Silo_Ws_Deposit_Shortcut(),
     amountsIn: [parseUnits('1', 18).toString()],
@@ -84,12 +88,12 @@ const txsToSim = [
 ];
 ```
 
-First shortcut (deposit) happens at block `8865840` (with the proper `block.timestamp` set), whilst the second shortcut
+First shortcut (deposit) happens at block `9872270` (with the proper `block.timestamp` set), whilst the second shortcut
 is executed at the same `block.number` but 1 second after.
 
 ```typescript
 const provider = getProviderByChainId(ChainIds.Sonic);
-const blockNumber = '8865840';
+const blockNumber = '9872270';
 const blockTimestamp = await getBlockTimestamp(provider, blockNumber);
 
 const txsToSim = [
@@ -112,31 +116,75 @@ const txsToSim = [
 ```typescript
 describe('silo', () => {
   describe('deposits', () => {
-    it('ws', async () => {
+    it('ws (deposit-redeem)', async () => {
       // Arrange
       const txsToSim = [
         {
-          blockNumber: '8455854',
+          blockNumber: '9872270',
           requiresFunding: true,
           shortcut: new Silo_Ws_Deposit_Shortcut(),
+          amountsIn: [parseUnits('1', 18).toString()],
+        },
+        {
+          shortcut: new Silo_Ws_Redeem_Shortcut(),
           amountsIn: [parseUnits('1', 18).toString()],
         },
       ];
 
       // Act
-      const report = await main(ChainIds.Sonic, txsToSim, {
-        forgeTestLogFormat: ForgeTestLogFormat.JSON,
-      });
+      const report = await main_(ChainIds.Sonic, txsToSim);
 
       // Assert
-      expect(report.length).toBe(1);
-      expect(report[0]).toMatchObject({
-        amountsIn: ['1000000000000000000'],
-        dust: { '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38': '0' },
-        quote: { '0xf55902DE87Bd80c6a35614b48d7f8B612a083C12': '998297853831134388682' },
-        weirollWallet: '0xBa8F5f80C41BF5e169d9149Cd4977B1990Fc2736',
-        gas: '417625',
+      expect(report.length).toBe(2);
+
+      const {
+        block: blockSc0,
+        amountsIn: amountsInSc0,
+        dust: dustSc0,
+        quote: quoteSc0,
+        weirollWallet: weirollWalletSc0,
+        gas: gasSc0,
+      } = report[0];
+
+      // Shortcut 0
+      expect(blockSc0).toEqual({ number: '9872270', timestamp: 1740423311 });
+      expect(amountsInSc0).toEqual(['1000000000000000000']);
+      expect(dustSc0[CALLER]).toEqual({
+        '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38': '0',
       });
+      expect(dustSc0[WEIROLL_WALLET]).toEqual({
+        '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38': '0',
+      });
+      expect(quoteSc0[CALLER]).toEqual({ '0xf55902DE87Bd80c6a35614b48d7f8B612a083C12': '0' });
+      expect(quoteSc0[WEIROLL_WALLET]).toEqual({
+        '0xf55902DE87Bd80c6a35614b48d7f8B612a083C12': '998149443699976369530',
+      });
+      expect(weirollWalletSc0).toBe(WEIROLL_WALLET);
+      expectBigIntToBeCloseTo(BigInt(gasSc0), BigInt('446834'), BigInt('100'));
+
+      const {
+        amountsIn: amountsInSc1,
+        dust: dustSc1,
+        quote: quoteSc1,
+        weirollWallet: weirollWalletSc1,
+        gas: gasSc1,
+      } = report[1];
+
+      // Shortcut 1
+      expect(blockSc0).toEqual({ number: '9872270', timestamp: 1740423311 });
+      expect(amountsInSc1).toEqual(['1000000000000000000']);
+      expect(dustSc1[CALLER]).toEqual({
+        '0xf55902DE87Bd80c6a35614b48d7f8B612a083C12': '0',
+      });
+      expect(dustSc1[WEIROLL_WALLET]).toEqual({
+        '0xf55902DE87Bd80c6a35614b48d7f8B612a083C12': '-998149443699976369530',
+      });
+      expect(quoteSc1[CALLER]).toEqual({ '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38': '999999999999999999' });
+      expect(quoteSc1[WEIROLL_WALLET]).toEqual({
+        '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38': '0',
+      });
+      expect(weirollWalletSc1).toBe(WEIROLL_WALLET);
+      expectBigIntToBeCloseTo(BigInt(gasSc1), BigInt('174308'), BigInt('100'));
     });
   });
 });
