@@ -14,7 +14,7 @@ import { addAction, getAmountOutFromBytes, getForks, percentMul } from '@ensofin
 import { BigNumber } from '@ethersproject/bignumber';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 
-import { chainIdToSimulationRoles } from '../constants';
+import { chainIdToDeFiAddresses, chainIdToSimulationRoles } from '../constants';
 import { getNativeToken } from '../helpers/utils';
 import type { RoycoOutput, Shortcut, SimulationResult } from '../types';
 
@@ -88,6 +88,109 @@ export async function sendTokensToOwner(token: AddressArg, amount: NumberArg, bu
     functionName: 'transfer',
     abi: ['function transfer(address,uint256)'],
     args: [owner, amount],
+  });
+}
+
+export async function claimPendleRewards(market: AddressArg, builder: Builder) {
+  const routerAddress = chainIdToDeFiAddresses[builder.chainId].pendleRouterV4;
+  const abi = [
+    {
+      inputs: [
+        {
+          internalType: 'contract IStandardizedYield[]',
+          name: 'SYs',
+          type: 'address[]',
+        },
+        {
+          components: [
+            {
+              internalType: 'contract IStandardizedYield',
+              name: 'YT',
+              type: 'address',
+            },
+            {
+              internalType: 'address',
+              name: 'tokenOut',
+              type: 'address',
+            },
+            {
+              internalType: 'uint256',
+              name: 'minAmountOut',
+              type: 'uint256',
+            },
+          ],
+          internalType: 'struct RedeemYtIncomeToTokenStruct[]',
+          name: 'YTs',
+          type: 'tuple[]',
+        },
+        {
+          internalType: 'contract IPMarket[]',
+          name: 'markets',
+          type: 'address[]',
+        },
+        {
+          internalType: 'contract IPSwapAggregator',
+          name: 'pendleSwap',
+          type: 'address',
+        },
+        {
+          components: [
+            {
+              internalType: 'bytes',
+              name: 'swapData',
+              type: 'bytes',
+            },
+            {
+              internalType: 'address',
+              name: 'tokenIn',
+              type: 'address',
+            },
+            {
+              internalType: 'address',
+              name: 'tokenOut',
+              type: 'address',
+            },
+            {
+              internalType: 'uint256',
+              name: 'minAmountOut',
+              type: 'uint256',
+            },
+          ],
+          internalType: 'struct SwapDataExtra[]',
+          name: 'swaps',
+          type: 'tuple[]',
+        },
+      ],
+      name: 'redeemDueInterestAndRewardsV2',
+      outputs: [
+        {
+          internalType: 'uint256[]',
+          name: 'netOutFromSwaps',
+          type: 'uint256[]',
+        },
+        {
+          internalType: 'uint256[]',
+          name: 'netInterests',
+          type: 'uint256[]',
+        },
+      ],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+  ];
+
+  builder.add({
+    address: routerAddress,
+    abi: JSON.stringify(abi),
+    functionName: 'redeemDueInterestAndRewardsV2',
+    noArgumentsCheck: true,
+    args: [
+      [], // SYs: empty address[]
+      [], // YTs: empty RedeemYtIncomeToTokenStruct[]
+      [market], // markets: IPMarket[] containing your wstethMarket address
+      '0x313e7ef7d52f5c10ac04ebaa4d33cdc68634c212', // pendleSwap address
+      [], // swaps: empty SwapDataExtra[]
+    ],
   });
 }
 

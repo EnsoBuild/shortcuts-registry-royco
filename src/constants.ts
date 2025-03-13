@@ -90,6 +90,8 @@ export const chainIdToDeFiAddresses: Record<number, Record<string, AddressArg>> 
     roycoWalletHelpers: '0x07899ac8BE7462151d6515FCd4773DD9267c9911',
     lptWstkscETH: '0xd14117baf6ec5d12be68cd06e763a4b82c9b6d1d',
     lptWstkscUSD: '0x6e4e95fab7db1f0524b4b0a05f0b9c96380b7dfa',
+    pendleRouterV4: '0x888888888889758F76e7103c6CbF23ABbF58F946',
+    pendle: '0xf1ef7d2d4c0c881cd634481e0586ed5d2871a74b',
   },
 };
 
@@ -105,6 +107,7 @@ const tokenToHolderSonic: Map<AddressArg, AddressArg> = new Map([
   [chainIdToDeFiAddresses[ChainIds.Sonic].stS, '0x396922EF30Cf012973343f7174db850c7D265278'],
   [chainIdToDeFiAddresses[ChainIds.Sonic].USDC_e, '0x322e1d5384aa4ED66AeCa770B95686271de61dc3'],
   [chainIdToDeFiAddresses[ChainIds.Sonic].WETH, '0x427514a905fa6bEaed9A36E308Fcfa06cE54e95b'],
+  [chainIdToDeFiAddresses[ChainIds.Sonic].busdc_e, '0x322e1d5384aa4ED66AeCa770B95686271de61dc3'],
   [chainIdToDeFiAddresses[ChainIds.Sonic].wOS, '0xF3c631B979EB59d8333374baA7c58B5Aff5e24D2'],
   [chainIdToDeFiAddresses[ChainIds.Sonic].wS, '0xE223C8e92AA91e966CA31d5C6590fF7167E25801'],
   [chainIdToDeFiAddresses[ChainIds.Sonic].YT_scUSD, '0xADD78875B8c993bD138aD2578381887e475361bc'],
