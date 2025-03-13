@@ -91,6 +91,18 @@ export async function sendTokensToOwner(token: AddressArg, amount: NumberArg, bu
   });
 }
 
+export async function claimPendleRewards(market: AddressArg, builder: Builder) {
+  const marketAbi = ['function redeemRewards(address user) external returns (uint256)'];
+
+  builder.add({
+    address: market,
+    abi: marketAbi,
+    functionName: 'redeemRewards',
+    noArgumentsCheck: true,
+    args: [walletAddress()],
+  });
+}
+
 // NOTE: alternative to 'import {balance} from "@ensofinance/shortcuts-standards/helpers"'
 export function getBalance(token: AddressArg, builder: Builder, account = walletAddress()) {
   if (token.toLowerCase() !== getNativeToken(builder.chainId).toLowerCase())

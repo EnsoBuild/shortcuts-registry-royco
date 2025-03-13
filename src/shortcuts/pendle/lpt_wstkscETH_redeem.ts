@@ -4,7 +4,7 @@ import { ChainIds, WeirollScript } from '@ensofinance/shortcuts-builder/types';
 
 import { chainIdToDeFiAddresses } from '../../constants';
 import type { Input, Output, Shortcut } from '../../types';
-import { getBalance, sendTokensToOwner } from '../../utils';
+import { claimPendleRewards, getBalance, sendTokensToOwner } from '../../utils';
 
 export class Pendle_LptWstkscETH_Redeem_Shortcut implements Shortcut {
   name = 'pendle-LptWstkscETH-redeem';
@@ -13,6 +13,7 @@ export class Pendle_LptWstkscETH_Redeem_Shortcut implements Shortcut {
   inputs: Record<number, Input> = {
     [ChainIds.Sonic]: {
       lptWstkscETH: chainIdToDeFiAddresses[ChainIds.Sonic].lptWstkscETH,
+      pendle: chainIdToDeFiAddresses[ChainIds.Sonic].pendle,
     },
   };
 
@@ -20,15 +21,20 @@ export class Pendle_LptWstkscETH_Redeem_Shortcut implements Shortcut {
     const client = new RoycoClient();
 
     const inputs = this.inputs[chainId];
-    const { lptWstkscETH } = inputs;
+    const { lptWstkscETH, pendle } = inputs;
 
     const builder = new Builder(chainId, client, {
       tokensIn: [lptWstkscETH],
       tokensOut: [lptWstkscETH],
     });
 
+    await claimPendleRewards(lptWstkscETH, builder);
+
+    const amountPendle = getBalance(pendle, builder);
     const amountLptWstkscETH = getBalance(lptWstkscETH, builder);
+
     await sendTokensToOwner(lptWstkscETH, amountLptWstkscETH, builder);
+    await sendTokensToOwner(pendle, amountPendle, builder);
 
     const payload = await builder.build({
       requireWeiroll: true,
