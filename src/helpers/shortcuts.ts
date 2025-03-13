@@ -12,10 +12,10 @@ import { Pendle_LptWstkscUSD_Deposit_Shortcut } from '../shortcuts/pendle/lpt_ws
 import { Pendle_LptWstkscUSD_Redeem_Shortcut } from '../shortcuts/pendle/lpt_wstkscUSD_redeem';
 import { Rings_Wstkscusd_Deposit_Shortcut } from '../shortcuts/rings/wstkscusd_deposit';
 import { Rings_Wstkscusd_Redeem_Shortcut } from '../shortcuts/rings/wstkscusd_redeem';
-import { Silo_Ws_Deposit_Shortcut } from '../shortcuts/silo/ws_deposit';
-import { Silo_Ws_Redeem_Shortcut } from '../shortcuts/silo/ws_redeem';
 import { Silo_BUSDCe_Deposit_Shortcut } from '../shortcuts/silo/busdce_deposit';
 import { Silo_BUSDCe_Redeem_Shortcut } from '../shortcuts/silo/busdce_redeem';
+import { Silo_Ws_Deposit_Shortcut } from '../shortcuts/silo/ws_deposit';
+import { Silo_Ws_Redeem_Shortcut } from '../shortcuts/silo/ws_redeem';
 import { Stability_CstSSL_Deposit_Shortcut } from '../shortcuts/stability/cstssl-deposit';
 import { Stability_CstSSL_Redeem_Shortcut } from '../shortcuts/stability/cstssl-redeem';
 import { Stability_Cwossal_Deposit_Shortcut } from '../shortcuts/stability/cwossal-deposit';
