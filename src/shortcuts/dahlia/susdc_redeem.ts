@@ -7,13 +7,13 @@ import type { Input, Output, Shortcut } from '../../types';
 import { getBalance, redeemErc4626, sendTokensToOwner } from '../../utils';
 
 export class Dahlia_SUSDC_Redeem_Shortcut implements Shortcut {
-  name = 'dahlia-susdc-redeem';
-  description = 'Dahlia S/USDC: Redeem S/USDC receipt token to get back USDC';
+  name = 'dahlia-susd-redeem';
+  description = 'Dahlia scUSD: Redeem scUSD/USDC.e receipt token to get back USDC.e';
   supportedChains = [ChainIds.Sonic];
   inputs: Record<number, Input> = {
     [ChainIds.Sonic]: {
-      vault: '0xe164b347de4682c7ec0adc14892fa2a8a2d43f84', // S/USDC Deposit Contract
-      outputToken: chainIdToDeFiAddresses[ChainIds.Sonic].USDC_e, // USDC
+      vault: '0xe164b347de4682c7ec0adc14892fa2a8a2d43f84',
+      USDC_e: chainIdToDeFiAddresses[ChainIds.Sonic].USDC_e,
     },
   };
 
@@ -21,18 +21,18 @@ export class Dahlia_SUSDC_Redeem_Shortcut implements Shortcut {
     const client = new RoycoClient();
 
     const inputs = this.inputs[chainId];
-    const { vault, outputToken } = inputs;
+    const { vault, USDC_e } = inputs;
 
     const builder = new Builder(chainId, client, {
       tokensIn: [vault],
-      tokensOut: [outputToken],
+      tokensOut: [USDC_e],
     });
 
     const vaultAmount = getBalance(vault, builder);
-    await redeemErc4626(vault, outputToken, vaultAmount, builder);
+    await redeemErc4626(vault, USDC_e, vaultAmount, builder);
 
-    const outputAmount = getBalance(outputToken, builder);
-    await sendTokensToOwner(outputToken, outputAmount, builder);
+    const outputAmount = getBalance(USDC_e, builder);
+    await sendTokensToOwner(USDC_e, outputAmount, builder);
 
     const payload = await builder.build({
       requireWeiroll: true,

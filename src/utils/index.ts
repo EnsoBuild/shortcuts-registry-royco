@@ -14,7 +14,7 @@ import { addAction, getAmountOutFromBytes, getForks, percentMul } from '@ensofin
 import { BigNumber } from '@ethersproject/bignumber';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 
-import { chainIdToSimulationRoles } from '../constants';
+import { chainIdToDeFiAddresses, chainIdToSimulationRoles } from '../constants';
 import { getNativeToken } from '../helpers/utils';
 import type { RoycoOutput, Shortcut, SimulationResult } from '../types';
 
@@ -185,6 +185,23 @@ export async function mint_OS(tokenIn: AddressArg, tokenOut: AddressArg, amountI
     tokenOut,
     amountIn,
     primaryAddress: originOs![getChainName(builder.chainId)]!.primary as AddressArg,
+  });
+
+  return amountOut as FromContractCallArg;
+}
+
+export async function mint_scToken(tokenIn: AddressArg, tokenOut: AddressArg, amountIn: NumberArg, builder: Builder) {
+  const standard = getStandardByProtocol('rings-sc', builder.chainId);
+  const scEthTeller = getStandardByProtocol('rings-sc', builder.chainId).getAddress(builder.chainId, 'scEthTeller');
+  const scUsdTeller = getStandardByProtocol('rings-sc', builder.chainId).getAddress(builder.chainId, 'scUsdTeller');
+
+  const isScEth = tokenOut.toLowerCase() === chainIdToDeFiAddresses[builder.chainId].scEth.toLowerCase();
+
+  const { amountOut } = await standard.deposit.addToBuilder(builder, {
+    tokenIn,
+    tokenOut,
+    amountIn,
+    primaryAddress: isScEth ? scEthTeller : scUsdTeller,
   });
 
   return amountOut as FromContractCallArg;

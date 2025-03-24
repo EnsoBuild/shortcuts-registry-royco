@@ -4,8 +4,6 @@ import { StaticJsonRpcProvider } from '@ethersproject/providers';
 
 import { Beets_Sts_Deposit_Shortcut } from '../shortcuts/beets/sts_deposit';
 import { Beets_Sts_Redeem_Shortcut } from '../shortcuts/beets/sts_redeem';
-import { Dahlia_ScUSD_Deposit_Shortcut } from '../shortcuts/dahlia/scusd_deposit';
-import { Dahlia_ScUSD_Redeem_Shortcut } from '../shortcuts/dahlia/scusd_redeem';
 import { Dahlia_StS_Deposit_Shortcut } from '../shortcuts/dahlia/sts_deposit';
 import { Dahlia_StS_Redeem_Shortcut } from '../shortcuts/dahlia/sts_redeem';
 import { Dahlia_SUSDC_Deposit_Shortcut } from '../shortcuts/dahlia/susdc_deposit';
@@ -57,8 +55,6 @@ export const shortcuts: Record<string, Record<string, Shortcut>> = {
   dahlia: {
     'susdc-deposit': new Dahlia_SUSDC_Deposit_Shortcut(),
     'susdc-redeem': new Dahlia_SUSDC_Redeem_Shortcut(),
-    'scusd-deposit': new Dahlia_ScUSD_Deposit_Shortcut(),
-    'scusd-redeem': new Dahlia_ScUSD_Redeem_Shortcut(),
     'sts-deposit': new Dahlia_StS_Deposit_Shortcut(),
     'sts-redeem': new Dahlia_StS_Redeem_Shortcut(),
     'wstksceth-sceth-deposit': new Dahlia_WstkscETH_ScETH_Deposit_Shortcut(),
@@ -119,8 +115,6 @@ export function getAllMarkets(): string[] {
 export const supportedShortcuts = [
   Dahlia_SUSDC_Deposit_Shortcut,
   Dahlia_SUSDC_Redeem_Shortcut,
-  Dahlia_ScUSD_Deposit_Shortcut,
-  Dahlia_ScUSD_Redeem_Shortcut,
   Dahlia_StS_Deposit_Shortcut,
   Dahlia_StS_Redeem_Shortcut,
   Dahlia_WstkscETH_ScETH_Deposit_Shortcut,

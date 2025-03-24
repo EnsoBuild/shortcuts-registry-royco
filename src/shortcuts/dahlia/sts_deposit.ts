@@ -4,18 +4,16 @@ import { ChainIds, WeirollScript } from '@ensofinance/shortcuts-builder/types';
 
 import { chainIdToDeFiAddresses } from '../../constants';
 import type { Input, Output, Shortcut } from '../../types';
-import { getBalance, mintErc4626, mint_stS, unwrap_wrappedNativeToken } from '../../utils';
+import { getBalance, mintErc4626 } from '../../utils';
 
 export class Dahlia_StS_Deposit_Shortcut implements Shortcut {
   name = 'dahlia-sts-deposit';
-  description = 'Dahlia stS/S: Deposit wS -> S -> stS -> stS/S receipt token';
+  description = 'Dahlia stS/S: Deposit wS -> stS/S receipt token';
   supportedChains = [ChainIds.Sonic];
   inputs: Record<number, Input> = {
     [ChainIds.Sonic]: {
-      wS: chainIdToDeFiAddresses[ChainIds.Sonic].wS, // wS
-      S: chainIdToDeFiAddresses[ChainIds.Sonic].S, // S (Native Token)
-      stS: chainIdToDeFiAddresses[ChainIds.Sonic].stS, // stS
-      vault: '0x134c82ba00a7d6dc111199b081a377a5d4ba911a', // stS/S Deposit Contract
+      wS: chainIdToDeFiAddresses[ChainIds.Sonic].wS,
+      vault: '0x134c82ba00a7d6dc111199b081a377a5d4ba911a',
     },
   };
 
@@ -23,26 +21,16 @@ export class Dahlia_StS_Deposit_Shortcut implements Shortcut {
     const client = new RoycoClient();
 
     const inputs = this.inputs[chainId];
-    const { wS, S, stS, vault } = inputs;
+    const { wS, vault } = inputs;
 
     const builder = new Builder(chainId, client, {
       tokensIn: [wS],
       tokensOut: [vault],
     });
 
-    // Get the amount of wS
     const amountWs = getBalance(wS, builder);
 
-    // Unwrap wS to get S
-    await unwrap_wrappedNativeToken(wS, S, amountWs, builder);
-    const amountS = getBalance(S, builder);
-
-    // Mint stS from S
-    await mint_stS(S, stS, amountS, builder);
-    const amountStS = getBalance(stS, builder);
-
-    // Deposit stS into the vault
-    await mintErc4626(stS, vault, amountStS, builder);
+    await mintErc4626(wS, vault, amountWs, builder);
 
     const payload = await builder.build({
       requireWeiroll: true,

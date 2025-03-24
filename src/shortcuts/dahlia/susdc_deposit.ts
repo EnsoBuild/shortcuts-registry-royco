@@ -7,13 +7,13 @@ import type { Input, Output, Shortcut } from '../../types';
 import { getBalance, mintErc4626 } from '../../utils';
 
 export class Dahlia_SUSDC_Deposit_Shortcut implements Shortcut {
-  name = 'dahlia-susdc-deposit';
-  description = 'Dahlia S/USDC: Deposit USDC to receive S/USDC receipt token';
+  name = 'dahlia-susd-deposit';
+  description = 'Dahlia USD: Deposit USDC.e s/USDC.e receipt token';
   supportedChains = [ChainIds.Sonic];
   inputs: Record<number, Input> = {
     [ChainIds.Sonic]: {
-      inputToken: chainIdToDeFiAddresses[ChainIds.Sonic].USDC_e, // USDC
-      vault: '0xe164b347de4682c7ec0adc14892fa2a8a2d43f84', // S/USDC Deposit Contract
+      USDC_e: chainIdToDeFiAddresses[ChainIds.Sonic].USDC_e,
+      vault: '0xe164b347de4682c7ec0adc14892fa2a8a2d43f84',
     },
   };
 
@@ -21,15 +21,16 @@ export class Dahlia_SUSDC_Deposit_Shortcut implements Shortcut {
     const client = new RoycoClient();
 
     const inputs = this.inputs[chainId];
-    const { inputToken, vault } = inputs;
+    const { USDC_e, vault } = inputs;
 
     const builder = new Builder(chainId, client, {
-      tokensIn: [inputToken],
+      tokensIn: [USDC_e],
       tokensOut: [vault],
     });
 
-    const inputAmount = getBalance(inputToken, builder);
-    await mintErc4626(inputToken, vault, inputAmount, builder);
+    const usdcAmount = getBalance(USDC_e, builder);
+
+    await mintErc4626(USDC_e, vault, usdcAmount, builder);
 
     const payload = await builder.build({
       requireWeiroll: true,
