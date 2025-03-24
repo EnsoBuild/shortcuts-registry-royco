@@ -197,12 +197,16 @@ export async function mint_scToken(tokenIn: AddressArg, tokenOut: AddressArg, am
 
   const isScEth = tokenOut.toLowerCase() === chainIdToDeFiAddresses[builder.chainId].scEth.toLowerCase();
 
-  const { amountOut } = await standard.deposit.addToBuilder(builder, {
-    tokenIn,
-    tokenOut,
-    amountIn,
-    primaryAddress: isScEth ? scEthTeller : scUsdTeller,
-  });
+  const { amountOut } = await standard.deposit.addToBuilder(
+    builder,
+    {
+      tokenIn,
+      tokenOut,
+      amountIn,
+      primaryAddress: isScEth ? scEthTeller : scUsdTeller,
+    },
+    ['amountOut'],
+  );
 
   return amountOut as FromContractCallArg;
 }

@@ -13,7 +13,7 @@ export class Dahlia_StS_Redeem_Shortcut implements Shortcut {
   inputs: Record<number, Input> = {
     [ChainIds.Sonic]: {
       vault: '0x134c82ba00a7d6dc111199b081a377a5d4ba911a',
-      wS: chainIdToDeFiAddresses[ChainIds.Sonic].wS,
+      outputToken: chainIdToDeFiAddresses[ChainIds.Sonic].wS,
     },
   };
 
@@ -21,17 +21,18 @@ export class Dahlia_StS_Redeem_Shortcut implements Shortcut {
     const client = new RoycoClient();
 
     const inputs = this.inputs[chainId];
-    const { vault, wS } = inputs;
+    const { vault, outputToken } = inputs;
 
     const builder = new Builder(chainId, client, {
       tokensIn: [vault],
-      tokensOut: [wS],
+      tokensOut: [outputToken],
     });
 
     const vaultAmount = getBalance(vault, builder);
-    await redeemErc4626(vault, wS, vaultAmount, builder);
+    await redeemErc4626(vault, outputToken, vaultAmount, builder);
 
-    sendTokensToOwner(wS, vaultAmount, builder);
+    const outputAmount = getBalance(outputToken, builder);
+    await sendTokensToOwner(outputToken, outputAmount, builder);
 
     const payload = await builder.build({
       requireWeiroll: true,
