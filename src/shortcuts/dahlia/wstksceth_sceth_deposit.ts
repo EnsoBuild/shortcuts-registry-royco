@@ -12,7 +12,7 @@ export class Dahlia_WstkscETH_ScETH_Deposit_Shortcut implements Shortcut {
   supportedChains = [ChainIds.Sonic];
   inputs: Record<number, Input> = {
     [ChainIds.Sonic]: {
-      inputToken: chainIdToDeFiAddresses[ChainIds.Sonic].wS, // wS
+      inputToken: chainIdToDeFiAddresses[ChainIds.Sonic].WETH, // WETH
       scEth: chainIdToDeFiAddresses[ChainIds.Sonic].scEth, // scETH
       vault: '0x82bfed569c692fd94ac8bbfc5c867b80b4f705a8', // wstkscETH/scETH Deposit Contract
     },
