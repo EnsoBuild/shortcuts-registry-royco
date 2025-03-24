@@ -14,7 +14,7 @@ export class StableJack_YtScUsd_Deposit_Shortcut implements Shortcut {
   inputs: Record<number, Input> = {
     [ChainIds.Sonic]: {
       primaryForScusd: Standards.Stable_Jack.protocol.addresses!.sonic!.primaryForScusd,
-      scUsdTeller: Standards.Rings_Scusd.protocol.addresses!.sonic!.scUsdTeller,
+      scUsdTeller: Standards.Rings_Sc.protocol.addresses!.sonic!.scUsdTeller,
       YT_scUSD: chainIdToDeFiAddresses[ChainIds.Sonic].YT_scUSD,
       scUSD: chainIdToDeFiAddresses[ChainIds.Sonic].scUsd,
       USDC_e: chainIdToDeFiAddresses[ChainIds.Sonic].USDC_e,
@@ -33,7 +33,7 @@ export class StableJack_YtScUsd_Deposit_Shortcut implements Shortcut {
     });
 
     const amountUsde = getBalance(USDC_e, builder);
-    getStandardByProtocol('rings-scusd', builder.chainId).deposit.addToBuilder(builder, {
+    getStandardByProtocol('rings-sc', builder.chainId).deposit.addToBuilder(builder, {
       tokenIn: [USDC_e],
       tokenOut: scUSD,
       amountIn: [amountUsde],

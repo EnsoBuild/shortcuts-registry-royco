@@ -4,8 +4,8 @@ import { AddressArg, ChainIds, WeirollScript } from '@ensofinance/shortcuts-buil
 
 import { chainIdToDeFiAddresses, chainIdToTokenHolder } from '../../constants';
 import type { AddressData, Input, Output, Shortcut } from '../../types';
-import { getBalance, mintErc4626 } from '../../utils';
-import { mintScusd, mintStkscusd } from './utils';
+import { getBalance, mintErc4626, mint_scToken } from '../../utils';
+import { mintStkscusd } from './utils';
 
 export class Rings_Wstkscusd_Deposit_Shortcut implements Shortcut {
   name = 'rings-wstkscusd-deposit';
@@ -24,7 +24,7 @@ export class Rings_Wstkscusd_Deposit_Shortcut implements Shortcut {
     const client = new RoycoClient();
 
     const inputs = this.inputs[chainId];
-    const { usdce, stkscusd, wstkscusd } = inputs;
+    const { usdce, stkscusd, wstkscusd, scusd } = inputs;
 
     const builder = new Builder(chainId, client, {
       tokensIn: [usdce],
@@ -33,7 +33,7 @@ export class Rings_Wstkscusd_Deposit_Shortcut implements Shortcut {
 
     const usdceAmount = getBalance(usdce, builder);
 
-    const scusdAmount = await mintScusd(usdceAmount, builder);
+    const scusdAmount = await mint_scToken(usdce, scusd, usdceAmount, builder);
     const stkscusdAmount = await mintStkscusd(scusdAmount, builder);
 
     await mintErc4626(stkscusd, wstkscusd, stkscusdAmount, builder);

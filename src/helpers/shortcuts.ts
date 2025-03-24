@@ -4,6 +4,16 @@ import { StaticJsonRpcProvider } from '@ethersproject/providers';
 
 import { Beets_Sts_Deposit_Shortcut } from '../shortcuts/beets/sts_deposit';
 import { Beets_Sts_Redeem_Shortcut } from '../shortcuts/beets/sts_redeem';
+import { Dahlia_StS_Deposit_Shortcut } from '../shortcuts/dahlia/sts_deposit';
+import { Dahlia_StS_Redeem_Shortcut } from '../shortcuts/dahlia/sts_redeem';
+import { Dahlia_SUSDC_Deposit_Shortcut } from '../shortcuts/dahlia/susdc_deposit';
+import { Dahlia_SUSDC_Redeem_Shortcut } from '../shortcuts/dahlia/susdc_redeem';
+import { Dahlia_WstkscETH_ScETH_Deposit_Shortcut } from '../shortcuts/dahlia/wstksceth_sceth_deposit';
+import { Dahlia_WstkscETH_ScETH_Redeem_Shortcut } from '../shortcuts/dahlia/wstksceth_sceth_redeem';
+import { Dahlia_WstkscUSD_ScUSD_Deposit_Shortcut } from '../shortcuts/dahlia/wstkscusd_scusd_deposit';
+import { Dahlia_WstkscUSD_ScUSD_Redeem_Shortcut } from '../shortcuts/dahlia/wstkscusd_scusd_redeem';
+import { Dahlia_WstkscUSD_USDC_Deposit_Shortcut } from '../shortcuts/dahlia/wstkscusd_usdc_deposit';
+import { Dahlia_WstkscUSD_USDC_Redeem_Shortcut } from '../shortcuts/dahlia/wstkscusd_usdc_redeem';
 import { Origin_Wos_Deposit_Shortcut } from '../shortcuts/origin/wos_deposit';
 import { Origin_Wos_Redeem_Shortcut } from '../shortcuts/origin/wos_redeem';
 import { Pendle_LptWstkscETH_Deposit_Shortcut } from '../shortcuts/pendle/lpt_wstkscETH_deposit';
@@ -41,6 +51,18 @@ export const shortcuts: Record<string, Record<string, Shortcut>> = {
   beets: {
     'sts-deposit': new Beets_Sts_Deposit_Shortcut(),
     'sts-redeem': new Beets_Sts_Redeem_Shortcut(),
+  },
+  dahlia: {
+    'susdc-deposit': new Dahlia_SUSDC_Deposit_Shortcut(),
+    'susdc-redeem': new Dahlia_SUSDC_Redeem_Shortcut(),
+    'sts-deposit': new Dahlia_StS_Deposit_Shortcut(),
+    'sts-redeem': new Dahlia_StS_Redeem_Shortcut(),
+    'wstksceth-sceth-deposit': new Dahlia_WstkscETH_ScETH_Deposit_Shortcut(),
+    'wstksceth-sceth-redeem': new Dahlia_WstkscETH_ScETH_Redeem_Shortcut(),
+    'wstkscusd-scusd-deposit': new Dahlia_WstkscUSD_ScUSD_Deposit_Shortcut(),
+    'wstkscusd-scusd-redeem': new Dahlia_WstkscUSD_ScUSD_Redeem_Shortcut(),
+    'wstkscusd-usdc-deposit': new Dahlia_WstkscUSD_USDC_Deposit_Shortcut(),
+    'wstkscusd-usdc-redeem': new Dahlia_WstkscUSD_USDC_Redeem_Shortcut(),
   },
   origin: {
     'wos-deposit': new Origin_Wos_Deposit_Shortcut(),
@@ -91,6 +113,16 @@ export function getAllMarkets(): string[] {
 }
 
 export const supportedShortcuts = [
+  Dahlia_SUSDC_Deposit_Shortcut,
+  Dahlia_SUSDC_Redeem_Shortcut,
+  Dahlia_StS_Deposit_Shortcut,
+  Dahlia_StS_Redeem_Shortcut,
+  Dahlia_WstkscETH_ScETH_Deposit_Shortcut,
+  Dahlia_WstkscETH_ScETH_Redeem_Shortcut,
+  Dahlia_WstkscUSD_ScUSD_Deposit_Shortcut,
+  Dahlia_WstkscUSD_ScUSD_Redeem_Shortcut,
+  Dahlia_WstkscUSD_USDC_Deposit_Shortcut,
+  Dahlia_WstkscUSD_USDC_Redeem_Shortcut,
   Silo_Ws_Deposit_Shortcut,
   Silo_Ws_Redeem_Shortcut,
   Silo_BUSDCe_Deposit_Shortcut,
